@@ -109,7 +109,7 @@
       (let [{:strs [type]} (json/read-str (str msg))]
         (if (= "AUTH_CHALLENGE" type)
           (let [token (get-token config)]
-            (log/debug "Got AUTH_CHALLENGE, responding with token" subscription token)
+            (log/debug "Responding to AUTH_CHALLENGE" subscription)
             (->> {:type         "AUTH_RESPONSE"
                   :authResponse {:clientVersion   "v21"
                                  :protocolVersion 21
@@ -164,7 +164,7 @@
                           "/"
                           eori)
 
-            :async   true
+            :async   true ;; returns a future ws
             :on-open (fn on-open [_ws]
                        (log/debug "Consumer websocket open" subscription))
 
@@ -230,11 +230,11 @@
                    (spit (io/file file-name) (pr-str new)))))
     a))
 
-(defn- load-events-atom [eori]
+(defn- load-events-atom [eori] ;; FIXME, use separate environment per "user-number"
   (let [file-name (str "/tmp/dil-demo-events-" eori ".edn")] ;; TODO config
     (load-atom file-name {})))
 
-(defn- load-subscriptions-atom [eori]
+(defn- load-subscriptions-atom [eori] ;; FIXME, use separate environment per "user-number"
   (let [file-name (str "/tmp/dil-demo-subscription-" eori ".edn")] ;; TODO config
     (load-atom file-name #{})))
 
@@ -261,6 +261,8 @@
                                             (app))]
         (reduce
          (fn [res [cmd & [opts]]]
+           (log/debug "handling" cmd opts)
+
            (case cmd
              :authorize!
              (let [{:keys [owner-eori topic

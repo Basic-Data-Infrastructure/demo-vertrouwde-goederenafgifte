@@ -64,13 +64,13 @@
                  (when (not= old-store new-store)
                    (future (save-store new-store filename)))))))
 
-(defn store-request [{:keys [user-number] :as req}
+(defn assoc-store [{:keys [user-number] :as req}
                      {:keys [eori store-atom] :as _config}]
   (if (and eori store-atom user-number)
     (assoc req ::store (get-in @store-atom [user-number eori]))
     req))
 
-(defn store-response [{:keys [user-number] :as _req}
+(defn process-store [{:keys [user-number] :as _req}
                       {::keys [commands] :as res}
                       {:keys [eori store-atom] :as _config}]
   (when (and eori store-atom user-number)
@@ -89,6 +89,6 @@
   of commands, those will be committed to the storage."
   [app config]
   (fn store-wrapper [req]
-    (store-response req
-                    (app (store-request req config))
+    (process-store req
+                    (app (assoc-store req config))
                     config)))

@@ -146,14 +146,14 @@
         handler (make-handler app-config)]
     (-> (fn [{:keys [uri] :as req}]
           (let [[_ base-uri user-number app-id uri]
-                (re-matches #"(/(\d+)/([^/]+))(/.*)" uri)]
+                (re-matches #"(/(\d+)/([^/]+))(/.*)" uri)] ; /1/wms ipv /wms
             (if (and user-number app-id (= app-id (name id)))
               (-> req
                   (assoc :base-uri base-uri
                          :uri uri
                          :user-number (parse-long user-number)
                          :eori (:eori app-config))
-                  (store/store-request app-config)
+                  (store/assoc-store app-config)
                   (handler))
               (app req))))
 

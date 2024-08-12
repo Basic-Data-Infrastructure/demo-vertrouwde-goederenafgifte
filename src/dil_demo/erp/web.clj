@@ -46,7 +46,12 @@
          [:a.button.secondary {:href  (str "publish-" id)
                                :title "Opdracht versturen naar locatie en vervoerder"}
           "Versturen"])
-       (f/delete-button (str "consignment-" id))]])])
+       (f/delete-button (str "consignment-" id))]])
+
+   [:nav.bottom
+    "Zie ook:"
+    [:ul
+     [:li [:a {:href "events/"} "Events"]]]]])
 
 (defn edit-consignment [consignment {:keys [carriers warehouses]}]
   (f/form consignment {:method "POST"}

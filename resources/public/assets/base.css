@@ -90,6 +90,17 @@ body > nav.top > ul > li > a.current {
     text-decoration: underline;
 }
 
+nav.bottom {
+    margin-top: 4em;
+    margin-bottom: -2em;
+}
+nav.bottom > ul {
+    margin-top: .5em;
+}
+nav.bottom > ul > li {
+    margin-bottom: .5em;
+}
+
 
 
 header.container, footer.container, main.container {

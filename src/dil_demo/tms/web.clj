@@ -55,7 +55,13 @@
          [:a.button.secondary {:href  (str "outsource-" id)
                                :title "Uitbesteden aan een andere vervoerder"}
           "Uitbesteden"])
-       (f/delete-button (str "trip-" id))]])])
+       (f/delete-button (str "trip-" id))]])
+
+   [:nav.bottom
+    "Zie ook:"
+    [:ul
+     [:li [:a {:href "chauffeur/"} "Chauffeur"]]
+     [:li [:a {:href "events/"} "Events"]]]]])
 
 (defn qr-code-dil-demo [{:keys [carriers driver-id-digits license-plate]}]
   (w/qr-code (str ":dil-demo"

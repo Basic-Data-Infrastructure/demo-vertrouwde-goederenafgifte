@@ -7,12 +7,12 @@
 
 (ns dil-demo.wms.events
   (:require [dil-demo.ishare.data-source :as ishare-data-source]
-            [dil-demo.store :as store]
             [dil-demo.ishare.jwt :as jwt]
-            [ring.middleware.params :refer [wrap-params]]
-            [org.bdinetwork.assocation-register.authentication :as authentication]
+            [dil-demo.store :as store]
             [nl.jomco.http-status-codes :as http-status]
+            [org.bdinetwork.assocation-register.authentication :as authentication]
             [ring.middleware.json :refer [wrap-json-response]]
+            [ring.middleware.params :refer [wrap-params]]
             [ring.util.response :as response]))
 
 (defn handler

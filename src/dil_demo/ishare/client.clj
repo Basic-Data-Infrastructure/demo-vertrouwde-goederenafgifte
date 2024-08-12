@@ -11,6 +11,7 @@
             [babashka.json :as json]
             [buddy.core.keys :as keys]
             [clojure.string :as string]
+            [clojure.tools.logging.readable :as log]
             [dil-demo.ishare.jwt :as jwt])
   (:import (java.net URI)))
 
@@ -215,6 +216,7 @@ When bearer token is not needed, provide a `nil` token"
 
 (defn exec
   [request]
+  (log/debug "exec" (dissoc request :ishare/x5c :ishare/private-key))
   (http/request (assoc request
                        :client http-client
                        :interceptors interceptors)))
