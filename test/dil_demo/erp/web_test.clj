@@ -69,7 +69,8 @@
           (do-request :delete "/consignment-31415")]
       (is (= http-status/see-other status))
       (is (= [:delete! :consignments] (->> store-commands first (take 2))))
-      (is (= [[:unsubscribe! {:topic "31415" :owner-eori "EU.EORI.TEST"}]] event-commands))))
+      (is (= [[:unsubscribe! {:topic "31415" :owner-eori "EU.EORI.TEST" :user-number 1}]]
+             event-commands))))
 
   (testing "GET /publish-31415"
     (let [{:keys [status headers body]} (do-request :get "/publish-31415")]
@@ -88,7 +89,7 @@
              [[:authorize! {:topic "31415" :owner-eori "EU.EORI.TEST"
                             :read-eoris ["EU.EORI.TEST" "EU.EORI.CARRIER"],
                             :write-eoris [ "EU.EORI.WAREHOUSE"]}]
-              [:subscribe! {:topic "31415" :owner-eori "EU.EORI.TEST"}]]))))
+              [:subscribe! {:topic "31415" :owner-eori "EU.EORI.TEST" :user-number 1}]]))))
 
   (testing "GET /published-31415"
     (let [{:keys [status headers body]} (do-request :get "/publish-31415")]

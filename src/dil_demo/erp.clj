@@ -10,6 +10,7 @@
             [dil-demo.erp.web :as erp.web]
             [dil-demo.ishare.client :as ishare-client]
             [dil-demo.ishare.policies :as policies]
+            [dil-demo.events :as events]
             [dil-demo.store :as store]
             [dil-demo.web-utils :as w]))
 
@@ -91,3 +92,18 @@
   (-> (erp.web/make-handler config)
       (wrap-policy-deletion config)
       (wrap-delegation config)))
+
+
+(defn base-event-handler
+  [{:keys                         [::store/store subscription] :as event
+    {:keys [bizStep disposition]} :event-data}]
+  (let [ref (second subscription)]
+    (when-let [consignment (erp.web/get-consignment-by-ref store ref)]
+      (when (and (= bizStep "departing")
+                 (= disposition "in_transit"))
+        (assoc event ::store/commands
+                     [[:put! :consignments (assoc consignment :status "inTransit")]])))))
+
+(defn make-event-handler [{:keys [client-data] :as _config}]
+  (-> base-event-handler
+      (events/wrap-fetch-event client-data)))

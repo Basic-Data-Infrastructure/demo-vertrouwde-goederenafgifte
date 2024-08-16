@@ -109,26 +109,30 @@
                  (assoc :user-number basic-authentication))
              req)))))
 
-(defn wrap-h2m-app [app id {:keys [pulsar store-atom] :as config} make-handler]
-  (let [config  (get config id)
-        config  (assoc config
+(defn wrap-h2m-app [app id {:keys [pulsar store-atom] :as config} make-handler make-event-handler]
+  (let [config         (get config id)
+        config         (assoc config
                        :id          id
                        :client-data (ishare-client/->client-data config)
                        :pulsar      pulsar
                        :store-atom  store-atom)
-        handler (make-handler config)]
+        event-callback (-> (if make-event-handler
+                             (make-event-handler config)
+                             (constantly nil))
+                           (store/wrap config))
+        handler        (make-handler config)]
     (wrap-with-prefix app
                       (str "/" (name id))
                       (-> (fn wrap-h2m-app [req] (handler (assoc req :app-id id)))
-                          (events/wrap config)
+                          (events/wrap config event-callback)
                           (store/wrap config)))))
 
 (defn make-h2m-app [config]
   (-> handler
-      (wrap-h2m-app :erp config erp/make-handler)
-      (wrap-h2m-app :wms config wms/make-handler)
-      (wrap-h2m-app :tms-1 config tms/make-handler)
-      (wrap-h2m-app :tms-2 config tms/make-handler)
+      (wrap-h2m-app :erp config erp/make-handler erp/make-event-handler)
+      (wrap-h2m-app :wms config wms/make-handler nil)
+      (wrap-h2m-app :tms-1 config tms/make-handler tms/make-event-handler)
+      (wrap-h2m-app :tms-2 config tms/make-handler tms/make-event-handler)
 
       (master-data/wrap config)
 
@@ -164,6 +168,12 @@
   (-> (constantly nil)
       (wrap-m2m-app :wms config wms.events/make-handler)))
 
+(defn wrap-base-url
+  "Set base-url that should be used for generating urls back to the service."
+  [f base-url]
+  (fn [req]
+    (f (assoc req :base-url base-url))))
+
 (defn make-app [config]
   (let [ ;; NOTE: single atom to keep store because of publication among apps
         store-atom (store/get-store-atom (-> config :store :file))
@@ -171,4 +181,5 @@
     (-> (routes (make-m2m-app config)
                 (make-h2m-app config))
         (wrap-stacktrace)
+        (wrap-base-url (:base-url config))
         (wrap-log))))

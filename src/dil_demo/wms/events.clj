@@ -39,10 +39,8 @@
                                   " server_eori=\"" eori "\""
                                   " server_token_endpoint=\"" token-endpoint "\"")))))))
 
-(defn url-for [{:keys [scheme server-name server-port user-number app-id]}
-               event-id]
-  (str (name scheme) "://" server-name ":" server-port
-       "/" user-number "/" (name app-id) "/event/" event-id))
+(defn url-for [{:keys [base-url user-number app-id]} event-id]
+  (str base-url "/" user-number "/" (name app-id) "/event/" event-id))
 
 (defn transport-order-gate-out-targets [transport-order]
   #{(-> transport-order :owner :eori)

@@ -197,6 +197,13 @@
 (defn get-trip [store id]
   (get-in store [:trips id]))
 
+(defn get-trip-by-ref [store ref]
+  (->> store
+       :trips
+       vals
+       (some #(when (= (:ref %) ref)
+                %))))
+
 
 
 (def ^:dynamic *slug* nil)
@@ -236,13 +243,15 @@
                    :slug-postfix "-chauffeur"))))
 
      (DELETE "/trip-:id" {::store/keys [store]
+                          :keys        [user-number]
                           {:keys [id]} :params}
        (when-let [trip (get-trip store id)]
          (-> "deleted"
              (redirect :see-other)
              (assoc :flash {:success "Opdracht verwijderd"}
                     ::store/commands [[:delete! :trips id]]
-                    ::events/commands [[:unsubscribe! (trip->topic trip)]]))))
+                    ::events/commands [[:unsubscribe! (assoc (trip->topic trip)
+                                                             :user-number user-number)]]))))
 
      (GET "/deleted" {:keys [flash]}
        (render "Opdracht verwijderd"
@@ -258,6 +267,7 @@
                  flash)))
 
      (POST "/assign-:id" {::store/keys            [store]
+                          :keys                   [user-number]
                           {:keys [id
                                   driver-id-digits
                                   license-plate]} :params}
@@ -270,7 +280,8 @@
                (redirect :see-other)
                (assoc :flash {:success (str "Chauffeur en kenteken toegewezen aan opdracht " ref)}
                       ::store/commands [[:put! :trips trip]]
-                      ::events/commands [[:subscribe! (trip->topic trip)]])))))
+                      ::events/commands [[:subscribe! (assoc (trip->topic trip)
+                                                             :user-number user-number)]])))))
 
      (GET "/assigned-:id" {:keys        [flash]
                            ::store/keys [store]
@@ -289,7 +300,7 @@
                                           (update :carriers dissoc own-eori)))
                  flash)))
 
-     (POST "/outsource-:id" {:keys                [master-data ::store/store]
+     (POST "/outsource-:id" {:keys                [master-data ::store/store user-number]
                              {:keys [id carrier]} :params}
        (when-let [trip (get-trip store id)]
          (let [trip (update trip :carriers conj carrier)]
@@ -300,7 +311,8 @@
                                              {:otm-object (otm/->trip trip master-data)}]]}
                       ::store/commands [[:put! :trips (assoc trip :status otm/status-outsourced)]
                                         [:publish! :trips (:eori carrier) trip]]
-                      ::events/commands [[:subscribe! (trip->topic trip)]])))))
+                      ::events/commands [[:subscribe! (assoc (trip->topic trip)
+                                                             :user-number user-number)]])))))
 
      (GET "/outsourced-:id" {:keys        [flash master-data ::store/store]
                              {:keys [id]} :params}

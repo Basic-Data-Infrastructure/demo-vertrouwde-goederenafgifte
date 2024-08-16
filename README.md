@@ -23,6 +23,7 @@ Use the following environment variables to configure this demo:
 
 - `PORT`: the port number to listen for HTTP requests, defaults to `8080`
 - `STORE_FILE`: the file to store state in, defaults to `/tmp/dil-demo.edn`
+- `BASE_URL`: base URL this application is reachable from, defaults to `http://localhost:8080`
 
 Authentication:
 

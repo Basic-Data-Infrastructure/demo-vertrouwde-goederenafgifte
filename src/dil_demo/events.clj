@@ -101,32 +101,41 @@
 
 (defn- make-on-message-handler
   [{:keys [eori events-atom] :as config}
-   [owner-eori topic]]
+   [owner-eori topic user-number :as subscription] callback-fn]
   {:pre [config owner-eori topic]}
 
-  (let [subscription [owner-eori topic eori]]
-    (fn on-message-handler [ws msg _last?]
-      (let [{:strs [type]} (json/read-str (str msg))]
-        (if (= "AUTH_CHALLENGE" type)
-          (let [token (get-token config)]
-            (log/debug "Responding to AUTH_CHALLENGE" subscription)
-            (->> {:type         "AUTH_RESPONSE"
-                  :authResponse {:clientVersion   "v21"
-                                 :protocolVersion 21
-                                 :response        {:authMethodName "token"
-                                                   :authData       token}}}
-                 (json/json-str)
-                 (ws/send! ws)))
-          (try
-            (let [{:keys [messageId] :as event}
-                  (-> msg
-                      (str)
-                      (json/read-str :key-fn keyword)
-                      (update :payload (comp json/read-str decode-base64)))]
-              (log/debug "Received event" subscription event)
-              (swap! events-atom assoc messageId [subscription event]))
-            (catch Throwable e
-              (log/error "Parsing message failed" subscription e))))))))
+  (fn on-message-handler [ws msg _last?]
+    (let [{:strs [type]} (json/read-str (str msg))]
+      (if (= "AUTH_CHALLENGE" type)
+        (let [token (get-token config)]
+          (log/debug "Responding to AUTH_CHALLENGE" subscription)
+          (->> {:type         "AUTH_RESPONSE"
+                :authResponse {:clientVersion   "v21"
+                               :protocolVersion 21
+                               :response        {:authMethodName "token"
+                                                 :authData       token}}}
+               (json/json-str)
+               (ws/send! ws)))
+        (try
+          (let [{:keys [messageId] :as event}
+                (-> msg
+                    (str)
+                    (json/read-str :key-fn keyword)
+                    (update :payload (comp json/read-str decode-base64)))]
+            (log/debug "Received event" subscription event)
+            (swap! events-atom assoc messageId [subscription event])
+            (let [event (assoc event
+                               :owner-eori owner-eori
+                               :eori eori
+                               :user-number user-number
+                               :subscription subscription)]
+              (try (callback-fn event)
+                   (catch Throwable e
+                     (log/error "Handling event failed"
+                                e
+                                event)))))
+          (catch Throwable e
+            (log/error "Parsing message failed" subscription e)))))))
 
 ;; live websockets
 (defonce websockets-atom (atom nil))
@@ -144,13 +153,12 @@
     (swap! websockets-atom dissoc k)))
 
 (defn subscribe!
-  "Subscribe to websocket for `[owner-eori topic]`.  Authorization
+  "Subscribe to websocket for `[owner-eori topic user-number]`.  Authorization
   should already been secured by owner."
   [{:keys [eori subscriptions-atom] {:keys [url]} :pulsar :as config}
-   [owner-eori topic]]
+   [owner-eori topic _user-number :as subscription] callback-fn]
   {:pre [url config owner-eori topic]}
-  (let [subscription [owner-eori topic eori]
-        open-websocket
+  (let [open-websocket
         (fn open-websocket []
           (log/info "Starting consumer" subscription)
 
@@ -168,7 +176,7 @@
             :on-open (fn on-open [_ws]
                        (log/debug "Consumer websocket open" subscription))
 
-            :on-message (make-on-message-handler config [owner-eori topic])
+            :on-message (make-on-message-handler config subscription callback-fn)
 
             :on-close (fn on-close [_ws status reason]
                         (log/debug "Consumer websocket closed" subscription status reason)
@@ -241,7 +249,7 @@
 
 
 (defn- -wrap
-  [app {:keys [eori pulsar client-data]}]
+  [app {:keys [eori pulsar client-data]} callback-fn]
   (let [events-atom        (load-events-atom eori)
         subscriptions-atom (load-subscriptions-atom eori)
 
@@ -253,7 +261,7 @@
 
     ;; reopen websockets
     (doseq [subscription @subscriptions-atom]
-      (subscribe! config subscription))
+      (subscribe! config subscription callback-fn))
 
     (fn events-wrapper [req]
       (let [{::keys [commands] :as res} (-> req
@@ -279,14 +287,14 @@
                                         {:ishare-log log}])))
 
              :subscribe!
-             (let [{:keys [owner-eori topic]} opts]
-               (subscribe! config [owner-eori topic])
+             (let [{:keys [owner-eori topic user-number]} opts]
+               (subscribe! config [owner-eori topic user-number] callback-fn)
                (w/append-explanation res
                                      [(str "Geabonneerd op '" owner-eori "#" topic "'")]))
 
              :unsubscribe!
-             (let [{:keys [owner-eori topic]} opts]
-               (unsubscribe! config [owner-eori topic])
+             (let [{:keys [owner-eori topic user-number]} opts]
+               (unsubscribe! config [owner-eori topic user-number])
                (w/append-explanation res
                                      [(str "Abonnement '" owner-eori "#" topic "' opgegeven")]))
 
@@ -300,7 +308,17 @@
 
 (defn wrap
   "Ring middleware providing event access."
-  [app config]
+  [app config callback-fn]
   (-> app
       (events.web/wrap config)
-      (-wrap config)))
+      (-wrap config callback-fn)))
+
+
+(defn wrap-fetch-event
+  "Wrapper for event handlers to automatically fetch event data from remote services."
+  [f client-data]
+  (fn [pulse]
+    (let [event-data (-> (events.web/fetch-event (:payload pulse) client-data)
+                         :body
+                         (json/read-str :key-fn keyword))]
+      (f (assoc pulse :event-data event-data)))))

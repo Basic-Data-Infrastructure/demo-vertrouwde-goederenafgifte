@@ -27,6 +27,7 @@
 (defn do-request [method path & [params]]
   ((sut/make-handler {:id :wms, :site-name "WMS"})
    (assoc (request method path params)
+          :base-url "http://example.com"
           ::store/store store
           :user-number 1
           :app-id :wms ;; TODO rename app-id to slug or whatever
@@ -65,7 +66,7 @@
       (testing "event triggered"
         (is (= (update-in event-commands [0 1] dissoc :message)
                [[:send! {:topic "31415", :owner-eori "EU.EORI.OWNER"}]]))
-        (is (re-matches #"http://localhost:80/1/wms/event/[0-9a-z-]+"
+        (is (re-matches #"http://example.com/1/wms/event/[0-9a-z-]+"
                         (get-in event-commands [0 1 :message]))))
 
       (testing "event payload stored"

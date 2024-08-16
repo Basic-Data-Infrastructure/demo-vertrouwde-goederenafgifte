@@ -148,6 +148,13 @@
 (defn get-consignment [store id]
   (get-in store [:consignments id]))
 
+(defn get-consignment-by-ref [store ref]
+  (->> store
+      :consignments
+      vals
+      (some #(when (= (:ref %) ref)
+               %))))
+
 (defn min-ref [user-number]
   (let [dt (LocalDateTime/now)]
     (loop [result  0
@@ -223,7 +230,7 @@
              (assoc :flash {:success (str "Order " (:ref consignment) " aangepast")})
              (assoc ::store/commands [[:put! :consignments consignment]]))))
 
-     (DELETE "/consignment-:id" {:keys        [::store/store]
+     (DELETE "/consignment-:id" {:keys        [::store/store user-number]
                                  {:keys [id]} :params}
        (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
          (-> "deleted"
@@ -231,7 +238,8 @@
              (assoc :flash {:success (str "Order " (:ref consignment) " verwijderd")}
                     ::store/commands [[:delete! :consignments id]]
                     ::events/commands [[:unsubscribe! {:topic      ref
-                                                       :owner-eori eori}]]))))
+                                                       :owner-eori eori
+                                                       :user-number user-number}]]))))
 
      (GET "/deleted" {:keys [flash]}
        (render "Order verwijderd"
@@ -245,7 +253,8 @@
                  (publish-consignment consignment master-data)
                  flash)))
 
-     (POST "/publish-:id" {:keys        [master-data ::store/store]
+     (POST "/publish-:id" {:keys        [master-data ::store/store
+                                         user-number]
                            {:keys [id]} :params}
        (when-let [consignment (get-consignment store id)]
          (let [consignment     (assoc consignment :status otm/status-requested)
@@ -277,7 +286,8 @@
                                            :write-eoris [warehouse-eori]}]
                                          [:subscribe!
                                           {:topic      ref
-                                           :owner-eori eori}]])))))
+                                           :owner-eori eori
+                                           :user-number user-number}]])))))
 
      (GET "/published-:id" {:keys        [flash master-data ::store/store]
                             {:keys [id]} :params}

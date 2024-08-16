@@ -9,7 +9,9 @@
   (:require [clojure.tools.logging.readable :as log]
             [dil-demo.ishare.client :as ishare-client]
             [dil-demo.ishare.policies :as policies]
+            [dil-demo.events :as events]
             [dil-demo.store :as store]
+            [dil-demo.otm :as otm]
             [dil-demo.tms.web :as tms.web]
             [dil-demo.web-utils :as w]))
 
@@ -149,3 +151,17 @@
 (defn make-handler [config]
   (-> (tms.web/make-handler config)
       (wrap-delegation config)))
+
+(defn base-event-handler
+  [{:keys                         [::store/store subscription] :as event
+    {:keys [bizStep disposition]} :event-data}]
+  (let [ref (second subscription)]
+    (when-let [trip (tms.web/get-trip-by-ref store ref)]
+      (when (and (= bizStep "departing")
+                 (= disposition "in_transit"))
+        (assoc event ::store/commands
+               [[:put! :trips (assoc trip :status otm/status-in-transit)]])))))
+
+(defn make-event-handler [{:keys [client-data] :as _config}]
+  (-> base-event-handler
+      (events/wrap-fetch-event client-data)))
