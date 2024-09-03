@@ -64,3 +64,25 @@
       (binding [*client-id* other-eori]
         (let [{:keys [status]} (do-request :get "/event/31415")]
           (is (= http-status/forbidden status)))))))
+
+(defn slurp-pem-data [s]
+  (->> s
+       (slurp)
+       (re-matches #"(?s)-----BEGIN (?:PRIVATE KEY|CERTIFICATE)-----\n(.*)-----END (?:PRIVATE KEY|CERTIFICATE)-----\n?")
+       (second)))
+
+(deftest make-handler
+  (testing "availability of /connect/token endpoint"
+    (let [priv-key    (slurp-pem-data "resources/test/pem/client.key.pem")
+          pub-key     (slurp-pem-data "resources/test/pem/client.cert.pem")
+          client-data #:ishare{:client-id          eori
+                               :private-key        priv-key
+                               :x5c                [pub-key]
+                               :satellite-id       other-eori
+                               :satellite-endpoint "https://example.com"}
+          handler     (sut/make-handler {:eori        eori
+                                         :client-data client-data})]
+      (is (= http-status/method-not-allowed
+             (:status (handler (request :get "/connect/token")))))
+      (is (= http-status/bad-request
+             (:status (handler (request :post "/connect/token"))))))))

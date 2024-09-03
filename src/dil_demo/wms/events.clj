@@ -6,11 +6,11 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.wms.events
-  (:require [dil-demo.ishare.data-source :as ishare-data-source]
-            [dil-demo.ishare.jwt :as jwt]
+ (:require [dil-demo.ishare.jwt :as jwt]
             [dil-demo.store :as store]
             [nl.jomco.http-status-codes :as http-status]
-            [org.bdinetwork.assocation-register.authentication :as authentication]
+            [org.bdinetwork.service-provider.authentication :as authentication]
+            [org.bdinetwork.service-provider.remote-association :refer [remote-association]]
             [ring.middleware.json :refer [wrap-json-response]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.util.response :as response]))
@@ -58,10 +58,10 @@
    :bizLocation (or (:location-name load)
                     (eori->name (:location-eori load)))})
 
-(defn wrap-data-source [app client-data]
-  (let [data-source (ishare-data-source/ishare-client-data-source-factory client-data)]
-    (fn data-source-wrapper [req]
-      (app (assoc req :data-source data-source)))))
+(defn wrap-association [app client-data]
+  (let [association (remote-association client-data)]
+    (fn association-wrapper [req]
+      (app (assoc req :association association)))))
 
 (defn make-handler [{:keys                                   [eori client-data]
                      {:ishare/keys [private-key x5c]} :client-data}]
@@ -73,6 +73,6 @@
                                              :access-token-ttl-seconds 10})
 
         ;; following middleware needed to maken wrap-authenication work
-        (wrap-data-source client-data)
+        (wrap-association client-data)
         (wrap-params)
         (wrap-json-response))))

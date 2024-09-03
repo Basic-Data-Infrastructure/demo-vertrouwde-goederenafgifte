@@ -5,8 +5,8 @@
 ;;;
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
-{:deps {org.bdinetwork/association-registry {:git/url "https://github.com/Basic-Data-Infrastructure/association-registry.git"
-                                             :git/sha "cdb64244948231cde6051c6398bbc094d94d6042"}
+{:deps {org.bdinetwork/service-provider-authentication {:git/url "https://github.com/Basic-Data-Infrastructure/service-provider-authentication.git"
+                                                        :git/sha "879eb70217395ab552173d6e0ebf96301c134241"}
 
         compojure/compojure              {:mvn/version "1.7.1"}
         hiccup/hiccup                    {:mvn/version "2.0.0-RC3"}
@@ -14,6 +14,7 @@
         ring/ring-defaults               {:mvn/version "0.5.0"}
         ring/ring-jetty-adapter          {:mvn/version "1.12.2"}
         ring/ring-devel                  {:mvn/version "1.12.2"}
+        ring/ring-json                   {:mvn/version "0.5.1"}
         org.clojure/data.json            {:mvn/version "2.5.0"}
         org.babashka/http-client         {:mvn/version "0.4.19"}
         org.babashka/json                {:mvn/version "0.1.6"}
