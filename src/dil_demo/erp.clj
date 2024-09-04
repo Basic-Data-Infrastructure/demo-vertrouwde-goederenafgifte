@@ -8,11 +8,11 @@
 (ns dil-demo.erp
   (:require [clojure.tools.logging :as log]
             [dil-demo.erp.web :as erp.web]
-            [dil-demo.ishare.client :as ishare-client]
-            [dil-demo.ishare.policies :as policies]
             [dil-demo.events :as events]
+            [dil-demo.ishare.policies :as policies]
             [dil-demo.store :as store]
-            [dil-demo.web-utils :as w]))
+            [dil-demo.web-utils :as w]
+            [org.bdinetwork.ishare.client :as ishare-client]))
 
 (defn- map->delegation-evidence
   [client-id effect {:keys [ref load] :as obj}]

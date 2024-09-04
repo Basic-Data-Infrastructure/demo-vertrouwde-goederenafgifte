@@ -6,11 +6,12 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.wms.events
- (:require [dil-demo.ishare.jwt :as jwt]
-            [dil-demo.store :as store]
+  (:require [dil-demo.store :as store]
             [nl.jomco.http-status-codes :as http-status]
+            [org.bdinetwork.ishare.jwt :as jwt]
             [org.bdinetwork.service-provider.authentication :as authentication]
-            [org.bdinetwork.service-provider.remote-association :refer [remote-association]]
+            [org.bdinetwork.service-provider.remote-association
+             :refer [remote-association]]
             [ring.middleware.json :refer [wrap-json-response]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.util.response :as response]))
@@ -65,7 +66,7 @@
 
 (defn make-handler [{:keys                                   [eori client-data]
                      {:ishare/keys [private-key x5c]} :client-data}]
-  (let [public-key (jwt/x5c->public-key x5c)]
+  (let [public-key (jwt/x5c->first-public-key x5c)]
     (-> handler
         (authentication/wrap-authentication {:server-id                eori
                                              :public-key               public-key

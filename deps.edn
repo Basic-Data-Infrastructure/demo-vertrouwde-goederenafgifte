@@ -6,7 +6,13 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 {:deps {org.bdinetwork/service-provider-authentication {:git/url "https://github.com/Basic-Data-Infrastructure/service-provider-authentication.git"
-                                                        :git/sha "879eb70217395ab552173d6e0ebf96301c134241"}
+                                                        :git/sha "aecb36a82bfc5e10945f3c981ed758d7bfb71cad"}
+
+        org.bdinetwork/clj-ishare-client {:git/url "https://github.com/Basic-Data-Infrastructure/clj-ishare-client.git"
+                                          :git/sha "e68a84b0c738578e5bf6b8314203a4a6c2ce4cce"}
+
+        org.bdinetwork/clj-ishare-jwt {:git/url "https://github.com/Basic-Data-Infrastructure/clj-ishare-jwt.git"
+                                       :git/sha "f7590e16c50e2a274c9307bd3be21ef179f9dce5"}
 
         compojure/compojure              {:mvn/version "1.7.1"}
         hiccup/hiccup                    {:mvn/version "2.0.0-RC3"}

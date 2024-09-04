@@ -7,13 +7,13 @@
 
 (ns dil-demo.tms
   (:require [clojure.tools.logging.readable :as log]
-            [dil-demo.ishare.client :as ishare-client]
-            [dil-demo.ishare.policies :as policies]
             [dil-demo.events :as events]
-            [dil-demo.store :as store]
+            [dil-demo.ishare.policies :as policies]
             [dil-demo.otm :as otm]
+            [dil-demo.store :as store]
             [dil-demo.tms.web :as tms.web]
-            [dil-demo.web-utils :as w]))
+            [dil-demo.web-utils :as w]
+            [org.bdinetwork.ishare.client :as ishare-client]))
 
 (defn- ishare-exec! [{:keys [client-data] :as req} title cmd]
   (binding [ishare-client/log-interceptor-atom (atom [])]

@@ -12,7 +12,6 @@
             [compojure.route :refer [resources]]
             [dil-demo.erp :as erp]
             [dil-demo.events :as events]
-            [dil-demo.ishare.client :as ishare-client]
             [dil-demo.master-data :as master-data]
             [dil-demo.sites :refer [sites]]
             [dil-demo.store :as store]
@@ -21,7 +20,9 @@
             [dil-demo.wms :as wms]
             [dil-demo.wms.events :as wms.events]
             [nl.jomco.ring-session-ttl-memory :refer [ttl-memory-store]]
-            [ring.middleware.basic-authentication :refer [wrap-basic-authentication]]
+            [org.bdinetwork.ishare.client :as ishare-client]
+            [ring.middleware.basic-authentication
+             :refer [wrap-basic-authentication]]
             [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
             [ring.middleware.stacktrace :refer [wrap-stacktrace]]
             [ring.util.response :refer [content-type not-found redirect]])

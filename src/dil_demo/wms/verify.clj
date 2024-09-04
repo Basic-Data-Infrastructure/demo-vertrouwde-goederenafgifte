@@ -6,8 +6,8 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.wms.verify
-  (:require [dil-demo.ishare.client :as ishare-client]
-            [dil-demo.ishare.policies :as policies]))
+  (:require [dil-demo.ishare.policies :as policies]
+            [org.bdinetwork.ishare.client :as ishare-client]))
 
 (defn ishare-get-delegation-evidence!
   [{:keys [client-data] :as req}

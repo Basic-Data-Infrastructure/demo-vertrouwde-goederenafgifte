@@ -11,9 +11,9 @@
             [clojure.string :as string]
             [compojure.core :refer [GET routes routing]]
             [dil-demo.http-utils :as http-utils]
-            [dil-demo.ishare.client :as ishare-client]
             [dil-demo.web-utils :as w]
-            [nl.jomco.http-status-codes :as http-status]))
+            [nl.jomco.http-status-codes :as http-status]
+            [org.bdinetwork.ishare.client :as ishare-client]))
 
 (defn fetch-event [url client-data]
   (let [req {:uri url, :method :get}

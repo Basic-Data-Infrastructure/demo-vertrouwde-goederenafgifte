@@ -12,10 +12,10 @@
             [clojure.java.io :as io]
             [clojure.tools.logging.readable :as log]
             [dil-demo.events.web :as events.web]
-            [dil-demo.ishare.client :as ishare-client]
-            [dil-demo.web-utils :as w])
-  (:import (java.util Base64)
-           (java.time Instant)))
+            [dil-demo.web-utils :as w]
+            [org.bdinetwork.ishare.client :as ishare-client])
+  (:import (java.time Instant)
+           (java.util Base64)))
 
 (defn- encode-base64 [^String s]
   (String. (.encode (Base64/getEncoder) (.getBytes s))))

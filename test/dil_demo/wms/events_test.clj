@@ -6,7 +6,8 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.wms.events-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [clojure.string :as string]
+            [clojure.test :refer [deftest is testing]]
             [dil-demo.http-utils :as http-utils]
             [dil-demo.store :as store]
             [dil-demo.wms.events :as sut]
@@ -66,10 +67,13 @@
           (is (= http-status/forbidden status)))))))
 
 (defn slurp-pem-data [s]
-  (->> s
-       (slurp)
-       (re-matches #"(?s)-----BEGIN (?:PRIVATE KEY|CERTIFICATE)-----\n(.*)-----END (?:PRIVATE KEY|CERTIFICATE)-----\n?")
-       (second)))
+  (string/replace
+   (->> s
+        (slurp)
+        (re-matches #"(?s)-----BEGIN (?:PRIVATE KEY|CERTIFICATE)-----\n(.*)-----END (?:PRIVATE KEY|CERTIFICATE)-----\n?")
+        (second)
+        )
+   #"\n" ""))
 
 (deftest make-handler
   (testing "availability of /connect/token endpoint"
