@@ -143,7 +143,7 @@
 
 
 (defn get-consignments [store]
-  (->> store :consignments vals (sort-by :creation-date) (reverse)))
+  (->> store :consignments vals (sort-by :ref) (reverse)))
 
 (defn get-consignment [store id]
   (get-in store [:consignments id]))

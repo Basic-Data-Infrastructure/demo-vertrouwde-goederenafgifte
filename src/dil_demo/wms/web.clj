@@ -142,7 +142,7 @@
 
 
 (defn get-transport-orders [store]
-  (->> store :transport-orders vals (sort-by :creation-date) (reverse)))
+  (->> store :transport-orders vals (sort-by :ref) (reverse)))
 
 (defn get-transport-order [store id]
   (get-in store [:transport-orders id]))
