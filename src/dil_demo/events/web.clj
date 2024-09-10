@@ -65,28 +65,21 @@
 
 
 
-(defn- list-events [events]
+(defn- list-pulses [pulses]
   [:main
-   (when-not (seq events)
+   (when-not (seq pulses)
      [:article.empty
-      [:p "Nog geen events geregistreerd.."]])
-   (for [{:keys [id topic published-at payload]}
-         (->> events
-              (map (fn [[msgId [topic {:keys [:publishTime :payload]}]]]
-                     {:id           msgId
-                      :topic        (string/join "/" (take 2 topic))
-                      :published-at publishTime
-                      :payload      payload}))
-              (sort-by :published-at)
-              reverse)]
+      [:p "Nog geen pulses geregistreerd.."]])
+   (for [{:keys [id publishTime payload subscription]}
+         (->> pulses vals (sort-by :publishTime) reverse)]
      [:article
       [:header
-       [:div.status published-at]
-       [:div.topic topic]
+       [:div.status publishTime]
+       [:div.subscription (string/join " / " subscription)]
        [:a {:href id}
         [:pre (w/to-json payload)]]]])])
 
-(defn- show-event [{:keys [flash] :as res}]
+(defn- show-pulse [{:keys [flash] :as res}]
   (let [res (dissoc res :flash)]
     [:main
      [:article
@@ -96,26 +89,26 @@
      (w/explanation (:explanation flash))]))
 
 (defn- make-handler
-  "Handler on /events/"
+  "Handler on /pulses/"
   [{:keys [id site-name client-data]}]
   (routes
-   (GET "/events/" {:keys [events flash]}
+   (GET "/pulses/" {:keys [pulses flash]}
      (w/render (name id)
-               (list-events events)
+               (list-pulses pulses)
                :flash flash
-               :title "Events"
+               :title "Pulses"
                :site-name site-name))
-   (GET "/events/:id" {:keys [events params flash]}
-     (when-let [[_ {:keys [payload]}] (get events (:id params))]
+   (GET "/pulses/:id" {:keys [pulses params flash]}
+     (when-let [{:keys [payload]} (get pulses (:id params))]
        (let [res (fetch-event payload client-data)]
          (w/render (name id)
-                   (show-event res)
+                   (show-pulse res)
                    :flash flash
-                   :title "Event"
+                   :title "Pulse"
                    :site-name site-name))))))
 
 (defn wrap
-  "Add route /events serving basic screen for viewing received events."
+  "Add route /pulses serving basic screen for viewing received pulses."
   [app config]
   (let [handler (make-handler config)]
     (fn [req]

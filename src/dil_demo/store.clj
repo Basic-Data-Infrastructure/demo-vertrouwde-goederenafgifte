@@ -90,5 +90,5 @@
   [app config]
   (fn store-wrapper [req]
     (process-store req
-                    (app (assoc-store req config))
-                    config)))
+                   (app (assoc-store req config))
+                   config)))

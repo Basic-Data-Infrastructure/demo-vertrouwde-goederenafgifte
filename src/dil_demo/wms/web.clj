@@ -214,10 +214,11 @@
                (assoc :flash {:success (str "Gate-out voor " ref " verstuurd")}
                       ::store/commands [[:put! :transport-orders
                                          (assoc transport-order :status otm/status-in-transit)]
-                                        [:put! :events {:id           event-id
-                                                        :targets      targets
-                                                        :content-type "application/json; charset=utf-8"
-                                                        :body         (json-str body)}]]
+                                        [:put! :events
+                                         {:id           event-id
+                                          :targets      targets
+                                          :content-type "application/json; charset=utf-8"
+                                          :body         (json-str body)}]]
                       ::events/commands [[:send! (-> transport-order
                                                      (transport-order->topic)
                                                      (assoc :message event-url))]])))))

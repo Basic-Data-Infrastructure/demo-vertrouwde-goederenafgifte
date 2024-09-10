@@ -51,7 +51,7 @@
    [:nav.bottom
     "Zie ook:"
     [:ul
-     [:li [:a {:href "events/"} "Events"]]]]])
+     [:li [:a {:href "pulses/"} "Pulses"]]]]])
 
 (defn edit-consignment [consignment {:keys [carriers warehouses]}]
   (f/form consignment {:method "POST"}

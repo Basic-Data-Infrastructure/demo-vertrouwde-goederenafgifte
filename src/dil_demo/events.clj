@@ -8,10 +8,9 @@
 (ns dil-demo.events
   (:require [babashka.http-client.websocket :as ws]
             [clojure.data.json :as json]
-            [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [clojure.tools.logging.readable :as log]
+            [clojure.tools.logging :as log]
             [dil-demo.events.web :as events.web]
+            [dil-demo.store :as store]
             [dil-demo.web-utils :as w]
             [org.bdinetwork.ishare.client :as ishare-client])
   (:import (java.time Instant)
@@ -100,7 +99,7 @@
       :ishare/result))
 
 (defn- make-on-message-handler
-  [{:keys [eori events-atom] :as config}
+  [{:keys [eori] :as config}
    [owner-eori topic user-number :as subscription] callback-fn]
   {:pre [config owner-eori topic]}
 
@@ -117,13 +116,12 @@
                (json/json-str)
                (ws/send! ws)))
         (try
-          (let [{:keys [messageId] :as event}
-                (-> msg
-                    (str)
-                    (json/read-str :key-fn keyword)
-                    (update :payload (comp json/read-str decode-base64)))]
+          (let [event (-> msg
+                          (str)
+                          (json/read-str :key-fn keyword)
+                          (update :payload (comp json/read-str decode-base64)))]
             (log/debug "Received event" subscription event)
-            (swap! events-atom assoc messageId [subscription event])
+
             (let [event (assoc event
                                :owner-eori owner-eori
                                :eori eori
@@ -155,7 +153,7 @@
 (defn subscribe!
   "Subscribe to websocket for `[owner-eori topic user-number]`.  Authorization
   should already been secured by owner."
-  [{:keys [eori subscriptions-atom] {:keys [url]} :pulsar :as config}
+  [{:keys [eori] {:keys [url]} :pulsar :as config}
    [owner-eori topic _user-number :as subscription] callback-fn]
   {:pre [url config owner-eori topic]}
   (let [open-websocket
@@ -193,18 +191,13 @@
                         (Thread/sleep sleep-before-reconnect-msec)
                         (swap! websockets-atom assoc subscription (open-websocket)))}))]
 
-    ;; register subscription for reconnection after restart
-    (swap! subscriptions-atom conj subscription)
-
     ;; register websocket for shutdown
     (swap! websockets-atom assoc subscription (open-websocket))))
 
 (defn unsubscribe!
   "Unsubscribe (and close)."
-  [{:keys [subscriptions-atom]}
-   [owner-eori topic]]
+  [_ [owner-eori topic]]
   (let [subscription [owner-eori topic]]
-    (swap! subscriptions-atom disj subscription)
     (when-let [websocket (get @websockets-atom subscription)]
       (ws/close! @websocket)
       (swap! websockets-atom dissoc subscription))))
@@ -229,82 +222,57 @@
 
 
 
-(defn- load-atom [file-name empty-val]
-  (let [f (io/file file-name)
-        a (atom (if (.exists f) (edn/read-string (slurp f)) empty-val))]
-    (add-watch a nil
-               (fn [_key _ref old new]
-                 (when (not= old new)
-                   (spit (io/file file-name) (pr-str new)))))
-    a))
+(defn exec! [res config callback-fn]
+  (reduce
+   (fn [res [cmd & [opts]]]
+     (log/debug "handling" cmd opts)
 
-(defn- load-events-atom [eori] ;; FIXME, use separate environment per "user-number"
-  (let [file-name (str "/tmp/dil-demo-events-" eori ".edn")] ;; TODO config
-    (load-atom file-name {})))
+     (case cmd
+       :authorize!
+       (let [{:keys [owner-eori topic
+                     read-eoris write-eoris]} opts
 
-(defn- load-subscriptions-atom [eori] ;; FIXME, use separate environment per "user-number"
-  (let [file-name (str "/tmp/dil-demo-subscription-" eori ".edn")] ;; TODO config
-    (load-atom file-name #{})))
+             [result log]
+             (authorize! config [owner-eori topic] read-eoris write-eoris)]
+         (cond-> res
+           (not result)
+           (assoc-in [:flash :error] "Aanmaken AR policy mislukt")
 
-
+           :and
+           (w/append-explanation ["Toevoegen policy toegang event broker"
+                                  {:ishare-log log}])))
+
+       :subscribe!
+       (let [{:keys [owner-eori topic user-number]} opts]
+         (subscribe! config [owner-eori topic user-number] callback-fn)
+         (w/append-explanation res
+                               [(str "Geabonneerd op '" owner-eori "#" topic "'")]))
+
+       :unsubscribe!
+       (let [{:keys [owner-eori topic user-number]} opts]
+         (unsubscribe! config [owner-eori topic user-number])
+         (w/append-explanation res
+                               [(str "Abonnement '" owner-eori "#" topic "' opgegeven")]))
+
+       :send!
+       (let [{:keys [owner-eori topic message]} opts]
+         (send-message! config [owner-eori topic] message)
+         (w/append-explanation res
+                               [(str "Bericht gestuurd naar '" owner-eori "#" topic "' gestuurd") {:event message}]))))
+   res
+   (::commands res)))
 
 (defn- -wrap
   [app {:keys [eori pulsar client-data]} callback-fn]
-  (let [events-atom        (load-events-atom eori)
-        subscriptions-atom (load-subscriptions-atom eori)
-
-        config {:client-data        client-data
+  (let [config {:client-data        client-data
                 :eori               eori
-                :pulsar             pulsar
-                :events-atom        events-atom
-                :subscriptions-atom subscriptions-atom}]
-
-    ;; reopen websockets
-    (doseq [subscription @subscriptions-atom]
-      (subscribe! config subscription callback-fn))
+                :pulsar             pulsar}]
 
     (fn events-wrapper [req]
-      (let [{::keys [commands] :as res} (-> req
-                                            (assoc :events @events-atom)
-                                            (app))]
-        (reduce
-         (fn [res [cmd & [opts]]]
-           (log/debug "handling" cmd opts)
-
-           (case cmd
-             :authorize!
-             (let [{:keys [owner-eori topic
-                           read-eoris write-eoris]} opts
-
-                   [result log]
-                   (authorize! config [owner-eori topic] read-eoris write-eoris)]
-               (cond-> res
-                 (not result)
-                 (assoc-in [:flash :error] "Aanmaken AR policy mislukt")
-
-                 :and
-                 (w/append-explanation ["Toevoegen policy toegang event broker"
-                                        {:ishare-log log}])))
-
-             :subscribe!
-             (let [{:keys [owner-eori topic user-number]} opts]
-               (subscribe! config [owner-eori topic user-number] callback-fn)
-               (w/append-explanation res
-                                     [(str "Geabonneerd op '" owner-eori "#" topic "'")]))
-
-             :unsubscribe!
-             (let [{:keys [owner-eori topic user-number]} opts]
-               (unsubscribe! config [owner-eori topic user-number])
-               (w/append-explanation res
-                                     [(str "Abonnement '" owner-eori "#" topic "' opgegeven")]))
-
-             :send!
-             (let [{:keys [owner-eori topic message]} opts]
-               (send-message! config [owner-eori topic] message)
-               (w/append-explanation res
-                                     [(str "Bericht gestuurd naar '" owner-eori "#" topic "' gestuurd") {:event message}]))))
-         res
-         commands)))))
+      (-> req
+          (assoc :pulses (-> req (get-in [::store/store :pulses])))
+          (app)
+          (exec! config callback-fn)))))
 
 (defn wrap
   "Ring middleware providing event access."
@@ -314,11 +282,23 @@
       (-wrap config callback-fn)))
 
 
-(defn wrap-fetch-event
-  "Wrapper for event handlers to automatically fetch event data from remote services."
+(defn wrap-fetch-and-store-event
+  "Wrapper for event handlers to automatically fetch event data from
+  remote services and store it."
   [f client-data]
-  (fn [pulse]
-    (let [event-data (-> (events.web/fetch-event (:payload pulse) client-data)
-                         :body
-                         (json/read-str :key-fn keyword))]
-      (f (assoc pulse :event-data event-data)))))
+  (fn fetch-event-wrapper [{:keys [subscription] :as pulse}]
+    (log/debug "Got pulse" pulse)
+    (let [{:keys [eventId user-number]
+           :as   event-data}
+          (-> pulse
+              :payload
+              (events.web/fetch-event client-data)
+              :body
+              (json/read-str :key-fn keyword)
+              (assoc :subscription subscription))]
+      (-> pulse
+          (assoc :event-data event-data
+                 :user-number user-number)
+          (update ::store/commands conj
+                  [:put! :pulses (assoc pulse :id eventId)])
+          (f)))))

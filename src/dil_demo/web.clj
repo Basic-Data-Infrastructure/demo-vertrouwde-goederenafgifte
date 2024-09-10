@@ -110,13 +110,15 @@
                  (assoc :user-number basic-authentication))
              req)))))
 
-(defn wrap-h2m-app [app id {:keys [pulsar store-atom] :as config} make-handler make-event-handler]
+(defn wrap-h2m-app [app id {:keys [pulsar store-atom] :as config}
+                    make-handler
+                    make-event-handler]
   (let [config         (get config id)
         config         (assoc config
-                       :id          id
-                       :client-data (ishare-client/->client-data config)
-                       :pulsar      pulsar
-                       :store-atom  store-atom)
+                              :id          id
+                              :client-data (ishare-client/->client-data config)
+                              :pulsar      pulsar
+                              :store-atom  store-atom)
         event-callback (-> (if make-event-handler
                              (make-event-handler config)
                              (constantly nil))

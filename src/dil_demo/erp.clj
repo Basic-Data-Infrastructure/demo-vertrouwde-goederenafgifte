@@ -10,6 +10,7 @@
             [dil-demo.erp.web :as erp.web]
             [dil-demo.events :as events]
             [dil-demo.ishare.policies :as policies]
+            [dil-demo.otm :as otm]
             [dil-demo.store :as store]
             [dil-demo.web-utils :as w]
             [org.bdinetwork.ishare.client :as ishare-client]))
@@ -101,9 +102,29 @@
     (when-let [consignment (erp.web/get-consignment-by-ref store ref)]
       (when (and (= bizStep "departing")
                  (= disposition "in_transit"))
-        (assoc event ::store/commands
-                     [[:put! :consignments (assoc consignment :status "inTransit")]])))))
+        (update event ::store/commands conj
+                [:put! :consignments (assoc consignment :status otm/status-in-transit)])))))
 
-(defn make-event-handler [{:keys [client-data] :as _config}]
-  (-> base-event-handler
-      (events/wrap-fetch-event client-data)))
+(defn make-event-handler [{:keys                      [client-data store-atom]
+                           {:ishare/keys [client-id]} :client-data
+                           :as                        config}]
+  (let [handler  (-> base-event-handler
+                     (events/wrap-fetch-and-store-event client-data))
+        commands (->> @store-atom
+                      (mapcat (fn [[user-number user-store]]
+                                (map (fn [{:keys [ref]}]
+                                       {:topic       ref
+                                        :owner-eori  client-id
+                                        :user-number user-number})
+                                     (->> (get user-store client-id)
+                                          :consignments
+                                          vals
+                                          (filter #(= otm/status-requested (:status %)))))))
+                      (map (fn [sub] [:subscribe! sub])))]
+    (when (seq commands)
+      ;; TODO handler needs store wrapper to put events in store
+      (events/exec! {::events/commands commands} config
+                    (fn [& args]
+                      (apply handler args))))
+
+    handler))

@@ -159,9 +159,10 @@
     (when-let [trip (tms.web/get-trip-by-ref store ref)]
       (when (and (= bizStep "departing")
                  (= disposition "in_transit"))
-        (assoc event ::store/commands
-               [[:put! :trips (assoc trip :status otm/status-in-transit)]])))))
+        (update event ::store/commands conj
+                [:put! :trips (assoc trip :status otm/status-in-transit)])))))
 
 (defn make-event-handler [{:keys [client-data] :as _config}]
+  ;; TODO setup subscriptions (all trips in store with status "assigned")
   (-> base-event-handler
-      (events/wrap-fetch-event client-data)))
+      (events/wrap-fetch-and-store-event client-data)))
