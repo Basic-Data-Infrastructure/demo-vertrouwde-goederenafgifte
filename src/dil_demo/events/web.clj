@@ -11,6 +11,7 @@
             [clojure.string :as string]
             [compojure.core :refer [GET routes routing]]
             [dil-demo.http-utils :as http-utils]
+            [dil-demo.store :as store]
             [dil-demo.web-utils :as w]
             [nl.jomco.http-status-codes :as http-status]
             [org.bdinetwork.ishare.client :as ishare-client]))
@@ -90,10 +91,10 @@
 
 (defn- make-handler
   "Handler on /pulses/"
-  [{:keys [id site-name client-data]}]
+  [{:keys [site-id site-name client-data]}]
   (routes
    (GET "/pulses/" {:keys [pulses flash]}
-     (w/render (name id)
+     (w/render (name site-id)
                (list-pulses pulses)
                :flash flash
                :title "Pulses"
@@ -101,7 +102,7 @@
    (GET "/pulses/:id" {:keys [pulses params flash]}
      (when-let [{:keys [payload]} (get pulses (:id params))]
        (let [res (fetch-event payload client-data)]
-         (w/render (name id)
+         (w/render (name site-id)
                    (show-pulse res)
                    :flash flash
                    :title "Pulse"
@@ -112,4 +113,6 @@
   [app config]
   (let [handler (make-handler config)]
     (fn [req]
-      (routing req handler app))))
+      (-> req
+          (assoc :pulses (-> req (get-in [::store/store :pulses])))
+          (routing handler app)))))

@@ -22,7 +22,7 @@
      :owner {:eori "EU.EORI.OWNER"}}}})
 
 (defn do-request [method path & [params]]
-  ((sut/make-handler {:id :tms, :site-name "TMS"})
+  ((sut/make-handler {:site-id :tms, :site-name "TMS"})
    (assoc (request method path params)
           ::store/store store
           :user-number 1
@@ -44,9 +44,10 @@
            event-commands ::events/commands} (do-request :delete "/trip-31415")]
       (is (= http-status/see-other status))
       (is (= [[:delete! :trips "31415"]] store-commands))
-      (is (= [[:unsubscribe! {:topic "31415",
-                              :owner-eori "EU.EORI.OWNER"
-                              :user-number 1}]]
+      (is (= [[:unsubscribe! {:topic       "31415",
+                              :owner-eori  "EU.EORI.OWNER"
+                              :user-number 1
+                              :site-id     :tms}]]
              event-commands))))
 
   (testing "GET /assign-not-found"
@@ -59,7 +60,7 @@
       (is (re-find #"\b31415\b" body))))
 
   (testing "POST /assign-31415"
-    (let [{:keys [status headers]
+    (let [{:keys          [status headers]
            store-commands ::store/commands
            event-commands ::events/commands}
           (do-request :post "/assign-31415"
@@ -68,9 +69,10 @@
       (is (= http-status/see-other status))
       (is (= "assigned-31415" (get headers "Location")))
       (is (= [:put! :trips] (->> store-commands first (take 2))))
-      (is (= [[:subscribe! {:topic "31415",
-                            :owner-eori "EU.EORI.OWNER"
-                            :user-number 1}]]
+      (is (= [[:subscribe! {:topic       "31415",
+                            :owner-eori  "EU.EORI.OWNER"
+                            :user-number 1
+                            :site-id     :tms}]]
              event-commands))))
 
   (testing "GET /outsource-31415"
@@ -80,7 +82,7 @@
       (is (re-find #"\b31415\b" body))))
 
   (testing "POST /outsource-31415"
-    (let [{:keys [status headers]
+    (let [{:keys          [status headers]
            store-commands ::store/commands
            event-commands ::events/commands}
           (do-request :post "/outsource-31415"
@@ -88,9 +90,10 @@
       (is (= http-status/see-other status))
       (is (= "outsourced-31415" (get headers "Location")))
       (is (= [:put! :trips] (->> store-commands first (take 2))))
-      (is (= [[:subscribe! {:topic "31415",
-                            :owner-eori "EU.EORI.OWNER"
-                            :user-number 1}]]
+      (is (= [[:subscribe! {:topic       "31415",
+                            :owner-eori  "EU.EORI.OWNER"
+                            :user-number 1
+                            :site-id     :tms}]]
              event-commands))))
 
   (testing "GET /outsourced-31415"

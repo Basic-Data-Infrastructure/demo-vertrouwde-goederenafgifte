@@ -98,23 +98,29 @@
 (defn base-event-handler
   [{:keys                         [::store/store subscription] :as event
     {:keys [bizStep disposition]} :event-data}]
-  (let [ref (second subscription)]
+  (let [[_ ref user-number site-id] subscription]
     (when-let [consignment (erp.web/get-consignment-by-ref store ref)]
       (when (and (= bizStep "departing")
                  (= disposition "in_transit"))
-        (update event ::store/commands conj
-                [:put! :consignments (assoc consignment :status otm/status-in-transit)])))))
+        (-> event
+            (update ::store/commands conj
+                    [:put! :consignments (assoc consignment :status otm/status-in-transit)])
+            (update ::events/commands conj
+                    [:unsubscribe! (erp.web/consignment->subscription consignment
+                                                                      user-number
+                                                                      site-id)]))))))
 
 (defn- subscribe-commands
   "Collect event subscribe commands for still pending consignments."
-  [{:keys                      [store-atom]
+  [{:keys                      [site-id store-atom]
     {:ishare/keys [client-id]} :client-data}]
   (->> @store-atom
        (mapcat (fn [[user-number user-store]]
                  (map (fn [{:keys [ref], {:keys [eori]} :owner}]
                         {:topic       ref
                          :owner-eori  eori
-                         :user-number user-number})
+                         :user-number user-number
+                         :site-id     site-id})
                       (->> (get user-store client-id)
                            :consignments
                            vals

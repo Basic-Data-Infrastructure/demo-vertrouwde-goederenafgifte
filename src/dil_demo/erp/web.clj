@@ -178,9 +178,17 @@
 
 
 
-(defn make-handler [{:keys [eori id site-name]}]
-  {:pre [(keyword? id) site-name]}
-  (let [slug     (name id)
+(defn consignment->subscription [{:keys [ref], {:keys [eori]} :owner}
+                                 user-number
+                                 site-id]
+  {:topic       ref
+   :owner-eori  eori
+   :user-number user-number
+   :site-id     site-id})
+
+(defn make-handler [{:keys [eori site-id site-name]}]
+  {:pre [(keyword? site-id) site-name]}
+  (let [slug     (name site-id)
         render   (fn render [title main flash & {:keys [slug-postfix]}]
                    (w/render (str slug slug-postfix)
                              main
@@ -232,14 +240,15 @@
 
      (DELETE "/consignment-:id" {:keys        [::store/store user-number]
                                  {:keys [id]} :params}
-       (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
+       (when-let [consignment (get-consignment store id)]
          (-> "deleted"
              (redirect :see-other)
              (assoc :flash {:success (str "Order " (:ref consignment) " verwijderd")}
                     ::store/commands [[:delete! :consignments id]]
-                    ::events/commands [[:unsubscribe! {:topic      ref
-                                                       :owner-eori eori
-                                                       :user-number user-number}]]))))
+                    ::events/commands [[:unsubscribe!
+                                        (consignment->subscription consignment
+                                                                   user-number
+                                                                   site-id)]]))))
 
      (GET "/deleted" {:keys [flash]}
        (render "Order verwijderd"
@@ -285,9 +294,9 @@
                                            :read-eoris  [eori carrier-eori]
                                            :write-eoris [warehouse-eori]}]
                                          [:subscribe!
-                                          {:topic      ref
-                                           :owner-eori eori
-                                           :user-number user-number}]])))))
+                                          (consignment->subscription consignment
+                                                                     user-number
+                                                                     site-id)]])))))
 
      (GET "/published-:id" {:keys        [flash master-data ::store/store]
                             {:keys [id]} :params}

@@ -55,7 +55,7 @@
                                   [:p "Deze pagina bestaat niet."]
                                   [:a.button {:href "/"} "Terug naar het startscherm"]]
                                  :title "Niet gevonden"
-                                 :site-name "Dil-Demo")
+                                 :site-name "DIL-Demo")
                   (not-found)
                   (content-type "text/html; charset=utf-8"))))
 
@@ -110,24 +110,25 @@
                  (assoc :user-number basic-authentication))
              req)))))
 
-(defn wrap-h2m-app [app id {:keys [pulsar store-atom] :as config}
+(defn wrap-h2m-app [app site-id {:keys [pulsar store-atom] :as config}
                     make-handler
                     make-event-handler]
-  (let [config         (get config id)
+  (let [config         (get config site-id)
         config         (assoc config
-                              :id          id
+                              :site-id     site-id
                               :client-data (ishare-client/->client-data config)
                               :pulsar      pulsar
                               :store-atom  store-atom)
         event-callback (-> (if make-event-handler
                              (make-event-handler config)
                              (constantly nil))
+                           (events/wrap config identity) ;; to allow unsubscribing
                            (store/wrap config))
         handler        (make-handler config)]
     (wrap-with-prefix app
-                      (str "/" (name id))
-                      (-> (fn wrap-h2m-app [req] (handler (assoc req :app-id id)))
-                          (events/wrap config event-callback)
+                      (str "/" (name site-id))
+                      (-> (fn wrap-h2m-app [req] (handler (assoc req :site-id site-id)))
+                          (events/wrap-web config event-callback)
                           (store/wrap config)))))
 
 (defn make-h2m-app [config]
@@ -152,9 +153,9 @@
                            :store-atom store-atom)
         handler (make-handler app-config)]
     (-> (fn [{:keys [uri] :as req}]
-          (let [[_ base-uri user-number app-id uri]
+          (let [[_ base-uri user-number site-id uri]
                 (re-matches #"(/(\d+)/([^/]+))(/.*)" uri)] ; /1/wms ipv /wms
-            (if (and user-number app-id (= app-id (name id)))
+            (if (and user-number site-id (= site-id (name id)))
               (-> req
                   (assoc :base-uri base-uri
                          :uri uri

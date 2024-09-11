@@ -208,11 +208,15 @@
 
 (def ^:dynamic *slug* nil)
 
-(defn trip->topic [{:keys [ref], {:keys [eori]} :owner}]
-  {:topic ref, :owner-eori eori})
+(defn trip->subscription [{:keys [ref], {:keys [eori]} :owner} user-number site-id]
+  ;; TODO put user-number in trip
+  {:topic       ref
+   :owner-eori  eori
+   :user-number user-number
+   :site-id     site-id})
 
-(defn make-handler [{:keys [id site-name], own-eori :eori}]
-  (let [slug   (name id)
+(defn make-handler [{:keys [site-id site-name], own-eori :eori}]
+  (let [slug   (name site-id)
         render (fn render [title main flash & {:keys [slug-postfix]}]
                  (w/render (str slug slug-postfix)
                            main
@@ -250,8 +254,9 @@
              (redirect :see-other)
              (assoc :flash {:success "Opdracht verwijderd"}
                     ::store/commands [[:delete! :trips id]]
-                    ::events/commands [[:unsubscribe! (assoc (trip->topic trip)
-                                                             :user-number user-number)]]))))
+                    ::events/commands [[:unsubscribe! (trip->subscription trip
+                                                                          user-number
+                                                                          site-id)]]))))
 
      (GET "/deleted" {:keys [flash]}
        (render "Opdracht verwijderd"
@@ -280,8 +285,9 @@
                (redirect :see-other)
                (assoc :flash {:success (str "Chauffeur en kenteken toegewezen aan opdracht " ref)}
                       ::store/commands [[:put! :trips trip]]
-                      ::events/commands [[:subscribe! (assoc (trip->topic trip)
-                                                             :user-number user-number)]])))))
+                      ::events/commands [[:subscribe! (trip->subscription trip
+                                                                          user-number
+                                                                          site-id)]])))))
 
      (GET "/assigned-:id" {:keys        [flash]
                            ::store/keys [store]
@@ -311,8 +317,9 @@
                                              {:otm-object (otm/->trip trip master-data)}]]}
                       ::store/commands [[:put! :trips (assoc trip :status otm/status-outsourced)]
                                         [:publish! :trips (:eori carrier) trip]]
-                      ::events/commands [[:subscribe! (assoc (trip->topic trip)
-                                                             :user-number user-number)]])))))
+                      ::events/commands [[:subscribe! (trip->subscription trip
+                                                                          user-number
+                                                                          site-id)]])))))
 
      (GET "/outsourced-:id" {:keys        [flash master-data ::store/store]
                              {:keys [id]} :params}

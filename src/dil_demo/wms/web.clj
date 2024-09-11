@@ -148,11 +148,14 @@
   (get-in store [:transport-orders id]))
 
 
-(defn transport-order->topic [{:keys [ref], {:keys [eori]} :owner}]
-  {:topic ref, :owner-eori eori})
+(defn transport-order->subscription [{:keys [ref], {:keys [eori]} :owner} user-number site-id]
+  {:topic       ref
+   :owner-eori  eori
+   :user-number user-number
+   :site-id     site-id})
 
-(defn make-handler [{:keys [id site-name client-data]}] ;; TODO rename :id to :site-id or :slug
-  (let [slug   (name id)
+(defn make-handler [{:keys [site-id site-name client-data]}]
+  (let [slug   (name site-id)
         render (fn render [title main flash & {:keys [slug-postfix]}]
                  (w/render (str slug slug-postfix)
                            main
@@ -197,7 +200,7 @@
                      (rejected-transport-order transport-order params result master-data)
                      flash)))))
 
-     (POST "/send-gate-out-:id" {:keys        [master-data ::store/store]
+     (POST "/send-gate-out-:id" {:keys        [master-data ::store/store user-number]
                                  {:keys [id]} :params
                                  :as          req}
        (when-let [{:keys [ref] :as transport-order} (get-transport-order store id)]
@@ -220,7 +223,7 @@
                                           :content-type "application/json; charset=utf-8"
                                           :body         (json-str body)}]]
                       ::events/commands [[:send! (-> transport-order
-                                                     (transport-order->topic)
+                                                     (transport-order->subscription user-number site-id)
                                                      (assoc :message event-url))]])))))
 
      (GET "/sent-gate-out-:id" {:keys        [flash ::store/store]

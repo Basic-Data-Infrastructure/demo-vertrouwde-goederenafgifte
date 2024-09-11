@@ -13,16 +13,19 @@
             [nl.jomco.http-status-codes :as http-status]
             [ring.mock.request :refer [request]]))
 
+(def eori "EU.EORI.TEST")
+
 (def store
   {:consignments
    {"31415"
     {:id      "31415"
      :ref     "31415"
      :load    {:location-eori "EU.EORI.WAREHOUSE"}
-     :carrier {:eori "EU.EORI.CARRIER"}}}})
+     :carrier {:eori "EU.EORI.CARRIER"}
+     :owner   {:eori eori}}}})
 
 (defn do-request [method path & [params]]
-  ((sut/make-handler {:id :erp, :site-name "ERP", :eori "EU.EORI.TEST"})
+  ((sut/make-handler {:site-id :erp, :site-name "ERP", :eori eori})
    (assoc (request method path params)
           ::store/store store
           :user-number 1
@@ -63,13 +66,16 @@
       (is (= [:put! :consignments] (->> commands first (take 2))))))
 
   (testing "DELETE /consignment-31415"
-    (let [{:keys [status]
+    (let [{:keys          [status]
            store-commands ::store/commands
            event-commands ::events/commands}
           (do-request :delete "/consignment-31415")]
       (is (= http-status/see-other status))
       (is (= [:delete! :consignments] (->> store-commands first (take 2))))
-      (is (= [[:unsubscribe! {:topic "31415" :owner-eori "EU.EORI.TEST" :user-number 1}]]
+      (is (= [[:unsubscribe! {:topic       "31415"
+                              :owner-eori  "EU.EORI.TEST"
+                              :user-number 1
+                              :site-id     :erp}]]
              event-commands))))
 
   (testing "GET /publish-31415"
@@ -79,17 +85,20 @@
       (is (re-find #"\b31415\b" body))))
 
   (testing "POST /publish-31415"
-    (let [{:keys [status]
+    (let [{:keys          [status]
            store-commands ::store/commands
            event-commands ::events/commands}
           (do-request :post "/publish-31415")]
       (is (= http-status/see-other status))
       (is (= #{:put! :publish!} (->> store-commands (map first) set)))
       (is (= event-commands
-             [[:authorize! {:topic "31415" :owner-eori "EU.EORI.TEST"
-                            :read-eoris ["EU.EORI.TEST" "EU.EORI.CARRIER"],
+             [[:authorize! {:topic       "31415" :owner-eori "EU.EORI.TEST"
+                            :read-eoris  ["EU.EORI.TEST" "EU.EORI.CARRIER"],
                             :write-eoris [ "EU.EORI.WAREHOUSE"]}]
-              [:subscribe! {:topic "31415" :owner-eori "EU.EORI.TEST" :user-number 1}]]))))
+              [:subscribe! {:topic       "31415"
+                            :owner-eori  "EU.EORI.TEST"
+                            :user-number 1
+                            :site-id     :erp}]]))))
 
   (testing "GET /published-31415"
     (let [{:keys [status headers body]} (do-request :get "/publish-31415")]

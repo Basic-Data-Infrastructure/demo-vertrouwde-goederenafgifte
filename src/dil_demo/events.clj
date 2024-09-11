@@ -151,10 +151,10 @@
     (swap! websockets-atom dissoc k)))
 
 (defn subscribe!
-  "Subscribe to websocket for `[owner-eori topic user-number]`.  Authorization
-  should already been secured by owner."
+  "Subscribe to websocket for `[owner-eori topic user-number site-id]`.
+  Authorization should already been secured by owner."
   [{:keys [eori] {:keys [url]} :pulsar :as config}
-   [owner-eori topic _user-number :as subscription] callback-fn]
+   [owner-eori topic _user-number _site-id :as subscription] callback-fn]
   {:pre [url config owner-eori topic]}
   (let [open-websocket
         (fn open-websocket []
@@ -176,18 +176,21 @@
 
             :on-message (make-on-message-handler config subscription callback-fn)
 
-            :on-close (fn on-close [_ws status reason]
+            :on-close (fn on-close [ws status reason]
                         (log/debug "Consumer websocket closed" subscription status reason)
 
                         (when-not (= 1000 status) ;; 1000 = Normal Closure
                           (log/info "Restarting consumer for" subscription)
 
+                          (try (ws/close! ws) (catch Throwable _)) ;; make sure it's really closed
                           (Thread/sleep sleep-before-reconnect-msec)
                           (swap! websockets-atom assoc subscription (open-websocket))))
 
-            :on-error (fn on-error [_ws err]
+            :on-error (fn on-error [ws err]
                         (log/info "Consumer error for" subscription err)
 
+                        ;; just close it and try again
+                        (try (ws/close! ws) (catch Throwable _))
                         (Thread/sleep sleep-before-reconnect-msec)
                         (swap! websockets-atom assoc subscription (open-websocket)))}))]
 
@@ -196,11 +199,10 @@
 
 (defn unsubscribe!
   "Unsubscribe (and close)."
-  [_ [owner-eori topic]]
-  (let [subscription [owner-eori topic]]
-    (when-let [websocket (get @websockets-atom subscription)]
-      (ws/close! @websocket)
-      (swap! websockets-atom dissoc subscription))))
+  [_ subscription]
+  (when-let [websocket (get @websockets-atom subscription)]
+    (ws/close! @websocket)
+    (swap! websockets-atom dissoc subscription)))
 
 (defn send-message!
   "Send message to `[owner-eori topic]`.  Authorization should already
@@ -217,8 +219,10 @@
         payload (-> message
                     (json/json-str)
                     (encode-base64))]
-    (ws/send! ws (json/json-str {:payload payload}))
-    (ws/close! ws)))
+    (try
+      (ws/send! ws (json/json-str {:payload payload}))
+      (finally
+        (ws/close! ws)))))
 
 
 
@@ -243,14 +247,14 @@
                                   {:ishare-log log}])))
 
        :subscribe!
-       (let [{:keys [owner-eori topic user-number]} opts]
-         (subscribe! config [owner-eori topic user-number] callback-fn)
+       (let [{:keys [owner-eori topic user-number site-id]} opts]
+         (subscribe! config [owner-eori topic user-number site-id] callback-fn)
          (w/append-explanation res
                                [(str "Geabonneerd op '" owner-eori "#" topic "'")]))
 
        :unsubscribe!
-       (let [{:keys [owner-eori topic user-number]} opts]
-         (unsubscribe! config [owner-eori topic user-number])
+       (let [{:keys [owner-eori topic user-number site-id]} opts]
+         (unsubscribe! config [owner-eori topic user-number site-id])
          (w/append-explanation res
                                [(str "Abonnement '" owner-eori "#" topic "' opgegeven")]))
 
@@ -262,35 +266,34 @@
    res
    (::commands res)))
 
-(defn- -wrap
+(defn wrap
+  "Ring middleware providing event command processing."
   [app {:keys [eori pulsar client-data]} callback-fn]
   (let [config {:client-data        client-data
                 :eori               eori
                 :pulsar             pulsar}]
-
     (fn events-wrapper [req]
       (-> req
-          (assoc :pulses (-> req (get-in [::store/store :pulses])))
           (app)
           (exec! config callback-fn)))))
 
-(defn wrap
-  "Ring middleware providing event access."
+(defn wrap-web
+  "Ring middleware providing pulse access and event command processing."
   [app config callback-fn]
   (-> app
       (events.web/wrap config)
-      (-wrap config callback-fn)))
+      (wrap config callback-fn)))
 
 
 (defn wrap-fetch-and-store-event
   "Wrapper for event handlers to automatically fetch event data from
   remote services and store it."
   [f client-data]
-  (fn fetch-event-wrapper [{:keys [subscription] :as pulse}]
+  (fn fetch-event-wrapper [{:keys [subscription messageId] :as pulse}]
     (log/debug "Got pulse" pulse)
 
     ;; TODO do not call f if pulse already seen
-    (let [{:keys [eventId user-number] :as event-data}
+    (let [{:keys [user-number] :as event-data}
           (-> pulse
               :payload
               (events.web/fetch-event client-data)
@@ -301,5 +304,13 @@
           (assoc :event-data event-data
                  :user-number user-number)
           (update ::store/commands conj
-                  [:put! :pulses (assoc pulse :id eventId)])
+                  [:put! :pulses
+                   (-> pulse
+                       (select-keys [:properties
+                                     :payload
+                                     :publishTime
+                                     :redeliveryCount
+                                     :messageId])
+                       (assoc :id messageId)
+                       (assoc :subscription subscription))])
           (f)))))

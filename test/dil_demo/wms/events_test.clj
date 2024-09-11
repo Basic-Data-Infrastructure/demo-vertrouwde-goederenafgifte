@@ -32,7 +32,7 @@
       (assoc
        ::store/store store
        :user-number 1
-       :app-id :wms
+       :site-id :wms
        :base-uri "/base/uri"
        :client-id *client-id*
        :eori eori)

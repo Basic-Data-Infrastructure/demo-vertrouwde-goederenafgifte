@@ -25,12 +25,12 @@
      :owner {:eori owner-eori}}}})
 
 (defn do-request [method path & [params]]
-  ((sut/make-handler {:id :wms, :site-name "WMS"})
+  ((sut/make-handler {:site-id :wms, :site-name "WMS"})
    (assoc (request method path params)
           :base-url "http://example.com"
           ::store/store store
           :user-number 1
-          :app-id :wms ;; TODO rename app-id to slug or whatever
+          :site-id :wms
           :master-data {:eori->name {}})))
 
 (deftest handler
@@ -57,7 +57,7 @@
     "TODO, this calls out to satellite and ARs")
 
   (testing "POST /send-gate-out-31415"
-    (let [{:keys [status]
+    (let [{:keys          [status]
            event-commands ::events/commands
            store-commands ::store/commands}
           (do-request :post "/send-gate-out-31415")]
@@ -65,7 +65,10 @@
 
       (testing "event triggered"
         (is (= (update-in event-commands [0 1] dissoc :message)
-               [[:send! {:topic "31415", :owner-eori "EU.EORI.OWNER"}]]))
+               [[:send! {:topic       "31415"
+                         :owner-eori  "EU.EORI.OWNER"
+                         :user-number 1
+                         :site-id     :wms}]]))
         (is (re-matches #"http://example.com/1/wms/event/[0-9a-z-]+"
                         (get-in event-commands [0 1 :message]))))
 

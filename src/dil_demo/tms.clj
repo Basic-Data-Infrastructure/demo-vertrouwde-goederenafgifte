@@ -155,23 +155,29 @@
 (defn base-event-handler
   [{:keys                         [::store/store subscription] :as event
     {:keys [bizStep disposition]} :event-data}]
-  (let [ref (second subscription)]
+  (let [[_ ref user-number site-id] subscription]
     (when-let [trip (tms.web/get-trip-by-ref store ref)]
       (when (and (= bizStep "departing")
                  (= disposition "in_transit"))
-        (update event ::store/commands conj
-                [:put! :trips (assoc trip :status otm/status-in-transit)])))))
+        (-> event
+            (update ::store/commands conj
+                    [:put! :trips (assoc trip :status otm/status-in-transit)])
+            (update ::events/commands conj
+                    [:unsubscribe! (tms.web/trip->subscription trip
+                                                               user-number
+                                                               site-id)]))))))
 
 (defn- subscribe-commands
   "Collect event subscribe commands for still pending trips."
-  [{:keys                      [store-atom]
+  [{:keys                      [site-id store-atom]
     {:ishare/keys [client-id]} :client-data}]
   (->> @store-atom
        (mapcat (fn [[user-number user-store]]
                  (map (fn [{:keys [ref], {:keys [eori]} :owner}]
                         {:topic       ref
                          :owner-eori  eori
-                         :user-number user-number})
+                         :user-number user-number
+                         :site-id     site-id})
                       (->> (get user-store client-id)
                            :trips
                            vals

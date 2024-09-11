@@ -40,8 +40,8 @@
                                   " server_eori=\"" eori "\""
                                   " server_token_endpoint=\"" token-endpoint "\"")))))))
 
-(defn url-for [{:keys [base-url user-number app-id]} event-id]
-  (str base-url "/" user-number "/" (name app-id) "/event/" event-id))
+(defn url-for [{:keys [base-url user-number site-id]} event-id]
+  (str base-url "/" user-number "/" (name site-id) "/event/" event-id))
 
 (defn transport-order-gate-out-targets [transport-order]
   #{(-> transport-order :owner :eori)
