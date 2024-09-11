@@ -9,7 +9,7 @@
                                                         :git/sha "aecb36a82bfc5e10945f3c981ed758d7bfb71cad"}
 
         org.bdinetwork/clj-ishare-client {:git/url "https://github.com/Basic-Data-Infrastructure/clj-ishare-client.git"
-                                          :git/sha "e68a84b0c738578e5bf6b8314203a4a6c2ce4cce"}
+                                          :git/sha "7a9247f7fb6c607ae912bf2fb9dbe2dc0afcdd59"}
 
         org.bdinetwork/clj-ishare-jwt {:git/url "https://github.com/Basic-Data-Infrastructure/clj-ishare-jwt.git"
                                        :git/sha "f7590e16c50e2a274c9307bd3be21ef179f9dce5"}
