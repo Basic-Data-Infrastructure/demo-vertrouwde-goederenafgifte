@@ -105,26 +105,27 @@
         (update event ::store/commands conj
                 [:put! :consignments (assoc consignment :status otm/status-in-transit)])))))
 
-(defn make-event-handler [{:keys                      [client-data store-atom]
-                           {:ishare/keys [client-id]} :client-data
-                           :as                        config}]
-  (let [handler  (-> base-event-handler
-                     (events/wrap-fetch-and-store-event client-data))
-        commands (->> @store-atom
-                      (mapcat (fn [[user-number user-store]]
-                                (map (fn [{:keys [ref]}]
-                                       {:topic       ref
-                                        :owner-eori  client-id
-                                        :user-number user-number})
-                                     (->> (get user-store client-id)
-                                          :consignments
-                                          vals
-                                          (filter #(= otm/status-requested (:status %)))))))
-                      (map (fn [sub] [:subscribe! sub])))]
-    (when (seq commands)
-      ;; TODO handler needs store wrapper to put events in store
-      (events/exec! {::events/commands commands} config
-                    (fn [& args]
-                      (apply handler args))))
+(defn- subscribe-commands
+  "Collect event subscribe commands for still pending consignments."
+  [{:keys                      [store-atom]
+    {:ishare/keys [client-id]} :client-data}]
+  (->> @store-atom
+       (mapcat (fn [[user-number user-store]]
+                 (map (fn [{:keys [ref], {:keys [eori]} :owner}]
+                        {:topic       ref
+                         :owner-eori  eori
+                         :user-number user-number})
+                      (->> (get user-store client-id)
+                           :consignments
+                           vals
+                           (filter #(= otm/status-requested (:status %)))))))
+       (map (fn [sub] [:subscribe! sub]))
+       seq))
 
+(defn make-event-handler [{:keys [client-data] :as config}]
+  (let [handler (events/wrap-fetch-and-store-event base-event-handler
+                                                   client-data)]
+    (events/exec! {::events/commands (subscribe-commands config)}
+                  config
+                  (store/wrap handler config))
     handler))

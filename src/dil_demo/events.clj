@@ -288,8 +288,9 @@
   [f client-data]
   (fn fetch-event-wrapper [{:keys [subscription] :as pulse}]
     (log/debug "Got pulse" pulse)
-    (let [{:keys [eventId user-number]
-           :as   event-data}
+
+    ;; TODO do not call f if pulse already seen
+    (let [{:keys [eventId user-number] :as event-data}
           (-> pulse
               :payload
               (events.web/fetch-event client-data)
