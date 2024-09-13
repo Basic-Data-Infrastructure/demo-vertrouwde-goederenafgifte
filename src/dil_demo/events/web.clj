@@ -97,7 +97,7 @@
      (w/render (name site-id)
                (list-pulses pulses)
                :flash flash
-               :title "Pulses"
+               :title "Notificaties"
                :site-name site-name))
    (GET "/pulses/:id" {:keys [pulses params flash]}
      (when-let [{:keys [payload]} (get pulses (:id params))]
@@ -105,7 +105,7 @@
          (w/render (name site-id)
                    (show-pulse res)
                    :flash flash
-                   :title "Pulse"
+                   :title "Notificatie"
                    :site-name site-name))))))
 
 (defn wrap

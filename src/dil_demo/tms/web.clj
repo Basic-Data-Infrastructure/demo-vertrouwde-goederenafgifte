@@ -61,7 +61,7 @@
     "Zie ook:"
     [:ul
      [:li [:a {:href "chauffeur/"} "Chauffeur"]]
-     [:li [:a {:href "pulses/"} "Pulses"]]]]])
+     [:li [:a {:href "pulses/"} "Notificaties"]]]]])
 
 (defn qr-code-dil-demo [{:keys [carriers driver-id-digits license-plate]}]
   (w/qr-code (str ":dil-demo"
