@@ -17,6 +17,13 @@ This code simulates the following environments:
 - [tms-2](http://localhost:8080/tms-2/)
 
 
+## DISCLAIMER
+
+**The software is for demo purposes only!**  It has not been audited
+for security flaws and is not suitable as a starting point to develop
+software.  Use at your own risk.
+
+
 ## Run
 
 Use the following environment variables to configure this demo:
