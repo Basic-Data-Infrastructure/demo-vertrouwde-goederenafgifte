@@ -9,6 +9,7 @@
   (:require [clojure.string :as string]
             [compojure.core :refer [DELETE GET POST routes]]
             [dil-demo.events :as events]
+            [dil-demo.i18n :refer [t]]
             [dil-demo.master-data :as d]
             [dil-demo.otm :as otm]
             [dil-demo.store :as store]
@@ -21,16 +22,17 @@
 (defn list-consignments [consignments {:keys [eori->name]}]
   [:main
    [:section.actions
-    [:a.button.primary {:href "consignment-new"} "Nieuwe order aanmaken"]]
+    [:a.button.primary {:href "consignment-new"}
+     (t "erp/button/new")]]
 
    (when-not (seq consignments)
      [:article.empty
-      [:p "Nog geen klantorders geregistreerd.."]])
+      [:p (t "empty")]])
 
    (for [{:keys [id ref goods load unload carrier status]} consignments]
      [:article
       [:header
-       [:div.status (otm/status-titles status)]
+       [:div.status (t (str "status/" status))]
        [:div.ref-date ref " / " (:date load)]
        [:div.from-to (-> load :location-eori eori->name) " → " (:location-name unload)]]
 
@@ -40,38 +42,50 @@
       [:footer.actions
        (when (= otm/status-draft status)
          [:a.button.primary {:href  (str "consignment-" id)
-                             :title "Eigenschappen aanpassen"}
-          "Aanpassen"])
+                             :title (t "tooltip/edit")}
+          (t "button/edit")])
        (when (= otm/status-draft status)
          [:a.button.secondary {:href  (str "publish-" id)
-                               :title "Opdracht versturen naar locatie en vervoerder"}
-          "Versturen"])
+                               :title (t "erp/tooltip/publish")}
+          (t "erp/button/publish")])
        (f/delete-button (str "consignment-" id))]])
 
    [:nav.bottom
-    "Zie ook:"
+    (t "see-also")
     [:ul
-     [:li [:a {:href "pulses/"} "Notificaties"]]]]])
+     [:li [:a {:href "pulses/"} (t "button/pulses")]]]]])
 
 (defn edit-consignment [consignment {:keys [carriers warehouses]}]
   (f/form consignment {:method "POST"}
     [:section
-     (f/select :status {:label "Status", :list otm/status-titles, :required true})
-     (f/number :ref {:label "Klantorder nr.", :required true})]
+     (f/select :status {:label (t "label/status")
+                        :list (reduce (fn [m status]
+                                        (assoc m status
+                                               (t (str "status/" status))))
+                                      {}
+                                      otm/statuses)
+                        :required true})
+     (f/number :ref {:label (t "label/ref")
+                     :required true})]
 
     [:section
-     (f/date [:load :date] {:label "Ophaaldatum", :required true})
-     (f/select [:load :location-eori] {:label "Ophaaladres", :list warehouses, :required true})
-     (f/textarea [:load :remarks] {:label "Opmerkingen"})]
+     (f/date [:load :date] {:label (t "label/load-date")
+                            :required true})
+     (f/select [:load :location-eori] {:label (t "label/load-location")
+                                       :list warehouses, :required true})
+     (f/textarea [:load :remarks] {:label (t "label/load-remarks")})]
 
     [:section
-     (f/date [:unload :date] {:label "Afleverdatum", :required true})
-     (f/text [:unload :location-name] {:label "Afleveradres", :list (keys d/locations), :required true})
-     (f/textarea [:unload :remarks] {:label "Opmerkingen"})]
+     (f/date [:unload :date] {:label (t "label/unload-date"), :required true})
+     (f/text [:unload :location-name] {:label (t "label/unload-location")
+                                       :list (keys d/locations), :required true})
+     (f/textarea [:unload :remarks] {:label (t "label/unload-remarks")})]
 
     [:section
-     (f/text :goods {:label "Goederen", :list d/goods, :required true})
-     (f/select [:carrier :eori] {:label "Vervoerder" :list (into {nil nil} carriers), :required true})]
+     (f/text :goods {:label (t "label/goods")
+                     :list d/goods, :required true})
+     (f/select [:carrier :eori] {:label (t "label/carrier")
+                                 :list (into {nil nil} carriers), :required true})]
 
     (f/submit-cancel-buttons)))
 
@@ -79,40 +93,39 @@
   [:div
    [:section
     [:div.actions
-     [:a.button {:href "."} "Terug naar overzicht"]]]
+     [:a.button {:href "."} (t "button/list")]]]
    (w/explanation explanation)])
 
 (defn publish-consignment [consignment {:keys [eori->name warehouse-addresses]}]
   (let [{:keys [status ref load unload goods carrier]} consignment]
     (f/form consignment {:method "POST"}
       (when (not= otm/status-draft status)
-        [:div.flash.flash-warning
-         "Let op!  Deze opdracht is al verzonden!"])
+        [:div.flash.flash-warning (t "warning/already-published")])
 
       [:section.details
        [:dl
         [:div
-         [:dt "Klantorder nr."]
+         [:dt (t "label/ref")]
          [:dd ref]]
         [:div
-         [:dt "Ophaaldatum"]
+         [:dt (t "label/load-date")]
          [:dd (:date load)]]
         [:div
-         [:dt "Afleverdatum"]
+         [:dt (t "label/unload-date")]
          [:dd (:date unload)]]
         [:div
-         [:dt "Vervoerder"]
+         [:dt (t "label/carrier")]
          [:dd (-> carrier :eori eori->name)]]]]
       [:section.trip
        [:fieldset.load-location
-        [:legend "Ophaaladres"]
+        [:legend (t "label/load-location")]
         [:h3 (-> load :location-eori eori->name)]
         (when-let [address (-> load :location-eori warehouse-addresses)]
           [:pre address])
         (when-not (string/blank? (:remarks load))
           [:blockquote.remarks (:remarks load)])]
        [:fieldset.unload-location
-        [:legend "Afleveradres"]
+        [:legend (t "label/unload-location")]
         [:h3 (:location-name unload)]
         (when-let [address (-> unload :location-name d/locations)]
           [:pre address])
@@ -120,24 +133,22 @@
           [:blockquote.remarks (:remarks unload)])]]
       [:section.goods
        [:fieldset
-        [:legend "Goederen"]
+        [:legend (t "label/goods")]
         [:pre goods]]]
 
-      (f/submit-cancel-buttons {:submit {:label "Versturen"
-                                         :onclick "return confirm('Zeker weten?')"}}))))
+      (f/submit-cancel-buttons {:submit {:label   (t "erp/button/publish")
+                                         :onclick (f/confirm-js)}}))))
 
 (defn published-consignment [consignment
                              {:keys [eori->name]}
                              {:keys [explanation]}]
   [:div
    [:section
-    [:p "Transportopdracht verstuurd naar locatie "
-     [:q (-> consignment :load :location-eori eori->name)]
-     " en vervoerder "
-     [:q (-> consignment :carrier :eori eori->name)]
-     "."]
+    [:p
+     (t "erp/published" {:location (-> consignment :load :location-eori eori->name)
+                         :carrier  (-> consignment :carrier :eori eori->name)})]
     [:div.actions
-     [:a.button {:href "."} "Terug naar overzicht"]]]
+     [:a.button {:href "."} (t "button/list")]]]
    (w/explanation explanation)])
 
 
@@ -201,12 +212,12 @@
                        (assoc-in [:owner :eori] eori)))]
     (routes
      (GET "/" {:keys [flash master-data ::store/store]}
-       (render "Orders"
+       (render (t "erp/title/list")
                (list-consignments (get-consignments store) master-data)
                flash))
 
      (GET "/consignment-new" {:keys [flash master-data ::store/store user-number]}
-       (render "Order aanmaken"
+       (render (t "erp/title/new")
                (edit-consignment
                 {:ref    (next-consignment-ref store user-number)
                  :load   {:date (w/format-date (Date.))}
@@ -216,18 +227,19 @@
                flash))
 
      (POST "/consignment-new" {:keys [params]}
-       (let [consignment (-> params
-                             (params->)
-                             (assoc :id (str (UUID/randomUUID))))]
+       (let [{:keys [ref] :as consignment}
+             (-> params
+                 (params->)
+                 (assoc :id (str (UUID/randomUUID))))]
          (-> "."
              (redirect :see-other)
-             (assoc :flash {:success (str "Order " (:ref consignment) " aangemaakt")})
+             (assoc :flash {:success (t "erp/flash/create-success" {:ref ref})})
              (assoc ::store/commands [[:put! :consignments consignment]]))))
 
      (GET "/consignment-:id" {:keys        [flash master-data ::store/store]
                               {:keys [id]} :params}
-       (when-let [consignment (get-consignment store id)]
-         (render (str "Order " (:ref consignment) " aanpassen")
+       (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
+         (render (t "erp/title/edit" {:ref ref})
                  (edit-consignment consignment master-data)
                  flash)))
 
@@ -235,15 +247,15 @@
        (let [consignment (params-> params)]
          (-> "."
              (redirect :see-other)
-             (assoc :flash {:success (str "Order " (:ref consignment) " aangepast")})
+             (assoc :flash {:success (t "erp/flash/update-success" {:ref ref})})
              (assoc ::store/commands [[:put! :consignments consignment]]))))
 
      (DELETE "/consignment-:id" {:keys        [::store/store user-number]
                                  {:keys [id]} :params}
-       (when-let [consignment (get-consignment store id)]
+       (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
          (-> "deleted"
              (redirect :see-other)
-             (assoc :flash {:success (str "Order " (:ref consignment) " verwijderd")}
+             (assoc :flash {:success (t "erp/flash/delete-success" {:ref ref})}
                     ::store/commands [[:delete! :consignments id]]
                     ::events/commands [[:unsubscribe!
                                         (consignment->subscription consignment
@@ -251,14 +263,14 @@
                                                                    site-id)]]))))
 
      (GET "/deleted" {:keys [flash]}
-       (render "Order verwijderd"
+       (render (t "erp/title/deleted")
                (deleted-consignment flash)
                flash))
 
      (GET "/publish-:id" {:keys        [flash master-data ::store/store]
                           {:keys [id]} :params}
-       (when-let [consignment (get-consignment store id)]
-         (render (str "Order " (:ref consignment) " naar locatie en vervoerder sturen")
+       (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
+         (render (t "erp/title/publish" {:ref ref})
                  (publish-consignment consignment master-data)
                  flash)))
 
@@ -274,10 +286,10 @@
                carrier-eori    (-> consignment :carrier :eori)]
            (-> (str "published-" id)
                (redirect :see-other)
-               (assoc :flash {:success     (str "Order " ref " verstuurd")
-                              :explanation [["Stuur OTM Transportopdracht naar WMS van DC"
+               (assoc :flash {:success     (t "erp/flash/published-success" {:ref ref})
+                              :explanation [[(t "erp/explanation/send-consignment-wms")
                                              {:otm-object (otm/->transport-order transport-order master-data)}]
-                                            ["Stuur OTM Trip naar TMS van Vervoerder"
+                                            [(t "erp/explanation/send-consignment-tms")
                                              {:otm-object (otm/->trip trip master-data)}]]}
 
                       ::store/commands [[:put! :consignments consignment]
@@ -300,9 +312,7 @@
 
      (GET "/published-:id" {:keys        [flash master-data ::store/store]
                             {:keys [id]} :params}
-       (when-let [consignment (get-consignment store id)]
-         (render (str "Order "
-                      (:ref consignment)
-                      " verstuurd")
+       (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
+         (render (t "erp/title/published" {:ref ref})
                  (published-consignment consignment master-data flash)
                  flash))))))

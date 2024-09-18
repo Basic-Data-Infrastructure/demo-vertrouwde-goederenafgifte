@@ -6,7 +6,8 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.wms.events
-  (:require [dil-demo.store :as store]
+  (:require [dil-demo.i18n :refer [t]]
+            [dil-demo.store :as store]
             [nl.jomco.http-status-codes :as http-status]
             [org.bdinetwork.ishare.jwt :as jwt]
             [org.bdinetwork.service-provider.authentication :as authentication]
@@ -29,7 +30,7 @@
           (-> (response/response body)
               (response/content-type content-type))
           (response/status http-status/forbidden))
-        (response/not-found "Unknown event"))
+        (response/not-found (t "events/no-found")))
       (let [token-endpoint (str base-uri "/connect/token")]
         (-> "unauthorized"
             (response/response)

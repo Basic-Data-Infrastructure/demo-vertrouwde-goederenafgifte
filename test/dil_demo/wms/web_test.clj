@@ -9,6 +9,7 @@
   (:require [clojure.data.json :as json]
             [clojure.test :refer [deftest is testing]]
             [dil-demo.events :as events]
+            [dil-demo.otm :as otm]
             [dil-demo.store :as store]
             [dil-demo.wms.web :as sut]
             [nl.jomco.http-status-codes :as http-status]
@@ -21,6 +22,7 @@
    {"31415"
     {:id "31415"
      :ref "31415"
+     :status  otm/status-requested
      :load {:location-name "WAREHOUSE"}
      :owner {:eori owner-eori}}}})
 

@@ -12,6 +12,7 @@
             [compojure.route :refer [resources]]
             [dil-demo.erp :as erp]
             [dil-demo.events :as events]
+            [dil-demo.i18n :as i18n :refer [t]]
             [dil-demo.master-data :as master-data]
             [dil-demo.sites :refer [sites]]
             [dil-demo.store :as store]
@@ -49,15 +50,15 @@
           :else
           (app req))))))
 
-(def not-found-handler
-  (constantly (-> (w/render-body "dil"
-                                 [:main
-                                  [:p "Deze pagina bestaat niet."]
-                                  [:a.button {:href "/"} "Terug naar het startscherm"]]
-                                 :title "Niet gevonden"
-                                 :site-name "DIL-Demo")
-                  (not-found)
-                  (content-type "text/html; charset=utf-8"))))
+(defn not-found-handler [_]
+  (-> (w/render-body "dil"
+                     [:main
+                      [:p (t "not-found")]
+                      [:a.button {:href "/"} (t "button/start-screen")]]
+                     :title (t "not-found/title")
+                     :site-name "DIL-Demo")
+      (not-found)
+      (content-type "text/html; charset=utf-8")))
 
 (defn list-apps []
   [:main
@@ -70,7 +71,7 @@
    (GET "/" {}
      (w/render "dil"
                (list-apps)
-               :title "Demo Vertrouwde Goederenafgifte"
+               :title (t "start-screen/title")
                :site-name "DIL-Demo"))
    (resources "/")
    not-found-handler))
@@ -142,6 +143,7 @@
 
       (wrap-user-number)
       (wrap-basic-authentication (->authenticate (config :auth)))
+      (i18n/wrap :throw-exceptions false)
 
       (wrap-defaults (assoc-in site-defaults
                                [:session :store] (ttl-memory-store)))))

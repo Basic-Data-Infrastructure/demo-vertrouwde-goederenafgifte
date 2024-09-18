@@ -10,6 +10,7 @@
             [clojure.string :as string]
             [compojure.core :refer [DELETE GET POST routes]]
             [dil-demo.events :as events]
+            [dil-demo.i18n :refer [t]]
             [dil-demo.otm :as otm]
             [dil-demo.store :as store]
             [dil-demo.web-form :as f]
@@ -24,12 +25,12 @@
   [:main
    (when-not (seq transport-orders)
      [:article.empty
-      [:p "Nog geen transportopdrachten geregistreerd.."]])
+      [:p (t "empty")]])
 
    (for [{:keys [id ref load goods status]} transport-orders]
      [:article
       [:header
-       [:div.status (otm/status-titles status)]
+       [:div.status (t (str "status/" status))]
        [:div.ref-date ref " / " (:date load)]]
       [:div.goods goods]
 
@@ -37,10 +38,12 @@
       [:footer.actions
        (cond
          (= status otm/status-confirmed)
-         (f/post-button (str "send-gate-out-" id) {:label "Afgehandeld", :class "primary"})
+         (f/post-button (str "send-gate-out-" id)
+                        {:label (t "wms/button/gate-out")
+                         :class "primary"})
 
          (= status otm/status-requested)
-         [:a.button.primary {:href (str "verify-" id)} "Veriferen"])
+         [:a.button.primary {:href (str "verify-" id)} (t "wms/button/verify")])
 
        (f/delete-button (str "transport-order-" id))]])])
 
@@ -56,30 +59,36 @@
                                          (json-str carrier-id) ", "
                                          (json-str driver-id) ", "
                                          (json-str plate-id) ")")}
-      "Scan QR"]]))
+      (t "wms/button/scan-qr")]]))
 
 (defn verify-transport-order [{:keys [id] :as transport-order}]
   (f/form transport-order {:method "POST", :action (str "verify-" id)}
-    (f/input :ref {:label "Opdracht nr.", :disabled true})
-    (f/input [:load :date] {:label "Datum", :disabled true})
-    (f/input :goods {:label "Goederen", :disabled true})
+    (f/input :ref {:label (t "label/ref"), :disabled true})
+    (f/input [:load :date] {:label (t "label/date"), :disabled true})
+    (f/input :goods {:label (t "label/goods"), :disabled true})
 
     (when-not (string/blank? (:remarks load))
-      (f/textarea [:load :remarks] {:label "Opmerkingen", :disabled true}))
+      (f/textarea [:load :remarks] {:label (t "label/remarks"), :disabled true}))
 
     [:div.actions
      (qr-code-scan-button "carrier-eoris" "driver-id-digits" "license-plate")]
 
-    (f/text :carrier-eoris {:id "carrier-eoris", :label "Vervoerder EORI's", :required true})
-    (f/text :driver-id-digits {:id "driver-id-digits", :label "Rijbewijs", :required true})
-    (f/text :license-plate {:id "license-plate", :label "Kenteken", :required true})
+    (f/text :carrier-eoris {:id       "carrier-eoris"
+                            :label    (t "label/carrier-eories")
+                            :required true})
+    (f/text :driver-id-digits {:id       "driver-id-digits"
+                               :label    (t "label/driver-id-digits")
+                               :required true})
+    (f/text :license-plate {:id       "license-plate"
+                            :label    (t "label/license-plate")
+                            :required true})
 
     [:div.actions
      [:button.button-primary
-      {:type "submit"
-       :onclick "return confirm('Kloppen de rijbewijs cijfers en het kenteken?')"}
-      "Veriferen"]
-     [:a.button {:href "."} "Annuleren"]]))
+      {:type    "submit"
+       :onclick (f/confirm-js (t "confirm/driver-and-license-plate"))}
+      (t "wms/button/verify")]
+     [:a.button {:href "."} (t "button/cancel")]]))
 
 (defn accepted-transport-order [transport-order
                                 {:keys [carrier-eoris driver-id-digits license-plate]}
@@ -87,19 +96,15 @@
                                 {:keys [eori->name]}]
   [:div
    [:section
-    [:h3.verification.verification-accepted "Afgifte akkoord"]
     [:p
-     "Afgifte transportopdracht "
-     [:q (:ref transport-order)]
-     " goedgekeurd voor vervoerder "
-     [:q (-> carrier-eoris last eori->name)]
-     ", chauffeur met rijbewijs eindigend op "
-     [:q driver-id-digits]
-     " en kenteken "
-     [:q license-plate]
-     "."]
+     (t "wms/verification-accepted"
+        {:ref              (:ref transport-order)
+         :carrier          (or (-> carrier-eoris last eori->name)
+                               (last carrier-eoris))
+         :driver-id-digits driver-id-digits
+         :license-plate    license-plate})]
     [:div.actions
-     [:a.button {:href "."} "Terug naar overzicht"]]]
+     [:a.button {:href "."} (t "button/list")]]]
    (w/explanation explanation)])
 
 (defn rejected-transport-order [transport-order
@@ -108,35 +113,30 @@
                                 {:keys [eori->name]}]
   [:div
    [:section
-    [:h3.verification.verification-rejected "Afgifte " [:strong "NIET"] " akkoord"]
     [:p
-     "Afgifte transportopdracht "
-     [:q (:ref transport-order)]
-     " " [:strong "NIET"] " goedgekeurd voor vervoerder "
-     [:q (eori->name (last carrier-eoris))]
-     ", chauffeur met rijbewijs eindigend op "
-     [:q driver-id-digits]
-     " en kenteken "
-     [:q license-plate]
-     "."]
+     (t "wms/verification-rejected"
+        {:ref              (:ref transport-order)
+         :carrier          (or (-> carrier-eoris last eori->name)
+                               (last carrier-eoris))
+         :driver-id-digits driver-id-digits
+         :license-plate    license-plate})]
 
     [:p
-     "Afgewezen na inspectie van het Authorisatie Register van "
-     [:q (eori->name (wms.verify/rejection-eori result))]
-     " met de volgende bevindingen:"]
+     (t "wms/verification-rejection-results"
+        {:party (eori->name (wms.verify/rejection-eori result))})]
 
     [:ul.rejections
      (for [rejection (wms.verify/rejection-reasons result)]
        [:li rejection])]
 
     [:div.actions
-     [:a.button {:href "."} "Terug naar overzicht"]]]
+     [:a.button {:href "."} (t "button/list")]]]
    (w/explanation explanation)])
 
 (defn gate-out-transport-order [_transport-order {:keys [explanation]}]
   [:div
    [:div.actions
-     [:a.button {:href "."} "Terug naar overzicht"]]
+     [:a.button {:href "."} (t "button/list")]]
    (w/explanation explanation)])
 
 
@@ -148,7 +148,9 @@
   (get-in store [:transport-orders id]))
 
 
-(defn transport-order->subscription [{:keys [ref], {:keys [eori]} :owner} user-number site-id]
+(defn transport-order->subscription [{:keys [ref], {:keys [eori]} :owner}
+                                     user-number
+                                     site-id]
   {:topic       ref
    :owner-eori  eori
    :user-number user-number
@@ -165,7 +167,7 @@
     (routes
      (GET "/" {:keys        [flash]
                ::store/keys [store]}
-       (render "Transportopdrachten"
+       (render (t "wms/title/list")
                (list-transport-orders (get-transport-orders store))
                flash))
 
@@ -174,14 +176,14 @@
        (when (get-transport-order store id)
          (-> "."
              (redirect :see-other)
-             (assoc :flash {:success "Transportopdracht verwijderd"})
+             (assoc :flash {:success (t "wms/flash/delete-success")})
              (assoc ::store/commands [[:delete! :transport-orders id]]))))
 
      (GET "/verify-:id" {:keys        [flash]
                          ::store/keys [store]
                          {:keys [id]} :params}
        (when-let [transport-order (get-transport-order store id)]
-         (render "Verificatie afgifte"
+         (render (t "wms/title/verify")
                  (verify-transport-order transport-order)
                  flash)))
 
@@ -191,12 +193,12 @@
          (let [params (update params :carrier-eoris string/split #",")
                result (wms.verify/verify! client-data transport-order params)]
            (if (wms.verify/permitted? result)
-             (-> (render "Afgifte goedgekeurd"
+             (-> (render (t "wms/title/verification-accepted")
                          (accepted-transport-order transport-order params result master-data)
                          flash)
                  (assoc ::store/commands [[:put! :transport-orders
                                            (assoc transport-order :status otm/status-confirmed)]]))
-             (render "Afgifte afgewezen"
+             (render (t "wms/title/verification-rejected")
                      (rejected-transport-order transport-order params result master-data)
                      flash)))))
 
@@ -214,7 +216,7 @@
                                                                    master-data)]
            (-> (str "sent-gate-out-" id)
                (redirect :see-other)
-               (assoc :flash {:success (str "Gate-out voor " ref " verstuurd")}
+               (assoc :flash {:success (t "wms/flash/send-gate-out-success" {:ref ref})}
                       ::store/commands [[:put! :transport-orders
                                          (assoc transport-order :status otm/status-in-transit)]
                                         [:put! :events
@@ -229,6 +231,6 @@
      (GET "/sent-gate-out-:id" {:keys        [flash ::store/store]
                                 {:keys [id]} :params}
        (when-let [transport-order (get-transport-order store id)]
-         (render "Gate-out verstuurd"
+         (render (t "wms/title/sent-gate-out")
                  (gate-out-transport-order transport-order flash)
                  flash))))))

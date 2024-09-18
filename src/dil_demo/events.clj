@@ -10,6 +10,7 @@
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]
             [dil-demo.events.web :as events.web]
+            [dil-demo.i18n :refer [t]]
             [dil-demo.store :as store]
             [dil-demo.web-utils :as w]
             [org.bdinetwork.ishare.client :as ishare-client])
@@ -240,29 +241,33 @@
              (authorize! config [owner-eori topic] read-eoris write-eoris)]
          (cond-> res
            (not result)
-           (assoc-in [:flash :error] "Aanmaken AR policy mislukt")
+           (assoc-in [:flash :error] (t "error/create-policy-failed"))
 
            :and
-           (w/append-explanation ["Toevoegen policy toegang event broker"
-                                  {:ishare-log log}])))
+           (w/append-explanation [(t "explanation/events/access-policy"
+                                     {:ishare-log log})])))
 
        :subscribe!
        (let [{:keys [owner-eori topic user-number site-id]} opts]
          (subscribe! config [owner-eori topic user-number site-id] callback-fn)
          (w/append-explanation res
-                               [(str "Geabonneerd op '" owner-eori "#" topic "'")]))
+                               [(t "explanation/events/subscribe"
+                                   {:owner-eori owner-eori, :topic topic})]))
 
        :unsubscribe!
        (let [{:keys [owner-eori topic user-number site-id]} opts]
          (unsubscribe! config [owner-eori topic user-number site-id])
          (w/append-explanation res
-                               [(str "Abonnement '" owner-eori "#" topic "' opgegeven")]))
+                               [(t "explanation/events/unsubscribe"
+                                   {:owner-eori owner-eori, :topic topic})]))
 
        :send!
        (let [{:keys [owner-eori topic message]} opts]
          (send-message! config [owner-eori topic] message)
          (w/append-explanation res
-                               [(str "Bericht gestuurd naar '" owner-eori "#" topic "' gestuurd") {:event message}]))))
+                               [(t "explanation/events/message-sent"
+                                   {:owner-eori owner-eori, :topic topic})
+                                {:event message}]))))
    res
    (::commands res)))
 

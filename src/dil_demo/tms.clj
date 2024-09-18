@@ -8,6 +8,7 @@
 (ns dil-demo.tms
   (:require [clojure.tools.logging.readable :as log]
             [dil-demo.events :as events]
+            [dil-demo.i18n :refer [t]]
             [dil-demo.ishare.policies :as policies]
             [dil-demo.otm :as otm]
             [dil-demo.store :as store]
@@ -26,7 +27,8 @@
         (log/error ex)
         (-> req
             (w/append-explanation [title {:ishare-log @ishare-client/log-interceptor-atom}])
-            (assoc-in [:flash :error] (str "Fout bij uitvoeren van iShare commando " (:ishare/message-type ex))))))))
+            (assoc-in [:flash :error] (t "error/ishare-command-failed"
+                                         {:error (:ishare/message-type ex)})))))))
 
 
 
@@ -51,7 +53,7 @@
   [{:keys [::store/store] :as req} {:keys [id] :as _trip} _subject-fn]
   (if-let [policy-id (get-in store [:trip-policies id :policy-id])]
     (-> req
-        (ishare-exec! "Verwijder policy voor trip"
+        (ishare-exec! (t "explanation/remove-policy-for-trip")
                       {:ishare/message-type :poort8/delete-policy
                        :ishare/params       {:policyId policy-id}
 
@@ -68,7 +70,7 @@
   ;; we're going to force a "deny" policy in to make sure we don't
   ;; have a lingering "permit".
   (ishare-exec! req
-                "Verwijder policy voor trip"
+                (t "explanation/remove-policy-for-trip")
                 (ishare-create-policy-command req (subject-fn trip) trip "Deny")))
 
 (defmulti create-policy-for-trip! ->ar-type)
@@ -82,7 +84,7 @@
           {:consignment-ref (:ref trip)
            :date            (-> trip :load :date)
            :subject         (subject-fn trip)})}
-        res (ishare-exec! req "Toevoegen policy voor trip" cmd)]
+        res (ishare-exec! req (t "explanation/add-policy-for-trip") cmd)]
 
     (if-let [policy-id (get-in res [:ishare/result "policyId"])]
       ;; poort8 AR will return a policy-id which can be used to delete the policy
@@ -92,7 +94,8 @@
 
 (defmethod create-policy-for-trip! :ishare
   [req trip subject-fn]
-  (ishare-exec! req "Toevoegen policy voor trip"
+  (ishare-exec! req
+                (t "explanation/add-policy-for-trip")
                 (ishare-create-policy-command req (subject-fn trip) trip "Permit")))
 
 (defmulti delegation-effect!

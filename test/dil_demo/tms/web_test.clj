@@ -7,6 +7,7 @@
 
 (ns dil-demo.tms.web-test
   (:require [clojure.test :refer [deftest is testing]]
+            [dil-demo.otm :as otm]
             [dil-demo.tms.web :as sut]
             [dil-demo.store :as store]
             [dil-demo.events :as events]
@@ -16,10 +17,10 @@
 (def store
   {:trips
    {"31415"
-    {:id "31415"
-     :status "assigned"
-     :ref "31415"
-     :owner {:eori "EU.EORI.OWNER"}}}})
+    {:id     "31415"
+     :status otm/status-assigned
+     :ref    "31415"
+     :owner  {:eori "EU.EORI.OWNER"}}}})
 
 (defn do-request [method path & [params]]
   ((sut/make-handler {:site-id :tms, :site-name "TMS"})

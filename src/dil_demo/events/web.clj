@@ -10,6 +10,7 @@
             [clojure.data.json :as json]
             [clojure.string :as string]
             [compojure.core :refer [GET routes routing]]
+            [dil-demo.i18n :refer [t]]
             [dil-demo.http-utils :as http-utils]
             [dil-demo.store :as store]
             [dil-demo.web-utils :as w]
@@ -24,7 +25,7 @@
                 ;; remove request added by http client
                 (dissoc :request))
         res (w/append-explanation res
-                                  ["Openhalen zonder authenticatie"
+                                  [(t "explanation/fetch-without-token")
                                    {:http-request  req
                                     :http-response res}])]
     (if-let [[auth-scheme {scope       "scope"
@@ -56,9 +57,9 @@
                         ;; remove request added by http client
                         (dissoc :request))]
             (-> res
-                (w/append-explanation ["Authenticatie token ophalen"
+                (w/append-explanation [(t "explanation/fetch-token")
                                        {:ishare-log @ishare-client/log-interceptor-atom}])
-                (w/append-explanation ["Ophalen met authenticatie token"
+                (w/append-explanation [(t "explanation/fetch-with-token")
                                        {:http-request  req
                                         :http-response res}]))))
         res)
@@ -70,7 +71,7 @@
   [:main
    (when-not (seq pulses)
      [:article.empty
-      [:p "Nog geen notificaties geregistreerd.."]])
+      [:p (t "empty")]])
    (for [{:keys [id publishTime payload subscription]}
          (->> pulses vals (sort-by :publishTime) reverse)]
      [:article
@@ -97,7 +98,7 @@
      (w/render (name site-id)
                (list-pulses pulses)
                :flash flash
-               :title "Notificaties"
+               :title (t "events/title/list")
                :site-name site-name))
    (GET "/pulses/:id" {:keys [pulses params flash]}
      (when-let [{:keys [payload]} (get pulses (:id params))]
@@ -105,7 +106,7 @@
          (w/render (name site-id)
                    (show-pulse res)
                    :flash flash
-                   :title "Notificatie"
+                   :title (t "events/title/event")
                    :site-name site-name))))))
 
 (defn wrap

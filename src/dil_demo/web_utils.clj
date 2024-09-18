@@ -8,6 +8,7 @@
 (ns dil-demo.web-utils
   (:require [clojure.data.json :as json]
             [clojure.string :as string]
+            [dil-demo.i18n :as i18n :refer [t]]
             [dil-demo.sites :refer [sites]]
             [ring.util.response :as response]
             [hiccup2.core :as hiccup])
@@ -39,6 +40,13 @@
        [:article.flash {:class (str "flash-" (name type))} message])
      main]
     [:footer.container
+     [:ul.select-lang
+      (for [lang @i18n/languages]
+        [:li
+         [:a.set-lang {:href (str ".?set-lang=" lang)
+                       :class (cond-> (str "lang-" lang)
+                                (= i18n/lang lang) (str " current"))} lang]])]
+
      [:img {:src   "/assets/bdi-logo.png"
             :title "Powered by BDI — Basic Data Infrastructure"
             :alt   "Powered by BDI — Basic Data Infrastructure"}]]]])
@@ -128,42 +136,42 @@
 (defn server-description
   [{:ishare/keys [server-id server-name]}]
   (if server-name
-    [:span [:q server-id] " (" server-name ")"]
-    [:q server-id]))
+    (str server-id " (" server-name ")")
+    server-id))
 
 (defmulti ishare-interaction-summary #(-> % :request :ishare/message-type))
 
 (defmethod ishare-interaction-summary :default
   [_]
-  [:span "Oeps.."])
+  [:span (t "explanation/unknown")])
 
 (defmethod ishare-interaction-summary :access-token
   [{:keys [request]}]
-  [:span "Ophalen access token voor " (server-description request)])
+  [:span (t "explanation/ishare/access-token" {:party (server-description request)})])
 
 (defmethod ishare-interaction-summary :parties
   [{:keys [request]}]
-  [:span "Partijen opvragen van " (server-description request)])
+  [:span (t "explanation/ishare/parties" {:satellite (server-description request)})])
 
 (defmethod ishare-interaction-summary :party
   [{{:ishare/keys [party-id] :as request} :request}]
-  [:span "Partij " [:q party-id] " opvragen van satelliet " (server-description request)])
+  [:span (t "explanation/ishare/party" {:eori party-id, :satellite (server-description request)})])
 
 (defmethod ishare-interaction-summary :ishare/policy
   [{:keys [request]}]
-  [:span "Policy aanmaken in iSHARE Authorisatie Register op " (server-description request)])
+  [:span (t "explanation/ishare/policy" {:party (server-description request)})])
 
 (defmethod ishare-interaction-summary :poort8/delete-policy
   [{:keys [request]}]
-  [:span "Policy verwijderen in Poort8 Authorisatie Register op " (server-description request)])
+  [:span (t "explanation/poort8/delete-policy" {:party (server-description request)})])
 
 (defmethod ishare-interaction-summary :poort8/policy
   [{:keys [request]}]
-  [:span "Policy aanmaken in Poort8 Authorisatie Register op " (server-description request)])
+  [:span (t "explanation/poort8/create-policy" {:party (server-description request)})])
 
 (defmethod ishare-interaction-summary :delegation
   [{:keys [request]}]
-  [:span "Delegation Evidence opvragen in Authorisatie Register " (server-description request)])
+  [:span (t "explanation/ishare/delegation" {:party (server-description request)})])
 
 (defn ishare-log-intercept-to-hiccup [logs]
   [:ol
@@ -173,42 +181,42 @@
        [:summary (ishare-interaction-summary interaction)]
        (when (:request interaction)
          [:div.request
-          [:p "Request:"]
+          [:p (t "explanation/http-request")]
           [:pre (to-json (-> interaction
                              :request
                              (select-keys [:method :uri :params :form-params :json-params :headers])))]])
        (when (:status interaction)
          [:div.response
-          [:p "Response:"]
+          [:p (t "explanation/http-response")]
           [:pre (to-json (select-keys interaction [:status :headers :body]))]])]])])
 
 (defn explanation [explanation]
   (when (seq explanation)
     [:details.explanation
-     [:summary.button.secondary "Uitleg"]
+     [:summary.button.secondary (t "explanation")]
      [:ol
       (for [[title {:keys [otm-object ishare-log event http-request http-response]}] explanation]
         [:li
          [:h3 title]
          (when otm-object
            [:details
-            [:summary "Bekijk OTM object"]
+            [:summary (t "explanation/otm-object")]
             [:pre (otm-to-json otm-object)]])
          (when ishare-log
            (ishare-log-intercept-to-hiccup ishare-log))
          (when http-request
            [:div.request
-            [:p "Request:"]
+            [:p (t "explanation/http-request")]
             [:pre (to-json http-request)]])
          (when http-response
            [:div.response
-            [:p "Response:"]
+            [:p (t "explanation/http-response")]
             [:pre (-> http-response
                       (dissoc :flash)
                       (to-json))]])
          (when event
            [:details
-            [:summary "Bekijk event"]
+            [:summary (t "explanation/event")]
             [:pre (to-json event)]])])]]))
 
 (defn append-explanation [res & explanation]

@@ -9,6 +9,7 @@
   (:require [clojure.test :refer [deftest is testing]]
             [dil-demo.erp.web :as sut]
             [dil-demo.events :as events]
+            [dil-demo.otm :as otm]
             [dil-demo.store :as store]
             [nl.jomco.http-status-codes :as http-status]
             [ring.mock.request :refer [request]]))
@@ -20,6 +21,7 @@
    {"31415"
     {:id      "31415"
      :ref     "31415"
+     :status  otm/status-draft
      :load    {:location-eori "EU.EORI.WAREHOUSE"}
      :carrier {:eori "EU.EORI.CARRIER"}
      :owner   {:eori eori}}}})

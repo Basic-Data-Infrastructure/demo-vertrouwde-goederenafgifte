@@ -9,6 +9,7 @@
   (:require [clojure.tools.logging :as log]
             [dil-demo.erp.web :as erp.web]
             [dil-demo.events :as events]
+            [dil-demo.i18n :refer [t]]
             [dil-demo.ishare.policies :as policies]
             [dil-demo.otm :as otm]
             [dil-demo.store :as store]
@@ -62,10 +63,10 @@
               ;; kinda hackish way to delete a policy from a iSHARE AR
               (ishare-ar-create-policy! client-data "Deny" old-consignment)]
           (cond->
-              (w/append-explanation res ["Verwijderen policy" {:ishare-log log}])
+              (w/append-explanation res [(t "explanation/ishare/delete-policy") {:ishare-log log}])
 
             (not result)
-            (assoc-in [:flash :error] "Verwijderen AR policy mislukt")))
+            (assoc-in [:flash :error] (t "error/delete-policy-failed"))))
 
         res))))
 
@@ -83,10 +84,10 @@
               (ishare-ar-create-policy! client-data "Permit" trip)]
           (cond->
               (w/append-explanation res
-                                    ["Toevoegen policy toestemming pickup" {:ishare-log log}])
+                                    [(t "erp/explanation/pickup-delegation") {:ishare-log log}])
 
             (not result)
-            (assoc-in [:flash :error] "Aanmaken AR policy mislukt")))
+            (assoc-in [:flash :error] (t "error/create-policy-failed"))))
         res))))
 
 (defn make-handler [config]

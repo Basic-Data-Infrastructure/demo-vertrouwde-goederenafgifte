@@ -6,7 +6,9 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.web-form
-  (:require [ring.middleware.anti-forgery :refer [*anti-forgery-token*]])
+  (:require [clojure.data.json :as json]
+            [dil-demo.i18n :refer [t]]
+            [ring.middleware.anti-forgery :refer [*anti-forgery-token*]])
   (:import (java.util UUID)))
 
 (def ^:dynamic *object* nil)
@@ -79,11 +81,15 @@
                            :name (ks->name ks)))
       (ks->value ks)]]))
 
+(defn confirm-js [& [message]]
+  (str "return confirm(" (json/write-str (or message (t "confirm"))) ")"))
+
 (defn delete-button
-  [path & {:keys [label] :or {label "Verwijderen"}}]
+  [path & {:keys [label] :or {label (t "button/delete")}}]
   (form nil {:method "POST", :action path}
     [:input {:type "hidden", :name "_method", :value "DELETE"}]
-    [:button {:onclick "return confirm('Zeker weten?')"} label]))
+    [:button {:onclick (confirm-js)}
+     label]))
 
 (defn post-button
   [path {:keys [label] :as opts}]
@@ -92,14 +98,14 @@
     [:button (dissoc opts :label) label]))
 
 (defn submit-button [& [{:keys [label]
-                         :or   {label "Opslaan"}
+                         :or   {label (t "button/save")}
                          :as attrs}]]
   [:button (into {:type "submit"}
                  (dissoc attrs :label))
    label])
 
 (defn cancel-button [& [{:keys [label]
-                         :or   {label "Annuleren"}
+                         :or   {label (t "button/cancel")}
                          :as attrs}]]
   [:a.button (into {:href "."}
                    (dissoc attrs :label))

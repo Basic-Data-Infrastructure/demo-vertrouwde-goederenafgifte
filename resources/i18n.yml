@@ -1,0 +1,158 @@
+# SPDX-FileCopyrightText: 2024 Jomco B.V.
+# SPDX-FileCopyrightText: 2024 Topsector Logistiek
+# SPDX-FileContributor: Joost Diepenmaat <joost@jomco.nl>
+# SPDX-FileContributor: Remco van 't Veer <remco@jomco.nl>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+nl:
+  not-found: "Deze pagina bestaat niet."
+  not-found/title: "Niet gevonden"
+  button/start-screen: "Terug naar het startscherm"
+  start-screen/title: "Demo Vertrouwde Goederenafgifte"
+
+  see-also: "Zie ook:"
+  empty: "Geen gegevens.."
+  confirm: "Zeker weten?"
+  confirm/driver-and-license-plate: "Kloppen de rijbewijs cijfers en het kenteken?"
+
+  button/show: "Tonen"
+  button/cancel: "Annuleren"
+  button/delete: "Verwijderen"
+  button/edit: "Aanpassen"
+  button/list: "Terug naar overzicht"
+  button/pulses: "Notificaties"
+  button/save: "Opslaan"
+
+  tooltip/edit: "Eigenschappen aanpassen"
+
+  label/status: "Status"
+  label/ref: "Klantorder nr."
+  label/load-date: "Ophaaldatum"
+  label/load-location: "Ophaaladres"
+  label/load-remarks: "Opmerkingen"
+  label/unload-date: "Afleverdatum"
+  label/unload-location: "Afleveradres"
+  label/unload-remarks: "Opmerkingen"
+  label/goods: "Goederen"
+  label/carrier: "Vervoerder"
+  label/carrier-eories: "Vervoerder EORI's"
+  label/driver-id-digits: "Rijbewijs"
+  label/license-plate: "Kenteken"
+  label/date: "Datum"
+  label/remarks: "Opmerkingen"
+
+  status/draft: "Klad"
+  status/requested: "Ingediend"
+  status/confirmed: "Bevestigd"
+  status/inTransit: "Onderweg"
+  status/completed: "Afgerond"
+  status/cancelled: "Geannuleerd"
+  status/assigned: "Toegewezen"
+  status/outsourced: "Uitbesteed"
+
+  erp/button/new: "Nieuwe order aanmaken"
+  erp/button/publish: "Versturen"
+  erp/tooltip/publish: "Opdracht versturen naar locatie en vervoerder"
+  erp/explanation/send-consignment-tms: "Stuur OTM Trip naar TMS van Vervoerder"
+  erp/explanation/send-consignment-wms: "Stuur OTM Transportopdracht naar WMS van DC"
+  erp/explanation/pickup-delegation: "Toevoegen policy toestemming pickup"
+  erp/flash/create-success: "Order %{ref} aangemaakt"
+  erp/flash/delete-success: "Order %{ref} verwijderd"
+  erp/flash/published-success: "Order %{ref} verstuurd"
+  erp/flash/update-success: "Order %{ref} aangepast"
+  erp/published: "Transportopdracht verstuurd naar locatie \"%{location}\" en vervoerder \"%{carrier}\"."
+  erp/title/deleted: "Order verwijderd"
+  erp/title/edit: "Order %{ref} aanpassen"
+  erp/title/list: "Orders"
+  erp/title/new: "Order aanmaken"
+  erp/title/publish: "Order %{ref} naar locatie en vervoerder sturen"
+  erp/title/published: "Order %{ref} verstuurd"
+  warning/already-published: "Let op!  Deze opdracht is al verzonden!"
+
+  tms/button/assign: "Toewijzen"
+  tms/button/outsource: "Uitbesteden"
+  tms/button/driver-view: "Chauffeur"
+  tms/tooltip/assign: "Toewijzen aan een chauffeur en wagen"
+  tms/tooltip/outsource: "Uitbesteden aan een andere vervoerder"
+  tms/placeholder/driver-id-digits: "Laatste 4 cijfers"
+  tms/assigned: "Toegewezen aan %{driver-id-digits} / %{license-plate}"
+  tms/assigned-trip: "Opdracht %{ref} toegewezen."
+  tms/outsourced: "Uitbesteed aan %{carrier}"
+  tms/unassigned: "Nog niet toegewezen.."
+  tms/outsourced-trip: "Opdracht %{ref} uitbesteed aan %{carrier}"
+  tms/title/list: "Opdrachten"
+  tms/title/deleted: "Opdracht verwijderd"
+  tms/flash/delete-success: "Opdracht verwijderd"
+  tms/title/assign: "Opdracht %{ref} toewijzen"
+  tms/flash/assigned-success: "Chauffeur en kenteken toegewezen aan opdracht %{ref}"
+  tms/title/assigned: "Opdracht %{ref} toegewezen"
+  tms/title/outsource: "Opdracht %{ref} uitbesteden aan een andere vervoerder"
+  tms/title/outsourced: "Opdracht %{ref} uitbesteed"
+  tms/flash/outsource-success: "Opdracht %{ref} naar vervoerder gestuurd"
+
+  wms/button/gate-out: "Afgehandeld"
+  wms/button/verify: "Verifiëren"
+  wms/button/scan-qr: "Scan QR"
+  wms/title/verification-accepted: "Afgifte akkoord"
+  wms/verification-accepted: |
+    Afgifte transportopdracht %{ref} goedgekeurd voor vervoerder %{carrier},
+    chauffeur met rijbewijs eindigend op %{driver-id-digits} en
+    kenteken %{license-plate}.
+
+  wms/title/verification-rejected: "Afgifte NIET akkoord"
+  wms/verification-rejected: |
+    Afgifte transportopdracht %{ref} AFGEKEURD voor vervoerder %{carrier},
+    chauffeur met rijbewijs eindigend op %{driver-id-digits} en
+    kenteken %{license-plate}.
+  wms/verification-rejection-results: |
+    Afgewezen na inspectie van het Authorisatie Register van %{party}
+    met de volgende bevindingen:
+  wms/title/list: "Transportopdrachten"
+  wms/flash/delete-success: "Transportopdracht verwijderd"
+  wms/title/verify: "Verificatie afgifte"
+  wms/flash/send-gate-out-success: "Gate-out voor %{ref} verstuurd"
+  wms/title/sent-gate-out: "Gate-out verstuurd"
+  wms/explanation/verify-erp: "Verifieer bij verlader"
+  wms/explanation/verify-tms-pickup: "Verifieer ophalen bij vervoerder"
+  wms/explanation/verify-tms-outsource: "Verifieer uitbesteding bij vervoerder"
+  wms/explanation/error: "Technische fout opgetreden: %{error}"
+
+  policy-rejection-reason/no-permit: "Geen toepasbare regels gevonden: %{rules}"
+  policy-rejection-reason/not-before: "Mag niet voor %{tstamp}"
+  policy-rejection-reason/not-on-or-after: "Mag niet op of na %{tstamp}"
+  policy-rejection-reason/no-matches: "Geen toepasbare policies gevonden: %{policies}"
+
+  events/title/list: "Notificaties"
+  events/title/event: "Notificatie"
+  events/no-found: "Unknown event"
+
+  explanation: "Uitleg"
+  explanation/event: "Bekijk event"
+  explanation/events/access-policy: "Toevoegen policy toegang event broker"
+  explanation/events/message-sent: "Bericht gestuurd naar \"%{owner-eori}#%{topic}\""
+  explanation/events/subscribe: "Geabonneerd op \"%{owner-eori}#%{topic}\""
+  explanation/events/unsubscribe: "Abonnement \"%{owner-eori}#%{topic}\" opgegeven"
+  explanation/http-request: "Request:"
+  explanation/http-response: "Response:"
+  explanation/ishare/access-token: "Ophalen access token voor %{party}"
+  explanation/ishare/delegation: "Delegation Evidence opvragen in Authorisatie Register %{party}"
+  explanation/ishare/delete-policy: "Verwijderen policy"
+  explanation/ishare/parties: "Partijen opvragen van satelliet %{satellite}"
+  explanation/ishare/party: "Partij %{eori} opvragen van satelliet %{satellite}"
+  explanation/ishare/policy: "Policy aanmaken in iSHARE Authorisatie Register op %{party}"
+  explanation/otm-object: "Bekijk OTM object"
+  explanation/poort8/create-policy: "Policy aanmaken in Poort8 Authorisatie Register op %{party}"
+  explanation/poort8/delete-policy: "Policy verwijderen in Poort8 Authorisatie Register op %{party}"
+  explanation/unknown: "Oeps.."
+  explanation/fetch-with-token: "Ophalen met authenticatie token"
+  explanation/fetch-without-token: "Openhalen zonder authenticatie"
+  explanation/fetch-token: "Authenticatie token ophalen"
+  explanation/tms/outsource: "Stuur OTM Trip naar TMS van andere vervoerder"
+  explanation/remove-policy-for-trip: "Verwijder policy voor trip"
+  explanation/add-policy-for-trip: "Toevoegen policy voor trip"
+
+  error/create-policy-failed: "Aanmaken AR policy mislukt"
+  error/delete-policy-failed: "Verwijderen AR policy mislukt"
+  error/ishare-command-failed: "Fout bij uitvoeren van iShare commando %{error}"
+

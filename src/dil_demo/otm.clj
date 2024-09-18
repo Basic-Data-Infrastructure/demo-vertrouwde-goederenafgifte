@@ -20,17 +20,17 @@
 (def status-assigned "assigned") ;; custom
 (def status-outsourced "outsourced") ;; custom
 
-(def status-titles
-  {status-draft      "Klad"
-   status-requested  "Ingediend"
-   status-confirmed  "Bevestigd"
-   status-in-transit "In Transit"
-   status-completed  "Afgerond"
-   status-cancelled  "Geannuleerd"
+(def statuses
+  #{status-draft
+    status-requested
+    status-confirmed
+    status-in-transit
+    status-completed
+    status-cancelled
 
-   ;; custom
-   status-assigned   "Toegewezen"
-   status-outsourced "Uitbesteed"})
+    ;; custom
+    status-assigned
+    status-outsourced})
 
 (def role-owner "owner")
 (def role-carrier "carrier")

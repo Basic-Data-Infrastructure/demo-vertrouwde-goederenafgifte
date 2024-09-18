@@ -25,6 +25,9 @@
     --color-button-secondary: color-mix(in srgb, var(--site-color) 30%, white 70%);
     --color-button-secondary-border: color-mix(in srgb, var(--site-color) 70%, white 30%);
 
+    --color-link: #0000EE;
+    --color-link-visited: #551A8B;
+
     --color-success: color-mix(in srgb, var(--color-green) 60%, black 40%);
     --color-success-bg: color-mix(in srgb, var(--color-green) 20%, white 80%);
     --color-success-border: var(--color-green);
@@ -132,7 +135,6 @@ header.container h1 {
 }
 footer.container {
     font-size: small;
-    text-align: right;
     border-radius: 0 0 .5rem .5rem;
     padding: .5rem 1rem;
 }
@@ -147,6 +149,27 @@ footer.container:after {
     display: table;
     clear: both;
 }
+footer.container .select-lang {
+    list-style: none;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+}
+footer.container .select-lang li {
+    display: inline-block;
+    margin: 0 .5em 0 0;
+    text-transform: uppercase;
+    line-height: 2rem;
+    padding: 0;
+}
+footer.container .select-lang li:last-child {
+    margin-right: inherit;
+}
+footer.container .select-lang a.current {
+    text-decoration-style: double;
+    color: var(--color-link-visited);
+}
+
 @media screen and (max-width: 84rem) {
     :is(footer,header).container {
         border-radius: inherit;
@@ -160,6 +183,13 @@ nav ul {
 
 h1, h2, h3, h4, h5 {
     margin: 0 0 1em 0;
+}
+
+a:link {
+    color: var(--color-link);
+}
+a:visited {
+    color: var(--color-link-visited);
 }
 
 q {
@@ -281,7 +311,7 @@ div.actions:last-child {
     margin-bottom: 0;
 }
 
-button, .button {
+button, .button, a.button {
     position: relative;
     display: inline-block;
     margin: 0 .5rem 0 0;

@@ -6,7 +6,8 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.wms.verify
-  (:require [dil-demo.ishare.policies :as policies]
+  (:require [dil-demo.i18n :refer [t]]
+            [dil-demo.ishare.policies :as policies]
             [org.bdinetwork.ishare.client :as ishare-client]))
 
 (defn ishare-get-delegation-evidence!
@@ -37,7 +38,7 @@
                      :target target})
             (update-in [:explanation] (fnil into [])
                        [[title {:ishare-log @ishare-client/log-interceptor-atom}
-                         [(str "Technische fout upgrade: " (.getMessage ex))]]]))))))
+                         [(t "wms/explanation/error" {:error (.getMessage ex)})]]]))))))
 
 (defn rejection-reasons [{:keys [delegation-evidences]}]
   (seq (mapcat (fn [{:keys [delegation-evidence target]}]
@@ -69,7 +70,7 @@
                                              :subject subject
                                              :target  target})]
     (ishare-get-delegation-evidence! req
-                                     "Verifieer bij verlader"
+                                     (t "wms/explanation/verify-erp")
                                      {:issuer issuer, :target target, :mask mask})))
 
 (defn verify-carriers!
@@ -99,8 +100,8 @@
           (recur (next carrier-eoris)
                  (ishare-get-delegation-evidence! req
                                                   (if pickup?
-                                                    "Verifieer ophalen bij vervoerder"
-                                                    "Verifieer uitbesteding bij vervoerder")
+                                                    (t "wms/explanation/verify-tms-pickup")
+                                                    (t "wms/explanation/verify-tms-outsource"))
                                                   {:issuer carrier-eori
                                                    :target target
                                                    :mask   mask})))

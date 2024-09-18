@@ -6,6 +6,7 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.ishare.policies
+  (:require [dil-demo.i18n :refer [t]])
   (:import (java.time Instant LocalDate LocalDateTime ZoneId)
            java.time.format.DateTimeFormatter))
 
@@ -144,18 +145,21 @@
     (cond-> []
       (and (seq rules)
            (not= rules [{:effect "Permit"}]))
-      (conj (str "Geen toepasbare regels gevonden: " (pr-str rules)))
+      (conj (t "policy-rejection-reason/no-permit"
+               {:rules  (pr-str rules)}))
 
       (and (:notBefore delegation-evidence)
            (< now (:notBefore delegation-evidence)))
-      (conj (str "Mag niet voor " (epoch->str (:notBefore delegation-evidence))) )
+      (conj (t "policy-rejection-reason/not-before"
+               {:tstamp (epoch->str (:notBefore delegation-evidence))}))
 
       (and (:notOnOrAfter delegation-evidence)
            (>= now (:notOnOrAfter delegation-evidence)))
-      (conj (str "Mag niet op of na " (epoch->str (:notOnOrAfter delegation-evidence))))
+      (conj (t "policy-rejection-reason/not-on-or-after"
+               {:tstamp (epoch->str (:notOnOrAfter delegation-evidence))}))
 
       (empty? matching-policies)
-      (conj (str "Geen toepasbare policies gevonden: " (pr-str policies)))
+      (conj (t "policy-rejection-reason/no-matches" {:policies (pr-str policies)}))
 
       :finally
       (seq))))
