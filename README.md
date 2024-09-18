@@ -9,19 +9,22 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 # DIL - Demo Vertrouwde Goederenafgifte
 
+An application to demonstrate the "Vertrouwde Goederenafgifte" use case.
+
+## ⚠ DISCLAIMER ⚠
+
+**The software is for demo purposes only!**  It has not been audited
+for security flaws and is not suitable as a starting point to develop
+software.  Use at your own risk.
+
+## Enviroments
+
 This code simulates the following environments:
 
 - [erp](http://localhost:8080/erp/)
 - [wms](http://localhost:8080/wms/)
 - [tms-1](http://localhost:8080/tms-1/)
 - [tms-2](http://localhost:8080/tms-2/)
-
-
-## DISCLAIMER
-
-**The software is for demo purposes only!**  It has not been audited
-for security flaws and is not suitable as a starting point to develop
-software.  Use at your own risk.
 
 
 ## Run
