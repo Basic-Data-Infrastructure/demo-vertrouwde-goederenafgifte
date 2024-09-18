@@ -13,5 +13,6 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   </appender>
   <logger name="ch.qos.logback" level="warn"/>
   <logger name="dil-demo" level="debug"/>
+  <logger name="org.bdinetwork" level="debug"/>
   <root level="info"><appender-ref ref="STDOUT" /></root>
 </configuration>
