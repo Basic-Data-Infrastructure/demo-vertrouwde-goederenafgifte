@@ -9,6 +9,7 @@
   (:gen-class)
   (:require [dil-demo.events :as events]
             [dil-demo.web :as web]
+            [clojure.java.io :as io]
             [ring.adapter.jetty :refer [run-jetty]]))
 
 (defn get-env
@@ -17,6 +18,15 @@
   ([k]
    (or (System/getenv k)
        (throw (Exception. (str "environment variable " k " not set"))))))
+
+(defn get-filename
+  [& [k :as args]]
+  (let [fname (apply get-env args)]
+    (when-not (.exists (io/file fname))
+      (throw (ex-info (str "File `" fname "` does not exist")
+                      {:fname fname
+                       :key k})))
+    fname))
 
 (defn ->config []
   (let [erp-eori           (get-env "ERP_EORI")
@@ -39,15 +49,15 @@
              :ar-id              (get-env "ERP_AR_ID")
              :ar-endpoint        (get-env "ERP_AR_ENDPOINT")
              :satellite-endpoint satellite-endpoint
-             :key-file           (get-env "ERP_KEY_FILE" (str "credentials/" erp-eori ".pem"))
-             :chain-file         (get-env "ERP_CHAIN_FILE" (str "credentials/" erp-eori ".crt"))}
+             :key-file           (get-filename "ERP_KEY_FILE" (str "credentials/" erp-eori ".pem"))
+             :chain-file         (get-filename "ERP_CHAIN_FILE" (str "credentials/" erp-eori ".crt"))}
      :wms   {:eori               wms-eori
              :site-name          (get-env "WMS_NAME" "Secure Storage Warehousing")
              :dataspace-id       dataspace-id
              :satellite-id       satellite-id
              :satellite-endpoint satellite-endpoint
-             :key-file           (get-env "WMS_KEY_FILE" (str "credentials/" wms-eori ".pem"))
-             :chain-file         (get-env "WMS_CHAIN_FILE" (str "credentials/" wms-eori ".crt"))}
+             :key-file           (get-filename "WMS_KEY_FILE" (str "credentials/" wms-eori ".pem"))
+             :chain-file         (get-filename "WMS_CHAIN_FILE" (str "credentials/" wms-eori ".crt"))}
      :tms-1 {:eori               tms-1-eori
              :site-name          (get-env "TMS1_NAME" "Precious Goods Transport")
              :dataspace-id       dataspace-id
@@ -56,8 +66,8 @@
              :ar-id              (get-env "TMS1_AR_ID")
              :ar-endpoint        (get-env "TMS1_AR_ENDPOINT")
              :ar-type            (get-env "TMS1_AR_TYPE")
-             :key-file           (get-env "TMS1_KEY_FILE" (str "credentials/" tms-1-eori ".pem"))
-             :chain-file         (get-env "TMS1_CHAIN_FILE" (str "credentials/" tms-1-eori ".crt"))}
+             :key-file           (get-filename "TMS1_KEY_FILE" (str "credentials/" tms-1-eori ".pem"))
+             :chain-file         (get-filename "TMS1_CHAIN_FILE" (str "credentials/" tms-1-eori ".crt"))}
      :tms-2 {:eori               tms-2-eori
              :site-name          (get-env "TMS2_NAME" "Flex Transport")
              :dataspace-id       dataspace-id
@@ -66,8 +76,8 @@
              :ar-id              (get-env "TMS2_AR_ID")
              :ar-endpoint        (get-env "TMS2_AR_ENDPOINT")
              :ar-type            (get-env "TMS2_AR_TYPE")
-             :key-file           (get-env "TMS2_KEY_FILE" (str "credentials/" tms-2-eori ".pem"))
-             :chain-file         (get-env "TMS2_CHAIN_FILE" (str "credentials/" tms-2-eori ".crt"))}
+             :key-file           (get-filename "TMS2_KEY_FILE" (str "credentials/" tms-2-eori ".pem"))
+             :chain-file         (get-filename "TMS2_CHAIN_FILE" (str "credentials/" tms-2-eori ".crt"))}
 
      :pulsar {:token-endpoint  (get-env "PULSAR_TOKEN_ENDPOINT")
               :token-server-id (get-env "PULSAR_SERVER_ID")
