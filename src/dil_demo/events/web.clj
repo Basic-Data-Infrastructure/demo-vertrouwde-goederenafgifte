@@ -70,7 +70,7 @@
   [:main
    (when-not (seq pulses)
      [:article.empty
-      [:p "Nog geen pulses geregistreerd.."]])
+      [:p "Nog geen notificaties geregistreerd.."]])
    (for [{:keys [id publishTime payload subscription]}
          (->> pulses vals (sort-by :publishTime) reverse)]
      [:article
