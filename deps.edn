@@ -39,7 +39,9 @@
         ring/ring-mock         {:mvn/version "0.4.0"}
 
         ;; for uberjar
-        org.clojure/clojure {:mvn/version "1.11.3"}}
+        org.clojure/clojure {:mvn/version "1.11.3"}
+        nl.jomco/envopts {:mvn/version "0.0.5"}
+        environ/environ {:mvn/version "1.2.0"}}
 
  :paths ["src" "resources" "dev" "classes" "test"]
 
