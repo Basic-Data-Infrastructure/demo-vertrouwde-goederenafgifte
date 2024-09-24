@@ -32,7 +32,9 @@
       [:li [:strong site-name]]]
      [:ul
       (for [{:keys [slug path title]} sites]
-        [:li [:a {:href path, :class (when (= slug site) "current")} title]])]]
+        [:li [:a {:href path, :class (when (= slug site) "current")}
+              title
+              [:span.site-sub-title (t (str "site-sub-title/" slug))]]])]]
 
     [:header.container [:h1 title]]
     [:main.container

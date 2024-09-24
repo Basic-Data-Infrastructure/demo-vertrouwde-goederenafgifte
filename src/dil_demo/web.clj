@@ -63,8 +63,10 @@
 (defn list-apps []
   [:main
    [:ul
-    (for [{:keys [path title]} sites]
-      [:li [:a {:href path} title]])]])
+    (for [{:keys [path slug title]} sites]
+      [:li [:a {:href path}
+            title
+            [:span.site-sub-title (t (str "site-sub-title/" slug))]]])]])
 
 (def handler
   (routes

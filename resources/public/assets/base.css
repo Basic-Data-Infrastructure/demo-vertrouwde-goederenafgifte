@@ -91,6 +91,7 @@ body > nav.top > ul > li > a {
 }
 body > nav.top > ul > li > a.current {
     text-decoration: underline;
+    font-weight: bold;
 }
 
 nav.bottom {
@@ -170,9 +171,24 @@ footer.container .select-lang a.current {
     color: var(--color-link-visited);
 }
 
+span.site-sub-title {
+    padding-left: .5em;
+}
+span.site-sub-title:before {
+    content: '(';
+}
+span.site-sub-title:after {
+    content: ')';
+}
+
 @media screen and (max-width: 84rem) {
     :is(footer,header).container {
         border-radius: inherit;
+    }
+}
+@media screen and (max-width: 40rem) {
+    nav span.site-sub-title {
+        display: none;
     }
 }
 

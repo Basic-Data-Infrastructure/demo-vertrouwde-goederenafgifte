@@ -9,7 +9,13 @@ nl:
   not-found: "Deze pagina bestaat niet."
   not-found/title: "Niet gevonden"
   button/start-screen: "Terug naar het startscherm"
+
   start-screen/title: "Demo Vertrouwde Goederenafgifte"
+
+  site-sub-title/erp: "Verlader"
+  site-sub-title/wms: "Distributiecentrum"
+  site-sub-title/tms-1: "Transporteur 1"
+  site-sub-title/tms-2: "Transporteur 2"
 
   see-also: "Zie ook:"
   empty: "Geen gegevens.."
@@ -161,7 +167,13 @@ en:
   not-found: "This page does not exist."
   not-found/title: "Not Found"
   button/start-screen: "Back to the start screen"
+
   start-screen/title: "Demo Trusted Goods Delivery"
+
+  site-sub-title/erp: "Shipper"
+  site-sub-title/wms: "Warehouse"
+  site-sub-title/tms-1: "Trucking company 1"
+  site-sub-title/tms-2: "Trucking company 2"
 
   see-also: "See also:"
   empty: "No data.."
