@@ -10,7 +10,9 @@
   (:require [dil-demo.events :as events]
             [dil-demo.web :as web]
             [clojure.java.io :as io]
-            [ring.adapter.jetty :refer [run-jetty]]))
+            [ring.adapter.jetty :refer [run-jetty]]
+            [nl.jomco.envopts :as envopts]
+            [environ.core :refer [env]]))
 
 (defn get-env
   ([k default]
@@ -28,60 +30,68 @@
                        :key k})))
     fname))
 
-(defn ->config []
-  (let [erp-eori           (get-env "ERP_EORI")
-        wms-eori           (get-env "WMS_EORI")
-        tms-1-eori         (get-env "TMS1_EORI")
-        tms-2-eori         (get-env "TMS2_EORI")
-        dataspace-id       (get-env "DATASPACE_ID")
-        satellite-id       (get-env "SATELLITE_ID")
-        satellite-endpoint (get-env "SATELLITE_ENDPOINT")]
-    {:jetty {:port (Integer/parseInt (get-env "PORT" "8080"))}
-     :base-url (get-env "BASE_URL" (str "http://localhost:" (get-env "PORT" "8080")))
-     :store {:file (get-env "STORE_FILE" "/tmp/dil-demo.edn")}
-     :auth  {:user-prefix  (get-env "AUTH_USER_PREFIX" "demo")
-             :pass-multi   (parse-long (get-env "AUTH_PASS_MULTI" "31415"))
-             :max-accounts (parse-long (get-env "AUTH_MAX_ACCOUNTS" "42"))}
-     :erp   {:eori               erp-eori
-             :site-name          (get-env "ERP_NAME" "Smartphone Shop")
-             :dataspace-id       dataspace-id
-             :satellite-id       satellite-id
-             :ar-id              (get-env "ERP_AR_ID")
-             :ar-endpoint        (get-env "ERP_AR_ENDPOINT")
-             :satellite-endpoint satellite-endpoint
-             :key-file           (get-filename "ERP_KEY_FILE" (str "credentials/" erp-eori ".pem"))
-             :chain-file         (get-filename "ERP_CHAIN_FILE" (str "credentials/" erp-eori ".crt"))}
-     :wms   {:eori               wms-eori
-             :site-name          (get-env "WMS_NAME" "Secure Storage Warehousing")
-             :dataspace-id       dataspace-id
-             :satellite-id       satellite-id
-             :satellite-endpoint satellite-endpoint
-             :key-file           (get-filename "WMS_KEY_FILE" (str "credentials/" wms-eori ".pem"))
-             :chain-file         (get-filename "WMS_CHAIN_FILE" (str "credentials/" wms-eori ".crt"))}
-     :tms-1 {:eori               tms-1-eori
-             :site-name          (get-env "TMS1_NAME" "Precious Goods Transport")
-             :dataspace-id       dataspace-id
-             :satellite-id       satellite-id
-             :satellite-endpoint satellite-endpoint
-             :ar-id              (get-env "TMS1_AR_ID")
-             :ar-endpoint        (get-env "TMS1_AR_ENDPOINT")
-             :ar-type            (get-env "TMS1_AR_TYPE")
-             :key-file           (get-filename "TMS1_KEY_FILE" (str "credentials/" tms-1-eori ".pem"))
-             :chain-file         (get-filename "TMS1_CHAIN_FILE" (str "credentials/" tms-1-eori ".crt"))}
-     :tms-2 {:eori               tms-2-eori
-             :site-name          (get-env "TMS2_NAME" "Flex Transport")
-             :dataspace-id       dataspace-id
-             :satellite-id       satellite-id
-             :satellite-endpoint satellite-endpoint
-             :ar-id              (get-env "TMS2_AR_ID")
-             :ar-endpoint        (get-env "TMS2_AR_ENDPOINT")
-             :ar-type            (get-env "TMS2_AR_TYPE")
-             :key-file           (get-filename "TMS2_KEY_FILE" (str "credentials/" tms-2-eori ".pem"))
-             :chain-file         (get-filename "TMS2_CHAIN_FILE" (str "credentials/" tms-2-eori ".crt"))}
+(defmethod envopts/parse :file
+  [s _]
+  ;; ensure that given file option exists, returns the path as string
+  (if-not (.exists (io/file s))
+    [nil "file does not exist"]
+    [s]))
 
-     :pulsar {:token-endpoint  (get-env "PULSAR_TOKEN_ENDPOINT")
-              :token-server-id (get-env "PULSAR_SERVER_ID")
-              :url             (get-env "PULSAR_URL")}}))
+(def opts-spec
+  {"ERP_EORI"              ["EORI of ERP system" :str :in [:erp :eori]]
+   "WMS_EORI"              ["EORI of WMS system" :str :in [:wms :eori]]
+   "TMS1_EORI"             ["EORI of TMS-1 system" :str :in [:tms-1 :eori]]
+   "TMS2_EORI"             ["EORI of TMS-2 system" :str :in [:tms-2 :eori]]
+   "DATASPACE_ID"          ["ID of Dataspace" :str]
+   "SATELLITE_ID"          ["ID of Association Register" :str]
+   "SATELLITE_ENDPOINT"    ["URL of Association Register" :str]
+   "STORE"                 ["Database file" :str :default "/tmp/dil-demo.edn" :in [:store :file]]
+   "PORT"                  ["Server port" :int :default 8080 :in [:jetty :port]]
+   "BASE_URL"              ["Base URL" :str :default "http://localhost:8080"]
+   "AUTH_USER_PREFIX"      ["Prefix of username" :str :default "demo" :in [:auth :user-prefix]]
+   "AUTH_PASS_MULTI"       ["Multiplier for user password" :int :default 31415 :in [:auth :pass-multi]]
+   "AUTH_MAX_ACCOUNTS"     ["Max number of user accounts" :int :default 42 :in [:auth :max-accounts]]
+   "ERP_NAME"              ["ERP Name" :str :default "Smartphone Shop"  :in [:erp :site-name]]
+   "ERP_AR_ID"             ["ERP AR ID" :str :in [:erp :ar-id]]
+   "ERP_AR_ENDPOINT"       ["ERP AR URL" :str :in [:erp :ar-endpoint]]
+   "ERP_KEY_FILE"          ["ERP Key file" :file :in [:erp :key-file]]
+   "ERP_CHAIN_FILE"        ["ERP Certificate chain file" :file :in [:erp :chain-file]]
+   "WMS_NAME"              ["WMS Name" :str :default "Smartphone Shop" :str :in [:wms :site-name]]
+   "WMS_KEY_FILE"          ["WMS Key file" :file :in [:wms :key-file]]
+   "WMS_CHAIN_FILE"        ["WMS Certificate chain file" :file :in [:wms :chain-file]]
+   "TMS1_NAME"             ["TMS-1 Name" :str :default "Smartphone Shop" :str :in [:tms-1 :site-name]]
+   "TMS1_AR_ID"            ["TMS-1 AR ID" :str :in [:tms-1 :ar-id]]
+   "TMS1_AR_ENDPOINT"      ["TMS-1 AR URL" :str :in [:tms-1 :ar-endpoint]]
+   "TMS1_KEY_FILE"         ["TMS-1 Key file" :file :in [:tms-1 :key-file]]
+   "TMS1_CHAIN_FILE"       ["TMS-1 Certificate chain file" :file :in [:tms-1 :chain-file]]
+   "TMS2_NAME"             ["TMS-2 Name" :str :default "Smartphone Shop" :str :in [:tms-2 :site-name]]
+   "TMS2_AR_ID"            ["TMS-2 AR ID" :str :in [:tms-2 :ar-id]]
+   "TMS2_AR_ENDPOINT"      ["TMS-2 AR URL" :str :in [:tms-2 :ar-endpoint]]
+   "TMS2_KEY_FILE"         ["TMS-2 Key file" :file :in [:tms-2 :key-file]]
+   "TMS2_CHAIN_FILE"       ["TMS-2 Certificate chain file" :file :in [:tms-2 :chain-file]]
+   "PULSAR_TOKEN_ENDPOINT" ["PULSAR Token Endpoint" :str :in [:pulsar :token-endpoint]]
+   "PULSAR_SERVER_ID"      ["PULSAR Token Server ID" :str :in [:pulsar :token-server-id]]
+   "PULSAR_URL"            ["PULSAR websocker URL" :str :in [:pulsar :url]]})
+
+(defn process-config
+  [config]
+  (let [shared (select-keys config [:dataspace-id :satellite-id :satellite-endpoint])]
+    (-> config
+        (update :erp merge shared)
+        (update :wms merge shared)
+        (update :tms-1 merge shared)
+        (update :tms-2 merge shared))))
+
+(defn ->config
+  [env]
+  (let [[config errs] (envopts/opts env opts-spec)]
+    (when errs
+      (throw (ex-info (str (envopts/errs-description errs) "\n"
+                           "available options:\n"
+                           (envopts/specs-description opts-spec))
+                      {:errs   errs
+                       :config config})))
+    (process-config config)))
 
 (defonce server-atom (atom nil))
 
@@ -100,5 +110,5 @@
           (start-webserver config (web/make-app config))))
 
 (defn -main []
-  (let [config (->config)]
+  (let [config (->config env)]
     (start-webserver config (web/make-app config))))
