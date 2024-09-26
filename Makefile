@@ -34,24 +34,6 @@ resources/test/pem/ca.cert.pem:
 		-keyout resources/test/pem/ca.key.pem \
 		-out resources/test/pem/ca.cert.pem
 
-resources/test/pem/aa.cert.pem: resources/test/pem/ca.cert.pem
-	openssl req \
-		-x509 -newkey rsa:4096 -sha256 -days 365 -noenc \
-		-subj "/CN=Satellite/serialNumber=EU.EORI.AA" \
-		-keyout resources/test/pem/aa.key.pem \
-		-out resources/test/pem/aa.cert.pem \
-		-CA resources/test/pem/ca.cert.pem \
-		-CAkey resources/test/pem/ca.key.pem
-
-resources/test/pem/ar.cert.pem: resources/test/pem/ca.cert.pem
-	openssl req \
-		-x509 -newkey rsa:4096 -sha256 -days 365 -noenc \
-		-subj "/CN=Satellite/serialNumber=EU.EORI.AR" \
-		-keyout resources/test/pem/ar.key.pem \
-		-out resources/test/pem/ar.cert.pem \
-		-CA resources/test/pem/ca.cert.pem \
-		-CAkey resources/test/pem/ca.key.pem
-
 resources/test/pem/client.cert.pem: resources/test/pem/ca.cert.pem
 	openssl req \
 		-x509 -newkey rsa:4096 -sha256 -days 365 -noenc \
@@ -61,7 +43,7 @@ resources/test/pem/client.cert.pem: resources/test/pem/ca.cert.pem
 		-CA resources/test/pem/ca.cert.pem \
 		-CAkey resources/test/pem/ca.key.pem
 
-test-certs: resources/test/pem/ca.cert.pem resources/test/pem/aa.cert.pem resources/test/pem/ar.cert.pem resources/test/pem/client.cert.pem
+test-certs: resources/test/pem/client.cert.pem
 
 lint:
 	reuse lint

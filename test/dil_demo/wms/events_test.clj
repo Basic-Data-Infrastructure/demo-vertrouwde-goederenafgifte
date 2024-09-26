@@ -6,7 +6,8 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.wms.events-test
-  (:require [clojure.string :as string]
+  (:require [clojure.java.io :as io]
+            [clojure.string :as string]
             [clojure.test :refer [deftest is testing]]
             [dil-demo.http-utils :as http-utils]
             [dil-demo.store :as store]
@@ -69,6 +70,7 @@
 (defn slurp-pem-data [s]
   (string/replace
    (->> s
+        (io/resource)
         (slurp)
         (re-matches #"(?s)-----BEGIN (?:PRIVATE KEY|CERTIFICATE)-----\n(.*)-----END (?:PRIVATE KEY|CERTIFICATE)-----\n?")
         (second)
@@ -77,8 +79,8 @@
 
 (deftest make-handler
   (testing "availability of /connect/token endpoint"
-    (let [priv-key    (slurp-pem-data "resources/test/pem/client.key.pem")
-          pub-key     (slurp-pem-data "resources/test/pem/client.cert.pem")
+    (let [priv-key    (slurp-pem-data "test/pem/client.key.pem")
+          pub-key     (slurp-pem-data "test/pem/client.cert.pem")
           client-data #:ishare{:client-id          eori
                                :private-key        priv-key
                                :x5c                [pub-key]
