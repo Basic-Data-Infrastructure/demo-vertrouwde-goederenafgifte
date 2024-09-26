@@ -9,13 +9,14 @@
   (:require [clojure.java.io :as io]
             [clojure.set :as set]
             [clojure.string :as string]
+            [clojure.tools.logging :as log]
             [clj-yaml.core :as yaml])
   (:import (java.time ZonedDateTime)
            (java.time.temporal ChronoUnit)))
 
 (def ^:dynamic *lang* "nl")
 (def ^:dynamic *translations* nil)
-(def ^:dynamic *throws-exception* true)
+(def ^:dynamic *throws-exception* false)
 
 (defn- check-translations
   "Throw an exception when languages in `translations` (top level keys)
@@ -47,7 +48,7 @@
   (.plus (ZonedDateTime/now) 1 ChronoUnit/YEARS))
 
 (defn wrap [app & {:keys [translations throw-exceptions]
-                   :or   {throw-exceptions true
+                   :or   {throw-exceptions false
                           translations     (->  "i18n.yml"
                                                 (io/resource)
                                                 (read-translations)
@@ -85,7 +86,13 @@
     (reduce (fn [r [k v]]
               (string/replace r (str "%{" (name k) "}") (str v)))
             (cond
-              (string? val) val
-              *throws-exception* (throw (ex-info "Translation missing" {:keys ks}))
-              :else (pr-str ks))
+              (string? val)
+              val
+
+              *throws-exception*
+              (throw (ex-info "Translation missing" {:keys ks}))
+
+              :else
+              (do (log/error "Translation missing" {:keys ks})
+                  (pr-str ks)))
             args)))

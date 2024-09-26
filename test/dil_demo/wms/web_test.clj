@@ -28,8 +28,9 @@
      :owner {:eori owner-eori}}}})
 
 (defn do-request [method path & [params]]
-  ((i18n/wrap
-    (sut/make-handler {:site-id :wms, :site-name "WMS"}))
+  ((-> {:site-id :wms, :site-name "WMS"}
+       (sut/make-handler)
+       (i18n/wrap :throw-exceptions true))
    (assoc (request method path params)
           :base-url "http://example.com"
           ::store/store store

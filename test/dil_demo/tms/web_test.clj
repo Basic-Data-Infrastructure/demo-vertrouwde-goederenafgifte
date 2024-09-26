@@ -24,8 +24,9 @@
      :owner  {:eori "EU.EORI.OWNER"}}}})
 
 (defn do-request [method path & [params]]
-  ((i18n/wrap
-    (sut/make-handler {:site-id :tms, :site-name "TMS"}))
+  ((-> {:site-id :tms, :site-name "TMS"}
+       (sut/make-handler)
+       (i18n/wrap :throw-exceptions true))
    (assoc (request method path params)
           ::store/store store
           :user-number 1

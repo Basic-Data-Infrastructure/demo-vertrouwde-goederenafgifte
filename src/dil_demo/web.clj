@@ -143,7 +143,7 @@
 
       (wrap-user-number)
       (wrap-basic-authentication (->authenticate (config :auth)))
-      (i18n/wrap :throw-exceptions false)
+      (i18n/wrap)
 
       (wrap-defaults (assoc-in site-defaults
                                [:session :store] (ttl-memory-store)))))

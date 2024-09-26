@@ -13,7 +13,9 @@
             [ring.mock.request :refer [request]]))
 
 (defn do-request [& args]
-  ((i18n/wrap sut/handler) (apply request args)))
+  ((-> sut/handler
+       (i18n/wrap :throw-exceptions true))
+   (apply request args)))
 
 (deftest handler
   (testing "/"
