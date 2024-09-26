@@ -9,6 +9,7 @@
   (:require [clojure.test :refer [deftest is testing]]
             [dil-demo.erp.web :as sut]
             [dil-demo.events :as events]
+            [dil-demo.i18n :as i18n]
             [dil-demo.otm :as otm]
             [dil-demo.store :as store]
             [nl.jomco.http-status-codes :as http-status]
@@ -27,7 +28,8 @@
      :owner   {:eori eori}}}})
 
 (defn do-request [method path & [params]]
-  ((sut/make-handler {:site-id :erp, :site-name "ERP", :eori eori})
+  ((i18n/wrap
+    (sut/make-handler {:site-id :erp, :site-name "ERP", :eori eori}))
    (assoc (request method path params)
           ::store/store store
           :user-number 1

@@ -41,11 +41,13 @@
      main]
     [:footer.container
      [:ul.select-lang
-      (for [lang @i18n/languages]
+      (for [lang (keys i18n/*translations*)]
         [:li
-         [:a.set-lang {:href (str ".?set-lang=" lang)
-                       :class (cond-> (str "lang-" lang)
-                                (= i18n/lang lang) (str " current"))} lang]])]
+         [:a.set-lang
+          {:href  (str ".?set-lang=" lang)
+           :class (cond-> (str "lang-" lang)
+                    (= i18n/*lang* lang) (str " current"))}
+          lang]])]
 
      [:img {:src   "/assets/bdi-logo.png"
             :title "Powered by BDI — Basic Data Infrastructure"

@@ -9,6 +9,7 @@
   (:require [clojure.data.json :as json]
             [clojure.test :refer [deftest is testing]]
             [dil-demo.events :as events]
+            [dil-demo.i18n :as i18n]
             [dil-demo.otm :as otm]
             [dil-demo.store :as store]
             [dil-demo.wms.web :as sut]
@@ -27,7 +28,8 @@
      :owner {:eori owner-eori}}}})
 
 (defn do-request [method path & [params]]
-  ((sut/make-handler {:site-id :wms, :site-name "WMS"})
+  ((i18n/wrap
+    (sut/make-handler {:site-id :wms, :site-name "WMS"}))
    (assoc (request method path params)
           :base-url "http://example.com"
           ::store/store store

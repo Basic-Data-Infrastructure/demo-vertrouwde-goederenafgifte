@@ -7,6 +7,7 @@
 
 (ns dil-demo.tms.web-test
   (:require [clojure.test :refer [deftest is testing]]
+            [dil-demo.i18n :as i18n]
             [dil-demo.otm :as otm]
             [dil-demo.tms.web :as sut]
             [dil-demo.store :as store]
@@ -23,7 +24,8 @@
      :owner  {:eori "EU.EORI.OWNER"}}}})
 
 (defn do-request [method path & [params]]
-  ((sut/make-handler {:site-id :tms, :site-name "TMS"})
+  ((i18n/wrap
+    (sut/make-handler {:site-id :tms, :site-name "TMS"}))
    (assoc (request method path params)
           ::store/store store
           :user-number 1
