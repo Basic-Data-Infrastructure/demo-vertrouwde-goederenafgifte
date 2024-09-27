@@ -18,10 +18,11 @@
   ([v k] (prn k v) v))
 
 (ns user
-  (:require [dil-demo.core :as core]))
+  (:require [dil-demo.core :as core]
+            [environ.core :refer [env]]))
 
 (defn start! []
-  (core/start! (assoc-in (core/->config) [:jetty :join?] false)))
+  (core/start! (core/->config env)))
 
 (defn stop! []
   (core/stop!))
