@@ -289,33 +289,32 @@
       (events.web/wrap config)
       (wrap config callback-fn)))
 
-
 (defn wrap-fetch-and-store-event
   "Wrapper for event handlers to automatically fetch event data from
   remote services and store it."
   [f client-data]
-  (fn fetch-event-wrapper [{:keys [subscription messageId] :as pulse}]
-    (log/debug "Got pulse" pulse)
-
-    ;; TODO do not call f if pulse already seen
-    (let [{:keys [user-number] :as event-data}
-          (-> pulse
-              :payload
-              (events.web/fetch-event client-data)
-              :body
-              (json/read-str :key-fn keyword)
-              (assoc :subscription subscription))]
-      (-> pulse
-          (assoc :event-data event-data
-                 :user-number user-number)
-          (update ::store/commands conj
-                  [:put! :pulses
-                   (-> pulse
-                       (select-keys [:properties
-                                     :payload
-                                     :publishTime
-                                     :redeliveryCount
-                                     :messageId])
-                       (assoc :id messageId)
-                       (assoc :subscription subscription))])
-          (f)))))
+  (fn fetch-event-wrapper [{:keys [subscription messageId] :as req}]
+    (let [pulse (select-keys req [:properties
+                                  :payload
+                                  :publishTime
+                                  :redeliveryCount
+                                  :messageId])]
+      (if (get-in req [::store/store :pulses messageId])
+        (do
+          (log/debug "Skipping pulse, already seen" {:subscription subscription
+                                                     :pulse        pulse})
+          nil)
+        (do
+          (log/debug "Processing pulse" {:subscription subscription
+                                         :pulse        pulse})
+          (-> req
+              (assoc :event-data
+                     (-> pulse
+                         :payload
+                         (events.web/fetch-event client-data)
+                         :body
+                         (json/read-str :key-fn keyword)
+                         (assoc :subscription subscription)))
+              (update ::store/commands conj
+                      [:put! :pulses (assoc pulse :id messageId)])
+              (f)))))))
