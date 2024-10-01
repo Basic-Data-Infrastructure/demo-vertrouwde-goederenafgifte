@@ -77,9 +77,9 @@
      [:article
       [:header
        [:div.status publishTime]
-       [:div.subscription (string/join " / " subscription)]
-       [:a {:href id}
-        [:pre (w/to-json payload)]]]])])
+       [:div.subscription (string/join " / " subscription)]]
+      [:a {:href id}
+       [:pre (w/to-json payload)]]])])
 
 (defn- show-pulse [{:keys [flash] :as res}]
   (let [res (dissoc res :flash)]

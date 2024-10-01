@@ -248,6 +248,7 @@ article > :is(header, footer) {
 
 article > header {
     margin: -1rem -1rem 1rem -1rem;
+    min-height: 1rem;
 }
 article > footer {
     margin: 1rem -1rem -1rem -1rem;
