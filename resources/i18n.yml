@@ -168,7 +168,7 @@ en:
   not-found/title: "Not Found"
   button/start-screen: "Back to the start screen"
 
-  start-screen/title: "Demo Trusted Goods Delivery"
+  start-screen/title: "Demo Trusted Goods Handover"
 
   site-sub-title/erp: "Shipper"
   site-sub-title/wms: "Warehouse"
@@ -178,7 +178,7 @@ en:
   see-also: "See also:"
   empty: "No data.."
   confirm: "Are you sure?"
-  confirm/driver-and-license-plate: "Are the driver's license digits and license plate correct?"
+  confirm/driver-and-license-plate: "Are the driver's ID digits and vehicle license plate correct?"
 
   button/show: "Show"
   button/cancel: "Cancel"
@@ -201,8 +201,8 @@ en:
   label/goods: "Goods"
   label/carrier: "Carrier"
   label/carrier-eories: "Carrier EORI's"
-  label/driver-id-digits: "Driver's License"
-  label/license-plate: "License Plate"
+  label/driver-id-digits: "Driver ID digits"
+  label/license-plate: "Vehicle License Plate"
   label/date: "Date"
   label/remarks: "Remarks"
 
@@ -249,7 +249,7 @@ en:
   tms/title/deleted: "Order deleted"
   tms/flash/delete-success: "Order deleted"
   tms/title/assign: "Assign Order %{ref}"
-  tms/flash/assigned-success: "Driver and license plate assigned to order %{ref}"
+  tms/flash/assigned-success: "Driver and vehicle license plate assigned to order %{ref}"
   tms/title/assigned: "Order %{ref} assigned"
   tms/title/outsource: "Outsource Order %{ref} to another carrier"
   tms/title/outsourced: "Order %{ref} outsourced"
@@ -258,23 +258,23 @@ en:
   wms/button/gate-out: "Handled"
   wms/button/verify: "Verify"
   wms/button/scan-qr: "Scan QR"
-  wms/title/verification-accepted: "Delivery Accepted"
+  wms/title/verification-accepted: "Handover Allowed"
   wms/verification-accepted: |
-    Transport order %{ref} delivery approved for carrier %{carrier},
-    driver with license ending in %{driver-id-digits} and
-    license plate %{license-plate}.
+    Transport order %{ref} handover approved for carrier %{carrier},
+    driver with ID ending in %{driver-id-digits} and vehicle license
+    plate %{license-plate}.
 
-  wms/title/verification-rejected: "Delivery NOT Accepted"
+  wms/title/verification-rejected: "Handover NOT Allowed"
   wms/verification-rejected: |
-    Transport order %{ref} delivery REJECTED for carrier %{carrier},
-    driver with license ending in %{driver-id-digits} and
-    license plate %{license-plate}.
+    Transport order %{ref} handover REJECTED for carrier %{carrier},
+    driver with ID ending in %{driver-id-digits} and vehicle license
+    plate %{license-plate}.
   wms/verification-rejection-results: |
     Rejected after inspection of the Authorization Register of %{party}
     with the following findings:
   wms/title/list: "Transport Orders"
   wms/flash/delete-success: "Transport order deleted"
-  wms/title/verify: "Delivery Verification"
+  wms/title/verify: "Handover Verification"
   wms/flash/send-gate-out-success: "Gate-out for %{ref} sent"
   wms/title/sent-gate-out: "Gate-out sent"
   wms/explanation/verify-erp: "Verify with shipper"
