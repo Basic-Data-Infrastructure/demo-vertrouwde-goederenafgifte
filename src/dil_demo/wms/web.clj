@@ -95,7 +95,7 @@
                                 {:keys [explanation]}
                                 {:keys [eori->name]}]
   [:div
-   [:section
+   [:section.verification-accepted
     [:p
      (t "wms/verification-accepted"
         {:ref              (:ref transport-order)
@@ -112,7 +112,7 @@
                                 {:keys [explanation] :as result}
                                 {:keys [eori->name]}]
   [:div
-   [:section
+   [:section.verification-rejected
     [:p
      (t "wms/verification-rejected"
         {:ref              (:ref transport-order)

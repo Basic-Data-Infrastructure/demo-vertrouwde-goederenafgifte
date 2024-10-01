@@ -437,16 +437,22 @@ video {
     width: 100%;
 }
 
-.verification-rejected {
-    background: var(--color-error-bg);
-    border: solid var(--color-error-border) 2px;
-    color: var(--color-error);
-    padding: 1rem;
+.verification-rejected:before, .verification-accepted:before {
+    font-size: 4em;
+    display: block;
+    line-height: 2;
+    text-align: center;
+    margin-bottom: 2rem;
 }
 
-.verification-accepted {
+.verification-rejected:before {
+    content: "⚠";
+    background: var(--color-error-bg);
+    color: var(--color-error);
+}
+
+.verification-accepted:before {
+    content: "✔";
     background: var(--color-success-bg);
-    border: solid var(--color-success-border) 2px;
     color: var(--color-success);
-    padding: 1rem;
 }
