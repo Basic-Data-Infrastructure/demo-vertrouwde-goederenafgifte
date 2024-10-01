@@ -17,7 +17,13 @@ An application to demonstrate the "Vertrouwde Goederenafgifte" use case.
 for security flaws and is not suitable as a starting point to develop
 software.  Use at your own risk.
 
-## Enviroments
+## Lessons learned (sorry in Dutch only)
+
+- [Fase 1](doc/bevindingen-fase-1.org)
+- [Fase 2](doc/bevindingen-fase-2.md)
+- [Fase 3](doc/bevindingen-fase-3.md)
+
+## Environments
 
 This code simulates the following environments:
 
