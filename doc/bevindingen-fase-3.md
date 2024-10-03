@@ -72,6 +72,26 @@ WWW-Authenticate Bearer
   server_token_endpoint=*TOKEN-URL-PRODUCER*
 ```
 
+# Alternatieve implementaties voor delen en afschermen van events
+
+Er zijn een alternatieven ter sprake gekomen zijn bij het implementeren van de demo. Deze hebben we nu niet geïmplementeerd, maar kunnen in andere use-cases of verdere uitbreiding van de demo van pas komen.
+
+## Meesturen data met notificatie
+
+Als bepaalde event data "niet-gevoelig" genoemd kan worden, zodat iedere partij die betrokken is bij een zending deze data ook mag inzien, is het ook mogelijk om deze data direct mee te sturen met de notificatie.  De ontvanger kan dan bepalen of er meer informatie nodig is, en deze bij de bron ophalen zoals hiervoor beschreven.
+
+Als de ontvanger dan vaak besluit dat er geen verdere data nodig is, omdat er al genoeg informatie is, of omdat de ontvanger kan zien dat het event niet relevant is, kan het aantal verdere requests naar de bron data terugdringen.
+
+## Opslitsen over meerdere topics/brokers
+
+Als er structureel event data afgeschermd moet worden, is een opslitsing over meerdere topics ook een mogelijkheid. Als zendingen uitbesteed worden zou de uitbestedende partij een eigen topic kunnen inrichten, net als de verlader in de huidige opzet. Deze kan dan binnenkomende events filteren en uitwisselen tusssen het topic van zijn opdrachtgever en het eigen topic dat gedeeld wordt met de onderaaannemers. Voor uitwisselen en filteren zijn dan wel extra componenten nodig.
+
+## Webhooks / long polling
+
+In plaats van een externe broker is het ook mogelijk om notificaties te implementeren via een "long poll", waar consumers direct bij de bron wachten op nieuwe event data. Hierbij is er geen aparte broker meer nodig, deze functionaliteit kan direct geimplementeerd worden bij de event bron.
+
+DSGO heeft een andere benadering met webhooks. Hierbij geeft de event bron subscribers direct een bericht (via een point-to-point request). Ook hierbij is geen aparte broker nodig.
+
 # Conclusie
 
 Het gebruik van een *event broker* in deze opzet heeft de volgende gevolgen:
