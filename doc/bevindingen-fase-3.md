@@ -22,7 +22,7 @@ Relevante BDI Building Blocks:
 - Authorisatie
 - Authenticatie
 - Discovery
-- Event Sub/Sub
+- Event Pub/Sub
 
 
 # Focus fase 3: gate-out events
