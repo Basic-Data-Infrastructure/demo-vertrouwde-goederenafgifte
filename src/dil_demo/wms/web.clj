@@ -39,21 +39,22 @@
        (cond
          (= status otm/status-confirmed)
          (f/post-button (str "send-gate-out-" id)
-                        {:label (t "wms/button/gate-out")
-                         :class "primary"})
+                        {:label  (t "wms/button/gate-out")
+                         :button {:class "primary"}
+                         :form   {:fx-dialog "#modal-dialog"}})
 
          (= status otm/status-requested)
-         [:a.button.primary {:href (str "verify-" id)} (t "wms/button/verify")])
+         [:a.button.primary {:href      (str "verify-" id)
+                             :fx-dialog "#modal-dialog"}
+          (t "wms/button/verify")])
 
-       (f/delete-button (str "transport-order-" id))]])])
+       (f/delete-button (str "transport-order-" id)
+                        {:form {:fx-dialog "#modal-dialog"}})]])])
 
 (defn qr-code-scan-button [carrier-id driver-id plate-id]
   (let [id (str "qr-code-video-" (UUID/randomUUID))]
     [:div.qr-code-scan-container
      [:video {:id id, :style "display:none"}]
-
-     [:script {:src "/assets/qr-scanner.legacy.min.js"}] ;; https://github.com/nimiq/qr-scanner
-     [:script {:src "/assets/scan-qr.js"}]
      [:a.button.secondary {:onclick (str "scanDriverQr(this, "
                                          (json-str id) ", "
                                          (json-str carrier-id) ", "
@@ -62,7 +63,9 @@
       (t "wms/button/scan-qr")]]))
 
 (defn verify-transport-order [{:keys [id] :as transport-order}]
-  (f/form transport-order {:method "POST", :action (str "verify-" id)}
+  (f/form transport-order {:method    "POST"
+                           :action    (str "verify-" id)
+                           :fx-dialog "#modal-dialog"}
     (f/input :ref {:label (t "label/ref"), :disabled true})
     (f/input [:load :date] {:label (t "label/date"), :disabled true})
     (f/input :goods {:label (t "label/goods"), :disabled true})
@@ -84,11 +87,12 @@
                             :required true})
 
     [:div.actions
+     [:a.button.cancel {:href "."} (t "button/cancel")]
+
      [:button.button-primary
       {:type    "submit"
        :onclick (f/confirm-js (t "confirm/driver-and-license-plate"))}
-      (t "wms/button/verify")]
-     [:a.button {:href "."} (t "button/cancel")]]))
+      (t "wms/button/verify")]]))
 
 (defn accepted-transport-order [transport-order
                                 {:keys [carrier-eoris driver-id-digits license-plate]}
@@ -133,10 +137,17 @@
      [:a.button {:href "."} (t "button/list")]]]
    (w/explanation explanation)])
 
+(defn deleted-transport-order [{:keys [explanation]}]
+  [:div
+   [:section
+    [:div.actions
+     [:a.button {:href "."} (t "button/list")]]]
+   (w/explanation explanation)])
+
 (defn gate-out-transport-order [_transport-order {:keys [explanation]}]
   [:div
    [:div.actions
-     [:a.button {:href "."} (t "button/list")]]
+    [:a.button {:href "."} (t "button/list")]]
    (w/explanation explanation)])
 
 
@@ -174,10 +185,15 @@
      (DELETE "/transport-order-:id" {::store/keys [store]
                                      {:keys [id]} :params}
        (when (get-transport-order store id)
-         (-> "."
+         (-> "deleted"
              (redirect :see-other)
              (assoc :flash {:success (t "wms/flash/delete-success")})
              (assoc ::store/commands [[:delete! :transport-orders id]]))))
+
+     (GET "/deleted" {:keys [flash]}
+       (render (t "erp/title/deleted")
+               (deleted-transport-order flash)
+               flash))
 
      (GET "/verify-:id" {:keys        [flash]
                          ::store/keys [store]
