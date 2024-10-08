@@ -85,33 +85,36 @@
   (str "return confirm(" (json/write-str (or message (t "confirm"))) ")"))
 
 (defn delete-button
-  [path & {:keys [label] :or {label (t "button/delete")}}]
-  (form nil {:method "POST", :action path}
+  [path & {:keys [label] :or {label (t "button/delete")} :as attrs}]
+  (form nil (merge {:method "POST", :action path, :class "delete-button"}
+                   (:form attrs))
     [:input {:type "hidden", :name "_method", :value "DELETE"}]
-    [:button {:onclick (confirm-js)}
+    [:button.delete.danger (merge {:onclick (confirm-js)}
+                                  (:button attrs))
      label]))
 
 (defn post-button
-  [path {:keys [label] :as opts}]
+  [path {:keys [label] :as attrs}]
   {:pre [path label]}
-  (form nil {:method "POST", :action path}
-    [:button (dissoc opts :label) label]))
+  (form nil (merge {:method "POST", :action path}
+                   (:form attrs))
+    [:button (:button attrs) label]))
 
 (defn submit-button [& [{:keys [label]
                          :or   {label (t "button/save")}
                          :as attrs}]]
-  [:button (into {:type "submit"}
-                 (dissoc attrs :label))
+  [:button.submit (into {:type "submit"}
+                        (dissoc attrs :label))
    label])
 
 (defn cancel-button [& [{:keys [label]
                          :or   {label (t "button/cancel")}
                          :as attrs}]]
-  [:a.button (into {:href "."}
-                   (dissoc attrs :label))
+  [:a.button.cancel (into {:href "."}
+                          (dissoc attrs :label))
    label])
 
 (defn submit-cancel-buttons [& [{:keys [submit cancel]}]]
   [:section.actions
-   (submit-button submit)
-   (cancel-button cancel)])
+   (cancel-button cancel)
+   (submit-button submit)])

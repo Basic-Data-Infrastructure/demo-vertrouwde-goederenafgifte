@@ -1,0 +1,4 @@
+{
+  "scripts": { "lint": "standard --env mocha" },
+  "devDependencies": { "standard": "*" }
+}

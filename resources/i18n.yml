@@ -93,7 +93,7 @@ nl:
   tms/title/assign: "Opdracht %{ref} toewijzen"
   tms/flash/assigned-success: "Chauffeur en kenteken toegewezen aan opdracht %{ref}"
   tms/title/assigned: "Opdracht %{ref} toegewezen"
-  tms/title/outsource: "Opdracht %{ref} uitbesteden aan een andere vervoerder"
+  tms/title/outsource: "Opdracht %{ref} uitbesteden"
   tms/title/outsourced: "Opdracht %{ref} uitbesteed"
   tms/flash/outsource-success: "Opdracht %{ref} naar vervoerder gestuurd"
 
@@ -251,7 +251,7 @@ en:
   tms/title/assign: "Assign Order %{ref}"
   tms/flash/assigned-success: "Driver and vehicle license plate assigned to order %{ref}"
   tms/title/assigned: "Order %{ref} assigned"
-  tms/title/outsource: "Outsource Order %{ref} to another carrier"
+  tms/title/outsource: "Outsource Order %{ref}"
   tms/title/outsourced: "Order %{ref} outsourced"
   tms/flash/outsource-success: "Order %{ref} sent to carrier"
 

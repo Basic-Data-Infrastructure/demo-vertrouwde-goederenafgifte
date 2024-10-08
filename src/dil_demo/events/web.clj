@@ -78,7 +78,7 @@
       [:header
        [:div.status publishTime]
        [:div.subscription (string/join " / " subscription)]]
-      [:a {:href id}
+      [:a {:href id, :fx-dialog "#modal-dialog"}
        [:pre (w/to-json payload)]]])])
 
 (defn- show-pulse [{:keys [flash] :as res}]

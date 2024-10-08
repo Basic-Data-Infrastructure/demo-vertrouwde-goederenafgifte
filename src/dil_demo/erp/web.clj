@@ -22,7 +22,8 @@
 (defn list-consignments [consignments {:keys [eori->name]}]
   [:main
    [:section.actions
-    [:a.button.primary {:href "consignment-new"}
+    [:a.button.primary {:href      "consignment-new"
+                        :fx-dialog "#drawer-dialog"}
      (t "erp/button/new")]]
 
    (when-not (seq consignments)
@@ -40,54 +41,65 @@
       [:div.carrier (-> carrier :eori eori->name)]
 
       [:footer.actions
+       [:a.button.primary {:href      (str "consignment-" id)
+                           :title     (t "tooltip/edit")
+                           :fx-dialog "#drawer-dialog"}
+        (t "button/edit")]
        (when (= otm/status-draft status)
-         [:a.button.primary {:href  (str "consignment-" id)
-                             :title (t "tooltip/edit")}
-          (t "button/edit")])
-       (when (= otm/status-draft status)
-         [:a.button.secondary {:href  (str "publish-" id)
-                               :title (t "erp/tooltip/publish")}
-          (t "erp/button/publish")])
-       (f/delete-button (str "consignment-" id))]])
+         [:a.button.secondary {:href      (str "publish-" id)
+                               :title     (t "erp/tooltip/publish")
+                               :fx-dialog "#modal-dialog"}
+          (t "erp/button/publish")])]])
 
    [:nav.bottom
     (t "see-also")
     [:ul
      [:li [:a {:href "pulses/"} (t "button/pulses")]]]]])
 
-(defn edit-consignment [consignment {:keys [carriers warehouses]}]
-  (f/form consignment {:method "POST"}
-    [:section
-     (f/select :status {:label (t "label/status")
-                        :list (reduce (fn [m status]
-                                        (assoc m status
-                                               (t (str "status/" status))))
-                                      {}
-                                      otm/statuses)
-                        :required true})
-     (f/number :ref {:label (t "label/ref")
-                     :required true})]
+(defn editable? [{:keys [status]}]
+  (or (nil? status)
+      (= otm/status-draft status)))
 
-    [:section
-     (f/date [:load :date] {:label (t "label/load-date")
-                            :required true})
-     (f/select [:load :location-eori] {:label (t "label/load-location")
-                                       :list warehouses, :required true})
-     (f/textarea [:load :remarks] {:label (t "label/load-remarks")})]
+(defn edit-consignment [{:keys [id] :as consignment}
+                        {:keys [carriers warehouses]}]
+  [:div.edit-form
+   (f/form consignment {:method "POST"}
+     [:section
+      (f/select :status {:label    (t "label/status")
+                         :list     (reduce (fn [m status]
+                                         (assoc m status
+                                                (t (str "status/" status))))
+                                           {}
+                                       otm/statuses)
+                         :required true})
+      (f/number :ref {:label    (t "label/ref")
+                      :required true})]
 
-    [:section
-     (f/date [:unload :date] {:label (t "label/unload-date"), :required true})
-     (f/text [:unload :location-name] {:label (t "label/unload-location")
-                                       :list (keys d/locations), :required true})
-     (f/textarea [:unload :remarks] {:label (t "label/unload-remarks")})]
+     [:section
+      (f/date [:load :date] {:label    (t "label/load-date")
+                             :required true})
+      (f/select [:load :location-eori] {:label (t "label/load-location")
+                                        :list  warehouses, :required true})
+      (f/textarea [:load :remarks] {:label (t "label/load-remarks")})]
 
-    [:section
-     (f/text :goods {:label (t "label/goods")
-                     :list d/goods, :required true})
-     (f/select [:carrier :eori] {:label (t "label/carrier")
-                                 :list (into {nil nil} carriers), :required true})]
+     [:section
+      (f/date [:unload :date] {:label (t "label/unload-date"), :required true})
+      (f/text [:unload :location-name] {:label (t "label/unload-location")
+                                        :list  (keys d/locations), :required true})
+      (f/textarea [:unload :remarks] {:label (t "label/unload-remarks")})]
 
-    (f/submit-cancel-buttons)))
+     [:section
+      (f/text :goods {:label (t "label/goods")
+                      :list  d/goods, :required true})
+      (f/select [:carrier :eori] {:label (t "label/carrier")
+                                  :list  (into {nil nil} carriers), :required true})]
+
+     (when (editable? consignment)
+       (f/submit-button)))
+
+   (when id
+     (f/delete-button (str "consignment-" id)
+                      {:form {:fx-dialog "#modal-dialog"}}))])
 
 (defn deleted-consignment [{:keys [explanation]}]
   [:div
@@ -98,7 +110,8 @@
 
 (defn publish-consignment [consignment {:keys [eori->name warehouse-addresses]}]
   (let [{:keys [status ref load unload goods carrier]} consignment]
-    (f/form consignment {:method "POST"}
+    (f/form consignment {:method    "POST"
+                         :fx-dialog "#modal-dialog"}
       (when (not= otm/status-draft status)
         [:div.flash.flash-warning (t "warning/already-published")])
 

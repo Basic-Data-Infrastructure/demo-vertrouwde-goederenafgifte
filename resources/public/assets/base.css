@@ -18,12 +18,20 @@
     --color-table-border: #ddd;
     --color-main-bg: #fff;
     --color-tinted-bg: color-mix(in srgb, var(--site-color) 5%, white 95%);
+    --color-separator: #ddd;
 
     --color-button-border: #ccc;
     --color-button-primary: color-mix(in srgb, var(--site-other-color) 30%, white 70%);
     --color-button-primary-border: color-mix(in srgb, var(--site-other-color) 70%, white 30%);
+    --color-button-primary-text: inherit;
+
     --color-button-secondary: color-mix(in srgb, var(--site-color) 30%, white 70%);
     --color-button-secondary-border: color-mix(in srgb, var(--site-color) 70%, white 30%);
+    --color-button-secondary-text: inherit;
+
+    --color-button-danger: white;
+    --color-button-danger-border: var(--color-red);
+    --color-button-danger-text: var(--color-red);
 
     --color-link: #0000EE;
     --color-link-visited: #551A8B;
@@ -37,6 +45,12 @@
     --color-warning: color-mix(in srgb, var(--color-orange) 60%, black 40%);
     --color-warning-bg: color-mix(in srgb, var(--color-orange) 20%, white 80%);
     --color-warning-border: var(--color-orange);
+
+    --header-height: 3.5rem;
+    --main-width: 80rem;
+    --main-padding: 2rem;
+    --dialog-width: 40rem;
+
 }
 
 html {
@@ -53,13 +67,14 @@ body {
 
 
 body > nav.top {
+    box-sizing: border-box;
     display: flex;
     justify-content: space-between;
 
     background: color-mix(in srgb, #5C6370 90%, var(--site-color) 10%);
     font-size: .66rem;
     padding: .5rem 1rem;
-    max-width: 82rem;
+    max-width: var(--main-width);
     margin: 0 auto 1rem auto;
 }
 body > nav.top > ul {
@@ -108,15 +123,17 @@ nav.bottom > ul > li {
 
 
 header.container, footer.container, main.container {
+    box-sizing: border-box;
     margin: auto;
 }
 main.container {
-    padding: 2rem;
-    max-width: 80rem;
+    padding: var(--main-padding);
+    max-width: var(--main-width);
 }
 header.container, footer.container {
     padding: 1rem;
-    max-width: 82rem;
+    max-width: var(--main-width);
+    max-height: var(--header-height);
 }
 main.container {
     background: var(--color-main-bg);
@@ -328,6 +345,21 @@ div.actions:last-child {
     margin-bottom: 0;
 }
 
+.actions .cancel {
+    float: left;
+}
+.actions .submit {
+    float: right;
+}
+.actions:before, .actions:after {
+    content: "";
+    display: table;
+}
+
+.actions:after {
+    clear: both;
+}
+
 button, .button, a.button {
     position: relative;
     display: inline-block;
@@ -353,10 +385,17 @@ button, .button, a.button {
 :is(button, .button).primary, button[type="submit"] {
     background: var(--color-button-primary);
     border: solid 1px var(--color-button-primary-border);
+    color: var(--color-button-primary-text);
 }
 :is(button, .button).secondary {
     background: var(--color-button-secondary);
     border: solid 1px var(--color-button-secondary-border);
+    color: var(--color-button-secondary-text);
+}
+:is(button, .button).danger {
+    background: var(--color-button-danger);
+    border: solid 1px var(--color-button-danger-border);
+    color: var(--color-button-danger-text);
 }
 button:last-child, .button:last-child {
     margin-right: 0;
@@ -438,6 +477,8 @@ video {
     width: 100%;
 }
 
+
+
 .verification-rejected:before, .verification-accepted:before {
     font-size: 4em;
     display: block;
@@ -456,4 +497,107 @@ video {
     content: "✔";
     background: var(--color-success-bg);
     color: var(--color-success);
+}
+
+
+
+dialog {
+    border: none;
+    width: var(--dialog-width);
+    min-height: 20rem;
+    padding: 0;
+}
+dialog#modal-dialog {
+    border-radius: .5rem;
+    max-height: calc(100% - 20rem);
+    margin: 10rem auto;
+}
+dialog#drawer-dialog {
+    top: 0;
+    right: 0;
+    left: unset;
+    bottom: 0;
+    height: unset;
+    max-height: unset;
+    margin: unset;
+}
+
+dialog#drawer-dialog main.container {
+    box-sizing: border-box;
+    height: calc(100% - var(--header-height));
+    position: relative;
+}
+dialog#drawer-dialog main.container .edit-form {
+    overflow: auto;
+    box-sizing: border-box;
+    height: calc(100% - 4rem);
+    border-bottom: solid var(--color-separator) 2px;
+    padding-bottom: var(--main-padding);
+}
+dialog#drawer-dialog main.container .edit-form button {
+    position: absolute;
+    bottom: 2rem;
+}
+dialog#drawer-dialog main.container .edit-form button.submit {
+    right: var(--main-padding);
+}
+dialog#drawer-dialog main.container .edit-form button.delete {
+    left: var(--main-padding);
+}
+
+dialog .dialog-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    text-decoration: none;
+    font-size: 1.5rem;
+    color: var(--color-text-gray);
+}
+
+::backdrop {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+@keyframes rotate {
+  0% {
+      transform: rotate(0deg);
+  }
+  100% {
+      transform: rotate(-360deg);
+  }
+}
+
+dialog .busy {
+    display: block;
+}
+
+dialog .busy {
+    opacity: 0;
+    transition: opacity 3s;
+}
+dialog.fx-busy .busy {
+    opacity: 1;
+}
+
+dialog.fx-busy .busy {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(255, 255, 255, 0.75);
+}
+dialog.fx-busy .busy:after {
+    font-family: 'icons';
+    font-size: 10rem;
+    line-height: 10rem;
+    content: var(--icon-sync);
+    color: var(--color-text-gray);
+    animation: rotate 2s linear infinite;
+
+    display: block;
+    position: absolute;
+    top: calc(50% - 5rem);
+    left: calc(50% - 5rem);
 }
