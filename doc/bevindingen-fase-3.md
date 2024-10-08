@@ -90,7 +90,7 @@ Als er structureel event data afgeschermd moet worden, is een opslitsing over me
 
 In plaats van een externe broker is het ook mogelijk om notificaties te implementeren via een "long poll", waar consumers direct bij de bron wachten op nieuwe event data. Hierbij is er geen aparte broker meer nodig, deze functionaliteit kan direct geïmplementeerd worden bij de event bron.
 
-[https://www.digigo.nu/digitaal-stelsel/waarom-dsgo/](Het Digitaal Stelsel Gebouwde Omgeving) (DSGO) heeft een andere benadering met webhooks. Hierbij geeft de event bron subscribers direct een bericht (via een point-to-point request). Ook hierbij is geen aparte broker nodig.
+[Het Digitaal Stelsel Gebouwde Omgeving](https://www.digigo.nu/digitaal-stelsel/waarom-dsgo/) (DSGO) heeft een andere benadering met webhooks. Hierbij geeft de event bron subscribers direct een bericht (via een point-to-point request). Ook hierbij is geen aparte broker nodig.
 
 # Conclusie
 
