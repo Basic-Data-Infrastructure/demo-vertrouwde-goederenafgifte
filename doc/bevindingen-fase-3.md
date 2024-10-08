@@ -15,11 +15,11 @@ lang: nl
 toc: false
 ---
 
-Dit document beschrijft onze bevindingen bij de implementatie van de DIL-demo fase 3. We benoemen hier de pijnpunten, zodat deze als input kunnen dienen voor verbeteringen aan architectuur, componenten en documentatie. 
+Dit document beschrijft onze bevindingen bij de implementatie van de VGU demo fase 3. We benoemen hier de pijnpunten, zodat deze als input kunnen dienen voor verbeteringen aan architectuur, componenten en documentatie. 
 
 Relevante BDI Building Blocks:
 
-- Authorisatie
+- Autorisatie
 - Authenticatie
 - Discovery
 - Event Pub/Sub
@@ -84,13 +84,13 @@ Als de ontvanger dan vaak besluit dat er geen verdere data nodig is, omdat er al
 
 ## Opslitsen over meerdere topics/brokers
 
-Als er structureel event data afgeschermd moet worden, is een opslitsing over meerdere topics ook een mogelijkheid. Als zendingen uitbesteed worden zou de uitbestedende partij een eigen topic kunnen inrichten, net als de verlader in de huidige opzet. Deze kan dan binnenkomende events filteren en uitwisselen tusssen het topic van zijn opdrachtgever en het eigen topic dat gedeeld wordt met de onderaaannemers. Voor uitwisselen en filteren zijn dan wel extra componenten nodig.
+Als er structureel event data afgeschermd moet worden, is een opslitsing over meerdere topics ook een mogelijkheid. Als zendingen uitbesteed worden zou de uitbestedende partij een eigen topic kunnen inrichten, net als de verlader in de huidige opzet. Deze kan dan binnenkomende events filteren en uitwisselen tusssen het topic van zijn opdrachtgever en het eigen topic dat gedeeld wordt met de onderaannemers. Voor uitwisselen en filteren zijn dan wel extra componenten nodig.
 
 ## Webhooks / long polling
 
-In plaats van een externe broker is het ook mogelijk om notificaties te implementeren via een "long poll", waar consumers direct bij de bron wachten op nieuwe event data. Hierbij is er geen aparte broker meer nodig, deze functionaliteit kan direct geimplementeerd worden bij de event bron.
+In plaats van een externe broker is het ook mogelijk om notificaties te implementeren via een "long poll", waar consumers direct bij de bron wachten op nieuwe event data. Hierbij is er geen aparte broker meer nodig, deze functionaliteit kan direct geïmplementeerd worden bij de event bron.
 
-DSGO heeft een andere benadering met webhooks. Hierbij geeft de event bron subscribers direct een bericht (via een point-to-point request). Ook hierbij is geen aparte broker nodig.
+[https://www.digigo.nu/digitaal-stelsel/waarom-dsgo/](Het Digitaal Stelsel Gebouwde Omgeving) (DSGO) heeft een andere benadering met webhooks. Hierbij geeft de event bron subscribers direct een bericht (via een point-to-point request). Ook hierbij is geen aparte broker nodig.
 
 # Conclusie
 
