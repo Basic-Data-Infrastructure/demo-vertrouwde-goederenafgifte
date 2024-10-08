@@ -43,7 +43,9 @@
                          :class "primary"})
 
          (= status otm/status-requested)
-         [:a.button.primary {:href (str "verify-" id)} (t "wms/button/verify")])
+         [:a.button.primary {:href (str "verify-" id)
+                             :fx-dialog "#modal-dialog"}
+          (t "wms/button/verify")])
 
        (f/delete-button (str "transport-order-" id))]])])
 
@@ -62,7 +64,9 @@
       (t "wms/button/scan-qr")]]))
 
 (defn verify-transport-order [{:keys [id] :as transport-order}]
-  (f/form transport-order {:method "POST", :action (str "verify-" id)}
+  (f/form transport-order {:method    "POST"
+                           :action    (str "verify-" id)
+                           :fx-dialog "#modal-dialog"}
     (f/input :ref {:label (t "label/ref"), :disabled true})
     (f/input [:load :date] {:label (t "label/date"), :disabled true})
     (f/input :goods {:label (t "label/goods"), :disabled true})

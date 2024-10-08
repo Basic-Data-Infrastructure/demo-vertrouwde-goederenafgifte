@@ -46,12 +46,14 @@
         [:em (t "tms/unassigned")])
       [:footer.actions
        (when (= otm/status-requested status)
-         [:a.button.primary {:href  (str "assign-" id)
-                             :title (t "tms/tooltip/assign")}
+         [:a.button.primary {:href      (str "assign-" id)
+                             :title     (t "tms/tooltip/assign")
+                             :fx-dialog "#modal-dialog"}
           (t "tms/button/assign")])
        (when (= otm/status-requested status)
-         [:a.button.secondary {:href  (str "outsource-" id)
-                               :title (t "tms/tooltip/outsource")}
+         [:a.button.secondary {:href      (str "outsource-" id)
+                               :title     (t "tms/tooltip/outsource")
+                               :fx-dialog "#modal-dialog"}
           (t "tms/button/outsource")])
        (f/delete-button (str "trip-" id))]])
 
@@ -134,16 +136,17 @@
 
 (defn assign-trip [{:keys [driver-id-digits license-plate] :as trip}
                    master-data]
-  (f/form trip {:method "POST"}
+  (f/form trip {:method    "POST"
+                :fx-dialog "#modal-dialog"}
     (when (and driver-id-digits license-plate)
       (qr-code-dil-demo trip))
 
     (trip-details trip master-data)
 
-    (f/text :driver-id-digits {:label (t "label/driver-id-digits")
+    (f/text :driver-id-digits {:label       (t "label/driver-id-digits")
                                :placeholder (t "tms/placeholder/driver-id-digits")
-                               :pattern "\\d{4}", :required true})
-    (f/text :license-plate {:label (t "label/license-plate")
+                               :pattern     "\\d{4}", :required true})
+    (f/text :license-plate {:label    (t "label/license-plate")
                             :required true})
 
     (f/submit-cancel-buttons {:submit {:label (t "tms/button/assign")}})))
@@ -160,7 +163,8 @@
    (w/explanation explanation)])
 
 (defn outsource-trip [trip {:keys [carriers] :as master-data}]
-  (f/form trip {:method "POST"}
+  (f/form trip {:method "POST"
+                :fx-dialog "#modal-dialog"}
     (trip-details trip master-data)
 
     [:section

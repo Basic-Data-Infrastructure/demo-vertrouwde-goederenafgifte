@@ -22,7 +22,8 @@
 (defn list-consignments [consignments {:keys [eori->name]}]
   [:main
    [:section.actions
-    [:a.button.primary {:href "consignment-new"}
+    [:a.button.primary {:href      "consignment-new"
+                        :fx-dialog "#drawer-dialog"}
      (t "erp/button/new")]]
 
    (when-not (seq consignments)
@@ -41,12 +42,14 @@
 
       [:footer.actions
        (when (= otm/status-draft status)
-         [:a.button.primary {:href  (str "consignment-" id)
-                             :title (t "tooltip/edit")}
+         [:a.button.primary {:href      (str "consignment-" id)
+                             :title     (t "tooltip/edit")
+                             :fx-dialog "#drawer-dialog"}
           (t "button/edit")])
        (when (= otm/status-draft status)
-         [:a.button.secondary {:href  (str "publish-" id)
-                               :title (t "erp/tooltip/publish")}
+         [:a.button.secondary {:href      (str "publish-" id)
+                               :title     (t "erp/tooltip/publish")
+                               :fx-dialog "#modal-dialog"}
           (t "erp/button/publish")])
        (f/delete-button (str "consignment-" id))]])
 
@@ -98,7 +101,8 @@
 
 (defn publish-consignment [consignment {:keys [eori->name warehouse-addresses]}]
   (let [{:keys [status ref load unload goods carrier]} consignment]
-    (f/form consignment {:method "POST"}
+    (f/form consignment {:method    "POST"
+                         :fx-dialog "#modal-dialog"}
       (when (not= otm/status-draft status)
         [:div.flash.flash-warning (t "warning/already-published")])
 

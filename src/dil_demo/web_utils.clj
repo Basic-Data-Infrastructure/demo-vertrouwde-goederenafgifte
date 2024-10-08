@@ -24,7 +24,8 @@
     [:title (str title " — " site-name)]
 
     [:link {:rel "stylesheet", :href "/assets/base.css"}]
-    [:link {:rel "stylesheet", :href (str "/assets/" site ".css")}]]
+    [:link {:rel "stylesheet", :href (str "/assets/" site ".css")}]
+    [:script {:src "/assets/fx.js"}]]
 
    [:body
     [:nav.top
@@ -53,7 +54,10 @@
 
      [:img {:src   "/assets/bdi-logo.png"
             :title "Powered by BDI — Basic Data Infrastructure"
-            :alt   "Powered by BDI — Basic Data Infrastructure"}]]]])
+            :alt   "Powered by BDI — Basic Data Infrastructure"}]]
+
+    [:dialog#modal-dialog [:header] [:main]]
+    [:dialog#drawer-dialog [:header] [:main]]]])
 
 (defn qr-code [text]
   (let [id (str "qrcode-" (UUID/randomUUID))]
