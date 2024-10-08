@@ -8,7 +8,7 @@
 (ns dil-demo.web
   (:require [clojure.string :refer [re-quote-replacement]]
             [clojure.tools.logging :as log]
-            [compojure.core :refer [GET routes]]
+            [compojure.core :refer [GET routes] :as compojure]
             [compojure.route :refer [resources]]
             [dil-demo.erp :as erp]
             [dil-demo.events :as events]
@@ -68,19 +68,36 @@
             title
             [:span.site-sub-title (t (str "site-sub-title/" slug))]]])]])
 
+(defn wrap-max-age-cache-control
+  "Add the `must-revalidate` and `max-age` directives for
+  `Cache-Control` forcing the browser to reconsider if the resource
+  needs to be fetched every `seconds`.  Note that
+  `compojure.route/resources` adds a `Last-Modified` header (works for
+  files in jar-files too) to allow the browser to make an
+  `If-Modified-Since` request which will yield a `304 Not Modified`
+  response if the resource has not been updated."
+  [app seconds]
+  (fn cache-asset-wrapper [req]
+    (when-let [res (app req)]
+      (assoc-in res [:headers "Cache-Control"]
+                (str "must-revalidate, max-age=" seconds)))))
+
+(def cache-control-max-age-assets 60)
+
 (def handler
-  (routes
-   (GET "/" {}
-     (w/render "dil"
-               (list-apps)
-               :title (t "start-screen/title")
-               :site-name "DIL-Demo"))
-   (resources "/")
-   not-found-handler))
+  (-> (routes
+       (GET "/" {}
+         (w/render "dil"
+                   (list-apps)
+                   :title (t "start-screen/title")
+                   :site-name "DIL-Demo"))
+       (resources "/")
+       not-found-handler)
+      (wrap-max-age-cache-control cache-control-max-age-assets)))
 
 (defn wrap-log
   [handler]
-  (fn [request]
+  (fn log-wrapper [request]
     (let [response (handler request)]
       (log/info (str (:status response) " " (:request-method request) " " (:uri request)))
       response)))
@@ -147,8 +164,11 @@
       (wrap-basic-authentication (->authenticate (config :auth)))
       (i18n/wrap)
 
-      (wrap-defaults (assoc-in site-defaults
-                               [:session :store] (ttl-memory-store)))))
+      (wrap-defaults (-> site-defaults
+                         (assoc-in [:session :store] (ttl-memory-store))
+
+                         ;; serve resource ourselves to allow applying cache-control
+                         (assoc-in [:static :resources] false)))))
 
 (defn wrap-m2m-app [app id {:keys [store-atom] :as config} make-handler]
   (let [app-config  (get config id)

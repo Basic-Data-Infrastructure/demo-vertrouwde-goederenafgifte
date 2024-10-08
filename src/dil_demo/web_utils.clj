@@ -24,7 +24,12 @@
     [:title (str title " — " site-name)]
 
     [:link {:rel "stylesheet", :href "/assets/base.css"}]
-    [:link {:rel "stylesheet", :href (str "/assets/" site ".css")}]]
+    [:link {:rel "stylesheet", :href "/assets/icons.css"}]
+    [:link {:rel "stylesheet", :href (str "/assets/" site ".css")}]
+
+    [:script {:src "/assets/qr-scanner.legacy.min.js"}] ;; https://github.com/nimiq/qr-scanner
+    [:script {:src "/assets/scan-qr.js"}]
+    [:script {:src "/assets/fx.js"}]]
 
    [:body
     [:nav.top
@@ -53,7 +58,18 @@
 
      [:img {:src   "/assets/bdi-logo.png"
             :title "Powered by BDI — Basic Data Infrastructure"
-            :alt   "Powered by BDI — Basic Data Infrastructure"}]]]])
+            :alt   "Powered by BDI — Basic Data Infrastructure"}]]
+
+    [:dialog#modal-dialog
+     [:a.dialog-close {:href "."} "✕"]
+     [:header]
+     [:main]
+     [:div.busy]]
+    [:dialog#drawer-dialog
+     [:a.dialog-close {:href "."} "✕"]
+     [:header]
+     [:main]
+     [:div.busy]]]])
 
 (defn qr-code [text]
   (let [id (str "qrcode-" (UUID/randomUUID))]
