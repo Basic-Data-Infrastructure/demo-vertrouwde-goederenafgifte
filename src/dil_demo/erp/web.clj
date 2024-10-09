@@ -244,7 +244,7 @@
                  flash)))
 
      (POST "/consignment-:id" {:keys [params]}
-       (let [consignment (params-> params)]
+       (let [{:keys [ref] :as consignment} (params-> params)]
          (-> "."
              (redirect :see-other)
              (assoc :flash {:success (t "erp/flash/update-success" {:ref ref})})
