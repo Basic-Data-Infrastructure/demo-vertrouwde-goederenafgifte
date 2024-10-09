@@ -24,6 +24,7 @@
     [:title (str title " — " site-name)]
 
     [:link {:rel "stylesheet", :href "/assets/base.css"}]
+    [:link {:rel "stylesheet", :href "/assets/icons.css"}]
     [:link {:rel "stylesheet", :href (str "/assets/" site ".css")}]
     [:script {:src "/assets/fx.js"}]]
 
