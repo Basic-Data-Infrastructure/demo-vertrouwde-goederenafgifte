@@ -110,7 +110,11 @@
 
   window.addEventListener('load', onLoad)
 
-  window.addEventListener('popstate', ev =>
-    document.getElementById('fx-dialog').close()
-  )
+  window.addEventListener('popstate', ev => {
+    if (!window.history.state) {
+      // navigated back to a "real" page
+      window.navigation.reload()
+    }
+    console.log(window.history.state)
+  })
 })()
