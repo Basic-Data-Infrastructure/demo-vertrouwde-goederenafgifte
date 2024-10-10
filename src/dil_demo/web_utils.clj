@@ -26,6 +26,9 @@
     [:link {:rel "stylesheet", :href "/assets/base.css"}]
     [:link {:rel "stylesheet", :href "/assets/icons.css"}]
     [:link {:rel "stylesheet", :href (str "/assets/" site ".css")}]
+
+    [:script {:src "/assets/qr-scanner.legacy.min.js"}] ;; https://github.com/nimiq/qr-scanner
+    [:script {:src "/assets/scan-qr.js"}]
     [:script {:src "/assets/fx.js"}]]
 
    [:body

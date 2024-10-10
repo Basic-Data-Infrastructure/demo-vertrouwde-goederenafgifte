@@ -53,9 +53,6 @@
   (let [id (str "qr-code-video-" (UUID/randomUUID))]
     [:div.qr-code-scan-container
      [:video {:id id, :style "display:none"}]
-
-     [:script {:src "/assets/qr-scanner.legacy.min.js"}] ;; https://github.com/nimiq/qr-scanner
-     [:script {:src "/assets/scan-qr.js"}]
      [:a.button.secondary {:onclick (str "scanDriverQr(this, "
                                          (json-str id) ", "
                                          (json-str carrier-id) ", "
