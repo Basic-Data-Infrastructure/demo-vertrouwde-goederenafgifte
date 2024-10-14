@@ -38,7 +38,7 @@
   "Setup delegation policies to allow access to topic."
   [{:keys                                             [client-data pulsar]
     {:ishare/keys [authentication-registry-id
-                   authentication-registry-endpoint]} :client-data}
+                   authentication-registry-base-url]} :client-data}
    [owner-eori topic]
    read-eoris write-eoris]
   {:pre [ ;; only owner can authorize access
@@ -49,7 +49,7 @@
        (let [read-eoris  (set read-eoris)
              write-eoris (set write-eoris)
              token       (-> client-data
-                             (assoc :ishare/endpoint     authentication-registry-endpoint
+                             (assoc :ishare/base-url     authentication-registry-base-url
                                     :ishare/server-id    authentication-registry-id
                                     :ishare/message-type :access-token)
                              ishare-client/exec
@@ -76,7 +76,7 @@
                                                         :environment {:serviceProviders [(:token-server-id pulsar)]}}
                                                :rules  [{:effect "Permit"}]}]}]}]
               (-> {:ishare/bearer-token token
-                   :ishare/endpoint     authentication-registry-endpoint
+                   :ishare/base-url     authentication-registry-base-url
                    :ishare/server-id    authentication-registry-id
                    :ishare/message-type :ishare/policy
                    :ishare/params       {:delegationEvidence delegation-evidence}}
@@ -94,7 +94,7 @@
   {:pre [client-data token-endpoint token-server-id]}
   (-> client-data
       (assoc :ishare/message-type :access-token
-             :ishare/endpoint token-endpoint
+             :ishare/base-url token-endpoint
              :ishare/server-id token-server-id)
       ishare-client/exec
       :ishare/result))
