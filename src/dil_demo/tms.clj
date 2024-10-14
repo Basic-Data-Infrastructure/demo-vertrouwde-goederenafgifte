@@ -33,8 +33,8 @@
 
 
 (defn- ->ar-type
-  [{{:ishare/keys [authentication-registry-type]} :client-data} & _]
-  authentication-registry-type)
+  [{{:ishare/keys [authorization-registry-type]} :client-data} & _]
+  authorization-registry-type)
 
 (defn- ishare-create-policy-command
   [{{:ishare/keys [client-id]} :client-data} subject trip effect]
