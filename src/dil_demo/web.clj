@@ -113,13 +113,32 @@
                  (assoc :user-number basic-authentication))
              req)))))
 
+
+(defn ->ishare-client-data
+  [{:keys [eori
+           dataspace-id
+           key-file chain-file
+           ar-id ar-base-url ar-type
+           satellite-id satellite-base-url]}]
+  {:pre [eori dataspace-id key-file chain-file
+         satellite-id satellite-base-url]}
+  {:ishare/client-id                       eori
+   :ishare/dataspace-id                    dataspace-id
+   :ishare/satellite-id                    satellite-id
+   :ishare/satellite-base-url              satellite-base-url
+   :ishare/authorization-registry-id      ar-id
+   :ishare/authorization-registry-base-url ar-base-url
+   :ishare/authorization-registry-type     (keyword ar-type)
+   :ishare/private-key                     (ishare-client/private-key key-file)
+   :ishare/x5c                             (ishare-client/x5c chain-file)})
+
 (defn wrap-h2m-app [app site-id {:keys [pulsar store-atom] :as config}
                     make-handler
                     make-event-handler]
   (let [config         (get config site-id)
         config         (assoc config
                               :site-id     site-id
-                              :client-data (ishare-client/->client-data config)
+                              :client-data (->ishare-client-data config)
                               :pulsar      pulsar
                               :store-atom  store-atom)
         event-callback (-> (if make-event-handler
@@ -153,7 +172,7 @@
 (defn wrap-m2m-app [app id {:keys [store-atom] :as config} make-handler]
   (let [app-config  (get config id)
         app-config  (assoc app-config
-                           :client-data (ishare-client/->client-data app-config)
+                           :client-data (->ishare-client-data app-config)
                            :store-atom store-atom)
         handler (make-handler app-config)]
     (-> (fn [{:keys [uri] :as req}]

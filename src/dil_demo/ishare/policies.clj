@@ -6,7 +6,8 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.ishare.policies
-  (:require [dil-demo.i18n :refer [t]])
+  (:require [dil-demo.i18n :refer [t]]
+            [org.bdinetwork.ishare.client :refer [ishare->http-request]])
   (:import (java.time Instant LocalDate LocalDateTime ZoneId)
            java.time.format.DateTimeFormatter))
 
@@ -179,3 +180,53 @@
   (let [carrier-eori (or (:eori carrier) (-> carriers last :eori))]
     (assert (and carrier-eori driver-id-digits license-plate))
     (str carrier-eori "#driver-id-digits=" driver-id-digits "&license-plate=" license-plate)))
+
+
+;; TODO: misspelled; should be authorization-registry-id
+
+(defn own-ar-request
+  "If request has no ishare/base-url and ishare/server-id,
+  set base-url and server-id from ishare/authorization-registry-id
+  and ishare/authorization-registry-base-url"
+  [{:ishare/keys [authorization-registry-id
+                  authorization-registry-base-url
+                  base-url
+                  server-id]
+    :as          request}]
+  (if (and base-url server-id)
+    request
+    (assoc request
+           :ishare/base-url  authorization-registry-base-url
+           :ishare/server-id authorization-registry-id)))
+
+(defmethod ishare->http-request :ishare/policy ;; ishare AR specific
+  [{delegation-evidence :ishare/params :as request}]
+  {:pre [delegation-evidence]}
+  (-> request
+      (own-ar-request)
+      (assoc :method       :post
+             :path         "policy"
+             :as           :json
+             :json-params  delegation-evidence
+             :ishare/unsign-token "policy_token"
+             :ishare/lens         [:body "policy_token"])))
+
+(defmethod ishare->http-request :poort8/policy ;; Poort8 AR specific
+  [{params :ishare/params :as request}]
+  (-> request
+      (own-ar-request)
+      (assoc :method :post
+             :path "../policies"
+             :as :json
+             :json-params (assoc params
+                                 :useCase "iSHARE")
+             :ishare/lens [:body])))
+
+(defmethod ishare->http-request :poort8/delete-policy ;; Poort8 AR specific
+  [{params :ishare/params :as request}]
+  (-> request
+      (own-ar-request)
+      (assoc :method :delete
+             :path (str "../policies/" (:policyId params))
+             :as :json
+             :ishare/lens [:body])))
