@@ -16,9 +16,9 @@
         nl.jomco/ring-session-ttl-memory                    {:git/url "https://git.sr.ht/~jomco/ring-session-ttl-memory" :git/sha "0415dedace39e2d28b6dc66fcf1321e8e136ca2c"}
         org.babashka/http-client                            {:mvn/version "0.4.19"}
         org.babashka/json                                   {:mvn/version "0.1.6"}
-        org.bdinetwork/clj-ishare-client                    {:git/url "https://github.com/Basic-Data-Infrastructure/clj-ishare-client.git" :git/sha "54d657bf7e045c5eeaa95d5aa89d916b63854635"}
-        org.bdinetwork/clj-ishare-jwt                       {:git/url "https://github.com/Basic-Data-Infrastructure/clj-ishare-jwt.git" :git/sha "f7590e16c50e2a274c9307bd3be21ef179f9dce5"}
-        org.bdinetwork/service-provider-authentication      {:git/url "https://github.com/Basic-Data-Infrastructure/service-provider-authentication.git" :git/sha "4b9b954a7f8575e56dec9353ef30bfb0c8358255"}
+        org.bdinetwork/clj-ishare-client                    {:git/url "https://github.com/Basic-Data-Infrastructure/clj-ishare-client.git" :git/sha "31aac30ab67661ca67273196fd901291f119b1d2"}
+        org.bdinetwork/clj-ishare-jwt                       {:git/url "https://github.com/Basic-Data-Infrastructure/clj-ishare-jwt.git" :git/sha "65ed4c07333994faf98a6e6309800338c3577d4c"}
+        org.bdinetwork/service-provider-authentication      {:git/url "https://github.com/Basic-Data-Infrastructure/service-provider-authentication.git" :git/sha "0c2dcb4c09fe7fa5069353bb94e18c61f2f97608"}
         org.clojure/data.json                               {:mvn/version "2.5.0"}
         org.clojure/tools.logging                           {:mvn/version "1.3.0"}
         ring-basic-authentication/ring-basic-authentication {:mvn/version "1.2.0"}

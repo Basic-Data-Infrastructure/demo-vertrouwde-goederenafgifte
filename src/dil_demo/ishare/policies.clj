@@ -182,8 +182,6 @@
     (str carrier-eori "#driver-id-digits=" driver-id-digits "&license-plate=" license-plate)))
 
 
-;; TODO: misspelled; should be authorization-registry-id
-
 (defn own-ar-request
   "If request has no ishare/base-url and ishare/server-id,
   set base-url and server-id from ishare/authorization-registry-id
