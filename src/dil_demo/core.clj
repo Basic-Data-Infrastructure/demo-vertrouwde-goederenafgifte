@@ -73,7 +73,8 @@
    "TMS2_AR_TYPE"          ["TMS-2 AR Type" :str :in [:tms-2 :ar-type]]
    "PULSAR_TOKEN_ENDPOINT" ["PULSAR Token Base-Url" :str :in [:pulsar :token-endpoint]]
    "PULSAR_SERVER_ID"      ["PULSAR Token Server ID" :str :in [:pulsar :token-server-id]]
-   "PULSAR_URL"            ["PULSAR websocker URL" :str :in [:pulsar :url]]})
+   "PULSAR_URL"            ["PULSAR websocker URL" :str :in [:pulsar :url]]
+   "PULSAR_DISABLED"       ["Disable events" :boolean :default false :in [:pulsar :disabled]]})
 
 (defn process-config
   [config]
