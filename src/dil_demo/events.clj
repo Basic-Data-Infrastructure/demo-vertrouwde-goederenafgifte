@@ -154,49 +154,50 @@
 (defn subscribe!
   "Subscribe to websocket for `[owner-eori topic user-number site-id]`.
   Authorization should already been secured by owner."
-  [{:keys [eori] {:keys [url]} :pulsar :as config}
+  [{:keys [eori] {:keys [url disabled]} :pulsar :as config}
    [owner-eori topic _user-number _site-id :as subscription] callback-fn]
   {:pre [url config owner-eori topic]}
-  (let [open-websocket
-        (fn open-websocket []
-          (log/info "Starting consumer" subscription)
+  (when-not disabled
+    (let [open-websocket
+          (fn open-websocket []
+            (log/info "Starting consumer" subscription)
 
-          (ws/websocket
-           {:headers {"Authorization" (str "Bearer " (get-token config))}
-            :uri     (str url
-                          "consumer/persistent/public/"
-                          owner-eori
-                          "/"
-                          topic
-                          "/"
-                          eori)
+            (ws/websocket
+             {:headers {"Authorization" (str "Bearer " (get-token config))}
+              :uri     (str url
+                            "consumer/persistent/public/"
+                            owner-eori
+                            "/"
+                            topic
+                            "/"
+                            eori)
 
-            :async   true ;; returns a future ws
-            :on-open (fn on-open [_ws]
-                       (log/debug "Consumer websocket open" subscription))
+              :async   true ;; returns a future ws
+              :on-open (fn on-open [_ws]
+                         (log/debug "Consumer websocket open" subscription))
 
-            :on-message (make-on-message-handler config subscription callback-fn)
+              :on-message (make-on-message-handler config subscription callback-fn)
 
-            :on-close (fn on-close [ws status reason]
-                        (log/debug "Consumer websocket closed" subscription status reason)
+              :on-close (fn on-close [ws status reason]
+                          (log/debug "Consumer websocket closed" subscription status reason)
 
-                        (when-not (= 1000 status) ;; 1000 = Normal Closure
-                          (log/info "Restarting consumer for" subscription)
+                          (when-not (= 1000 status) ;; 1000 = Normal Closure
+                            (log/info "Restarting consumer for" subscription)
 
-                          (try (ws/close! ws) (catch Throwable _)) ;; make sure it's really closed
+                            (try (ws/close! ws) (catch Throwable _)) ;; make sure it's really closed
+                            (Thread/sleep sleep-before-reconnect-msec)
+                            (swap! websockets-atom assoc subscription (open-websocket))))
+
+              :on-error (fn on-error [ws err]
+                          (log/info "Consumer error for" subscription err)
+
+                          ;; just close it and try again
+                          (try (ws/close! ws) (catch Throwable _))
                           (Thread/sleep sleep-before-reconnect-msec)
-                          (swap! websockets-atom assoc subscription (open-websocket))))
+                          (swap! websockets-atom assoc subscription (open-websocket)))}))]
 
-            :on-error (fn on-error [ws err]
-                        (log/info "Consumer error for" subscription err)
-
-                        ;; just close it and try again
-                        (try (ws/close! ws) (catch Throwable _))
-                        (Thread/sleep sleep-before-reconnect-msec)
-                        (swap! websockets-atom assoc subscription (open-websocket)))}))]
-
-    ;; register websocket for shutdown
-    (swap! websockets-atom assoc subscription (open-websocket))))
+      ;; register websocket for shutdown
+      (swap! websockets-atom assoc subscription (open-websocket)))))
 
 (defn unsubscribe!
   "Unsubscribe (and close)."
@@ -208,22 +209,23 @@
 (defn send-message!
   "Send message to `[owner-eori topic]`.  Authorization should already
   been secured by owner."
-  [{{:keys [url]} :pulsar :as config}
+  [{{:keys [url disabled]} :pulsar :as config}
    [owner-eori topic] message]
-  (let [ws      (ws/websocket
-                 {:headers {"Authorization" (str "Bearer " (get-token config))}
-                  :uri     (str url
-                                "producer/persistent/public/"
-                                owner-eori
-                                "/"
-                                topic)})
-        payload (-> message
-                    (json/json-str)
-                    (encode-base64))]
-    (try
-      (ws/send! ws (json/json-str {:payload payload}))
-      (finally
-        (ws/close! ws)))))
+  (when-not disabled
+    (let [ws      (ws/websocket
+                   {:headers {"Authorization" (str "Bearer " (get-token config))}
+                    :uri     (str url
+                                  "producer/persistent/public/"
+                                  owner-eori
+                                  "/"
+                                  topic)})
+          payload (-> message
+                      (json/json-str)
+                      (encode-base64))]
+      (try
+        (ws/send! ws (json/json-str {:payload payload}))
+        (finally
+          (ws/close! ws))))))
 
 
 
