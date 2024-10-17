@@ -85,7 +85,7 @@
                                :private-key        priv-key
                                :x5c                [pub-key]
                                :satellite-id       other-eori
-                               :satellite-endpoint "https://example.com"}
+                               :satellite-base-url "https://example.com"}
           handler     (sut/make-handler {:eori        eori
                                          :client-data client-data})]
       (is (= http-status/method-not-allowed
