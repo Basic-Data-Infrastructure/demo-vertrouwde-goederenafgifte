@@ -17,6 +17,16 @@ nl:
   site-sub-title/tms-1: "Transporteur 1"
   site-sub-title/tms-2: "Transporteur 2"
 
+  nav/dashboard: "Dashboard"
+  nav/erp/list: "Orders"
+  nav/wms/list: "Transportopdrachten"
+  nav/tms/list: "Opdrachten"
+  nav/erp/contacts: "Contacten"
+  nav/wms/contacts: "Contacten"
+  nav/tms/contacts: "Chauffeurs"
+  nav/pulses: "Notificaties"
+  dummy-link: "Niet geïmplementeerd"
+
   see-also: "Zie ook:"
   empty: "Geen gegevens.."
   confirm: "Zeker weten?"
@@ -27,7 +37,6 @@ nl:
   button/delete: "Verwijderen"
   button/edit: "Aanpassen"
   button/list: "Terug naar overzicht"
-  button/pulses: "Notificaties"
   button/save: "Opslaan"
 
   tooltip/edit: "Eigenschappen aanpassen"
@@ -78,7 +87,6 @@ nl:
 
   tms/button/assign: "Toewijzen"
   tms/button/outsource: "Uitbesteden"
-  tms/button/driver-view: "Chauffeur"
   tms/tooltip/assign: "Toewijzen aan een chauffeur en wagen"
   tms/tooltip/outsource: "Uitbesteden aan een andere vervoerder"
   tms/placeholder/driver-id-digits: "Laatste 4 cijfers"
@@ -175,6 +183,16 @@ en:
   site-sub-title/tms-1: "Trucking company 1"
   site-sub-title/tms-2: "Trucking company 2"
 
+  nav/dashboard: "Dashboard"
+  nav/erp/list: "Orders"
+  nav/wms/list: "Transportorders"
+  nav/tms/list: "Assignments"
+  nav/erp/contacts: "Contacts"
+  nav/wms/contacts: "Contacts"
+  nav/tms/contacts: "Drivers"
+  nav/pulses: "Notifications"
+  dummy-link: "Not implemented"
+
   see-also: "See also:"
   empty: "No data.."
   confirm: "Are you sure?"
@@ -185,7 +203,6 @@ en:
   button/delete: "Delete"
   button/edit: "Edit"
   button/list: "Back to overview"
-  button/pulses: "Notifications"
   button/save: "Save"
 
   tooltip/edit: "Adjust properties"
@@ -236,7 +253,6 @@ en:
 
   tms/button/assign: "Assign"
   tms/button/outsource: "Outsource"
-  tms/button/driver-view: "Driver"
   tms/tooltip/assign: "Assign to a driver and vehicle"
   tms/tooltip/outsource: "Outsource to another carrier"
   tms/placeholder/driver-id-digits: "Last 4 digits"

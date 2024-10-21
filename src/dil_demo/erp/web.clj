@@ -49,12 +49,7 @@
          [:a.button.secondary {:href      (str "publish-" id)
                                :title     (t "erp/tooltip/publish")
                                :fx-dialog "#modal-dialog"}
-          (t "erp/button/publish")])]])
-
-   [:nav.bottom
-    (t "see-also")
-    [:ul
-     [:li [:a {:href "pulses/"} (t "button/pulses")]]]]])
+          (t "erp/button/publish")])]])])
 
 (defn editable? [{:keys [status]}]
   (or (nil? status)
