@@ -56,13 +56,7 @@
                                :fx-dialog "#modal-dialog"}
           (t "tms/button/outsource")])
        (f/delete-button (str "trip-" id)
-                        {:form {:fx-dialog "#modal-dialog"}})]])
-
-   [:nav.bottom
-    (t "see-also")
-    [:ul
-     [:li [:a {:href "chauffeur/"} (t "tms/button/driver-view")]]
-     [:li [:a {:href "pulses/"} (t "button/pulses")]]]]])
+                        {:form {:fx-dialog "#modal-dialog"}})]])])
 
 (defn qr-code-dil-demo [{:keys [carriers driver-id-digits license-plate]}]
   (w/qr-code (str ":dil-demo"
@@ -225,12 +219,22 @@
 
 (defn make-handler [{:keys [site-id site-name], own-eori :eori}]
   (let [slug   (name site-id)
-        render (fn render [title main flash & {:keys [slug-postfix]}]
-                 (w/render (str slug slug-postfix)
+        render (fn render [title main flash & {:keys [chauffeur]}]
+                 (w/render (str slug (when chauffeur "-chauffeur"))
                            main
                            :flash flash
                            :title title
-                           :site-name site-name))]
+                           :app-name "tms"
+                           :site-name site-name
+                           :navigation (if chauffeur
+                                         {:current :contacts
+                                          :paths   {:list     ".."
+                                                    :contacts "."
+                                                    :pulses   "../pulses/"}}
+                                         {:current :list
+                                          :paths   {:list     "."
+                                                    :contacts "chauffeur/"
+                                                    :pulses   "pulses/"}})))]
     (routes
      (GET "/" {:keys [flash master-data ::store/store]}
        (render (t "tms/title/list")
@@ -243,7 +247,7 @@
                                              (get-trips store))
                                      master-data)
                flash
-               :slug-postfix "-chauffeur"))
+               :chauffeur true))
 
      (GET "/chauffeur/trip-:id" {:keys        [flash ::store/store]
                                  {:keys [id]} :params}
@@ -252,7 +256,7 @@
            (render (:ref trip)
                    (chauffeur-trip trip)
                    flash
-                   :slug-postfix "-chauffeur"))))
+                   :chauffeur true))))
 
      (DELETE "/trip-:id" {::store/keys [store]
                           :keys        [user-number]

@@ -15,61 +15,90 @@
   (:import (java.text SimpleDateFormat)
            (java.util UUID)))
 
-(defn template [site main & {:keys [flash title site-name]}]
-  [:html
-   [:head
-    [:meta {:charset "utf-8"}]
-    [:meta {:name "viewport", :content "width=device-width,initial-scale=1.0"}]
+(defn dummy-link [title]
+  [:a.dummy
+   {:onclick (str "alert(" (json/write-str (t "dummy-link")) ")")
+    :title   (t "dummy-link")
+    :href    "#"}
+   title])
 
-    [:title (str title " — " site-name)]
+(defn template [site main & {:keys [app-name flash title site-name navigation]
+                             :or   {navigation {:current :list
+                                                :paths   {:list   "."
+                                                          :pulses "pulses/"}}}}]
+  (let [app-name (or app-name site)]
+    [:html
+     [:head
+      [:meta {:charset "utf-8"}]
+      [:meta {:name "viewport", :content "width=device-width,initial-scale=1.0"}]
 
-    [:link {:rel "stylesheet", :href "/assets/base.css"}]
-    [:link {:rel "stylesheet", :href "/assets/icons.css"}]
-    [:link {:rel "stylesheet", :href (str "/assets/" site ".css")}]
+      [:title (str title " — " site-name)]
 
-    [:script {:src "/assets/qr-scanner.legacy.min.js"}] ;; https://github.com/nimiq/qr-scanner
-    [:script {:src "/assets/scan-qr.js"}]
-    [:script {:src "/assets/fx.js"}]]
+      [:link {:rel "stylesheet", :href "/assets/base.css"}]
+      [:link {:rel "stylesheet", :href "/assets/icons.css"}]
+      [:link {:rel "stylesheet", :href (str "/assets/" site ".css")}]
 
-   [:body
-    [:nav.top
-     [:ul
-      [:li [:strong site-name]]]
-     [:ul
-      (for [{:keys [slug path title]} sites]
-        [:li [:a {:href path, :class (when (= slug site) "current")}
-              title
-              [:span.site-sub-title (t (str "site-sub-title/" slug))]]])]]
+      [:script {:src "/assets/qr-scanner.legacy.min.js"}] ;; https://github.com/nimiq/qr-scanner
+      [:script {:src "/assets/scan-qr.js"}]
+      [:script {:src "/assets/fx.js"}]]
 
-    [:header.container [:h1 title]]
-    [:main.container
-     (for [[type message] (select-keys flash [:error :success :warning])]
-       [:article.flash {:class (str "flash-" (name type))} message])
-     main]
-    [:footer.container
-     [:ul.select-lang
-      (for [lang (keys i18n/*translations*)]
-        [:li
-         [:a.set-lang
-          {:href  (str ".?set-lang=" lang)
-           :class (cond-> (str "lang-" lang)
-                    (= i18n/*lang* lang) (str " current"))}
-          lang]])]
+     [:body
+      [:nav.top
+       [:ul
+        [:li [:strong site-name]]]
 
-     [:img {:src   "/assets/bdi-logo.png"
-            :title "Powered by BDI — Basic Data Infrastructure"
-            :alt   "Powered by BDI — Basic Data Infrastructure"}]]
+       [:ul
+        (for [{:keys [slug path title]} sites]
+          [:li [:a {:href path, :class (when (= slug site) "current")}
+                title
+                [:span.site-sub-title (t (str "site-sub-title/" slug))]]])]
 
-    [:dialog#modal-dialog
-     [:a.dialog-close {:href "."} "✕"]
-     [:header]
-     [:main]
-     [:div.busy]]
-    [:dialog#drawer-dialog
-     [:a.dialog-close {:href "."} "✕"]
-     [:header]
-     [:main]
-     [:div.busy]]]])
+       [:ul.select-lang
+        (for [lang (keys i18n/*translations*)]
+          [:li
+           [:a.set-lang
+            {:href  (str ".?set-lang=" lang)
+             :class (cond-> (str "lang-" lang)
+                      (= i18n/*lang* lang) (str " current"))}
+            lang]])]]
+
+      [:div.app-container
+       [:nav.app
+        [:h1 site-name]
+        [:h2 site]
+        (let [{:keys [current paths]} navigation]
+          [:ul
+           [:li.dashboard {:class (when (= :dashboard current) "current")}
+            (dummy-link (t "nav/dashboard"))]
+           [:li.list {:class (when (= :list current) "current")}
+            [:a {:href (:list paths)}
+             (t (str "nav/" app-name "/list"))]]
+           [:li.contacts {:class (when (= :contacts current) "current")}
+            (let [title (t (str "nav/" app-name "/contacts"))]
+              (if-let [path (:contacts paths)]
+                [:a {:href path} title]
+                (dummy-link title)))]
+           [:li.pulses {:class (when (= :pulses current) "current")}
+            [:a {:href (:pulses paths)}
+             (t "nav/pulses")]]])]
+
+       [:div.app
+        [:header.container [:h1 title]]
+        [:main.container
+         (for [[type message] (select-keys flash [:error :success :warning])]
+           [:article.flash {:class (str "flash-" (name type))} message])
+         main]]]
+
+      [:dialog#modal-dialog
+       [:a.dialog-close {:href "."} "✕"]
+       [:header]
+       [:main]
+       [:div.busy]]
+      [:dialog#drawer-dialog
+       [:a.dialog-close {:href "."} "✕"]
+       [:header]
+       [:main]
+       [:div.busy]]]]))
 
 (defn qr-code [text]
   (let [id (str "qrcode-" (UUID/randomUUID))]

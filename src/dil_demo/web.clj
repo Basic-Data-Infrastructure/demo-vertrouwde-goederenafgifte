@@ -152,13 +152,15 @@
 
 (defn wrap-h2m-app [app site-id {:keys [pulsar store-atom] :as config}
                     make-handler
-                    make-event-handler]
+                    make-event-handler
+                    & [app-name]]
   (let [config         (get config site-id)
         config         (assoc config
                               :site-id     site-id
                               :client-data (->ishare-client-data config)
                               :pulsar      pulsar
-                              :store-atom  store-atom)
+                              :store-atom  store-atom
+                              :app-name    app-name)
         event-callback (-> (if make-event-handler
                              (make-event-handler config)
                              (constantly nil))
@@ -175,8 +177,8 @@
   (-> handler
       (wrap-h2m-app :erp config erp/make-handler erp/make-event-handler)
       (wrap-h2m-app :wms config wms/make-handler nil)
-      (wrap-h2m-app :tms-1 config tms/make-handler tms/make-event-handler)
-      (wrap-h2m-app :tms-2 config tms/make-handler tms/make-event-handler)
+      (wrap-h2m-app :tms-1 config tms/make-handler tms/make-event-handler "tms")
+      (wrap-h2m-app :tms-2 config tms/make-handler tms/make-event-handler "tms")
 
       (master-data/wrap config)
 
