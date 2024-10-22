@@ -14,7 +14,7 @@
 
 .list-apps {
     box-sizing: border-box;
-    min-height: calc(100vh - var(--top-nav-height));
+    min-height: 100vh;
     padding: 5rem;
     background: var(--color-tinted-bg);
 }

@@ -9,7 +9,6 @@
   (:require [clojure.data.json :as json]
             [clojure.string :as string]
             [dil-demo.i18n :as i18n :refer [t]]
-            [dil-demo.sites :refer [sites]]
             [ring.util.response :as response]
             [hiccup2.core :as hiccup])
   (:import (java.text SimpleDateFormat)
@@ -39,27 +38,17 @@
     [:script {:src "/assets/fx.js"}]]
 
    [:body
-    [:nav.top
-     [:ul
-      [:li [:a {:href "/"} [:strong site-name]]]]
-
-     [:ul
-      (for [{:keys [slug path title]} sites]
-        [:li [:a {:href path, :class (when (= slug site) "current")}
-              title
-              [:span.site-sub-title (t (str "site-sub-title/" slug))]]])]
-
-     [:ul.select-lang
-      (for [lang (keys i18n/*translations*)]
-        [:li
-         [:a.set-lang
-          {:href  (str ".?set-lang=" lang)
-           :class (cond-> (str "lang-" lang)
-                    (= i18n/*lang* lang) (str " current"))}
-          lang]])]]
 
     main
 
+    [:ul.select-lang
+     (for [lang (keys i18n/*translations*)]
+       [:li
+        [:a.set-lang
+         {:href  (str ".?set-lang=" lang)
+          :class (cond-> (str "lang-" lang)
+                   (= i18n/*lang* lang) (str " current"))}
+         lang]])]
     [:dialog#modal-dialog
      [:a.dialog-close {:href "."} "✕"]
      [:header]
@@ -81,8 +70,10 @@
      site
      [:div.app-container
       [:nav.app
-       [:h1 site-name]
-       [:h2 site]
+       [:a.root
+        {:href "/"}
+        [:h1 site-name]
+        [:h2 site]]
        (let [{:keys [current paths]} navigation]
          [:ul
           [:li.dashboard {:class (when (= :dashboard current) "current")}
