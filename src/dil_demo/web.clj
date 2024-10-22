@@ -56,17 +56,20 @@
                       [:p (t "not-found")]
                       [:a.button {:href "/"} (t "button/start-screen")]]
                      :title (t "not-found/title")
-                     :site-name "DIL-Demo")
+                     :site-name "DIL-Demo"
+                     :template-fn w/base-template)
       (not-found)
       (content-type "text/html; charset=utf-8")))
 
-(defn list-apps []
-  [:main
+(defn list-apps [config]
+  [:main.list-apps
    [:ul
     (for [{:keys [path slug title]} sites]
-      [:li [:a {:href path}
-            title
-            [:span.site-sub-title (t (str "site-sub-title/" slug))]]])]])
+      [:li {:class slug}
+       [:a {:href path}
+        [:div
+         [:h2.site-name (get-in config [(keyword slug) :site-name])]
+         [:span.site-title title]]]])]])
 
 (defn wrap-max-age-cache-control
   "Add the `must-revalidate` and `max-age` directives for
@@ -84,13 +87,14 @@
 
 (def cache-control-max-age-assets 60)
 
-(def handler
+(defn make-root-handler [config]
   (-> (routes
        (GET "/" {}
          (w/render "dil"
-                   (list-apps)
+                   (list-apps config)
                    :title (t "start-screen/title")
-                   :site-name "DIL-Demo"))
+                   :site-name "DIL-Demo"
+                   :template-fn w/base-template))
        (resources "/")
        not-found-handler)
       (wrap-max-age-cache-control cache-control-max-age-assets)))
@@ -154,7 +158,8 @@
                           (store/wrap config)))))
 
 (defn make-h2m-app [config]
-  (-> handler
+  (-> config
+      (make-root-handler)
       (wrap-h2m-app :erp config erp/make-handler erp/make-event-handler)
       (wrap-h2m-app :wms config wms/make-handler nil)
       (wrap-h2m-app :tms-1 config tms/make-handler tms/make-event-handler "tms")

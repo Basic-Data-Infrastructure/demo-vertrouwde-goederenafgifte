@@ -8,6 +8,6 @@
  */
 
 :root {
-    --site-color: #00895A;
-    --site-other-color: #FF9500;
+    --site-color: var(--tms-1-color);
+    --site-other-color: var(--tms-1-other-color);
 }

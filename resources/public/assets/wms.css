@@ -8,6 +8,6 @@
  */
 
 :root {
-    --site-color: #D24317;
-    --site-other-color: #017FC0;
+    --site-color: var(--wms-color);
+    --site-other-color: var(--wms-other-color);
 }
