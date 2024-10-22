@@ -8,6 +8,15 @@
  */
 
 :root {
+    --erp-color: #1f41f7;
+    --erp-other-color: #058686;
+    --wms-color: #D24317;
+    --wms-other-color: #017FC0;
+    --tms-1-color: #00895A;
+    --tms-1-other-color: #FF9500;
+    --tms-2-color: #FFBF00;
+    --tms-2-other-color: #A5D601;
+
     --color-black: #000;
     --color-white: #fff;
     --color-red: #D93526;

@@ -22,83 +22,90 @@
     :href    "#"}
    title])
 
+(defn base-template [site main & {:keys [title site-name]}]
+  [:html
+   [:head
+    [:meta {:charset "utf-8"}]
+    [:meta {:name "viewport", :content "width=device-width,initial-scale=1.0"}]
+
+    [:title (str title " — " site-name)]
+
+    [:link {:rel "stylesheet", :href "/assets/base.css"}]
+    [:link {:rel "stylesheet", :href "/assets/icons.css"}]
+    [:link {:rel "stylesheet", :href (str "/assets/" site ".css")}]
+
+    [:script {:src "/assets/qr-scanner.legacy.min.js"}] ;; https://github.com/nimiq/qr-scanner
+    [:script {:src "/assets/scan-qr.js"}]
+    [:script {:src "/assets/fx.js"}]]
+
+   [:body
+    [:nav.top
+     [:ul
+      [:li [:a {:href "/"} [:strong site-name]]]]
+
+     [:ul
+      (for [{:keys [slug path title]} sites]
+        [:li [:a {:href path, :class (when (= slug site) "current")}
+              title
+              [:span.site-sub-title (t (str "site-sub-title/" slug))]]])]
+
+     [:ul.select-lang
+      (for [lang (keys i18n/*translations*)]
+        [:li
+         [:a.set-lang
+          {:href  (str ".?set-lang=" lang)
+           :class (cond-> (str "lang-" lang)
+                    (= i18n/*lang* lang) (str " current"))}
+          lang]])]]
+
+    main
+
+    [:dialog#modal-dialog
+     [:a.dialog-close {:href "."} "✕"]
+     [:header]
+     [:main]
+     [:div.busy]]
+    [:dialog#drawer-dialog
+     [:a.dialog-close {:href "."} "✕"]
+     [:header]
+     [:main]
+     [:div.busy]]]])
+
 (defn template [site main & {:keys [app-name flash title site-name navigation]
                              :or   {navigation {:current :list
                                                 :paths   {:list   "."
-                                                          :pulses "pulses/"}}}}]
+                                                          :pulses "pulses/"}}}
+                             :as   opts}]
   (let [app-name (or app-name site)]
-    [:html
-     [:head
-      [:meta {:charset "utf-8"}]
-      [:meta {:name "viewport", :content "width=device-width,initial-scale=1.0"}]
+    (base-template
+     site
+     [:div.app-container
+      [:nav.app
+       [:h1 site-name]
+       [:h2 site]
+       (let [{:keys [current paths]} navigation]
+         [:ul
+          [:li.dashboard {:class (when (= :dashboard current) "current")}
+           (dummy-link (t "nav/dashboard"))]
+          [:li.list {:class (when (= :list current) "current")}
+           [:a {:href (:list paths)}
+            (t (str "nav/" app-name "/list"))]]
+          [:li.contacts {:class (when (= :contacts current) "current")}
+           (let [title (t (str "nav/" app-name "/contacts"))]
+             (if-let [path (:contacts paths)]
+               [:a {:href path} title]
+               (dummy-link title)))]
+          [:li.pulses {:class (when (= :pulses current) "current")}
+           [:a {:href (:pulses paths)}
+            (t "nav/pulses")]]])]
 
-      [:title (str title " — " site-name)]
-
-      [:link {:rel "stylesheet", :href "/assets/base.css"}]
-      [:link {:rel "stylesheet", :href "/assets/icons.css"}]
-      [:link {:rel "stylesheet", :href (str "/assets/" site ".css")}]
-
-      [:script {:src "/assets/qr-scanner.legacy.min.js"}] ;; https://github.com/nimiq/qr-scanner
-      [:script {:src "/assets/scan-qr.js"}]
-      [:script {:src "/assets/fx.js"}]]
-
-     [:body
-      [:nav.top
-       [:ul
-        [:li [:strong site-name]]]
-
-       [:ul
-        (for [{:keys [slug path title]} sites]
-          [:li [:a {:href path, :class (when (= slug site) "current")}
-                title
-                [:span.site-sub-title (t (str "site-sub-title/" slug))]]])]
-
-       [:ul.select-lang
-        (for [lang (keys i18n/*translations*)]
-          [:li
-           [:a.set-lang
-            {:href  (str ".?set-lang=" lang)
-             :class (cond-> (str "lang-" lang)
-                      (= i18n/*lang* lang) (str " current"))}
-            lang]])]]
-
-      [:div.app-container
-       [:nav.app
-        [:h1 site-name]
-        [:h2 site]
-        (let [{:keys [current paths]} navigation]
-          [:ul
-           [:li.dashboard {:class (when (= :dashboard current) "current")}
-            (dummy-link (t "nav/dashboard"))]
-           [:li.list {:class (when (= :list current) "current")}
-            [:a {:href (:list paths)}
-             (t (str "nav/" app-name "/list"))]]
-           [:li.contacts {:class (when (= :contacts current) "current")}
-            (let [title (t (str "nav/" app-name "/contacts"))]
-              (if-let [path (:contacts paths)]
-                [:a {:href path} title]
-                (dummy-link title)))]
-           [:li.pulses {:class (when (= :pulses current) "current")}
-            [:a {:href (:pulses paths)}
-             (t "nav/pulses")]]])]
-
-       [:div.app
-        [:header.container [:h1 title]]
-        [:main.container
-         (for [[type message] (select-keys flash [:error :success :warning])]
-           [:article.flash {:class (str "flash-" (name type))} message])
-         main]]]
-
-      [:dialog#modal-dialog
-       [:a.dialog-close {:href "."} "✕"]
-       [:header]
-       [:main]
-       [:div.busy]]
-      [:dialog#drawer-dialog
-       [:a.dialog-close {:href "."} "✕"]
-       [:header]
-       [:main]
-       [:div.busy]]]]))
+      [:div.app
+       [:header.container [:h1 title]]
+       [:main.container
+        (for [[type message] (select-keys flash [:error :success :warning])]
+          [:article.flash {:class (str "flash-" (name type))} message])
+        main]]]
+     opts)))
 
 (defn qr-code [text]
   (let [id (str "qrcode-" (UUID/randomUUID))]
@@ -121,9 +128,11 @@
     "—"
     val))
 
-(defn render-body [site main & opts]
+(defn render-body [site main & {:keys [template-fn]
+                                :or   {template-fn template}
+                                :as   opts}]
   {:pre [(string? site) (coll? main)]}
-  (str "<!DOCTYPE HTML>" (hiccup/html (apply template site main opts))))
+  (str "<!DOCTYPE HTML>" (hiccup/html (template-fn site main opts))))
 
 (defn render [& args]
   (-> (apply render-body args)
