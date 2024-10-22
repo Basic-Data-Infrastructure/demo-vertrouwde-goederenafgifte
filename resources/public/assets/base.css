@@ -55,10 +55,9 @@
     --color-warning-bg: color-mix(in srgb, var(--color-orange) 20%, white 80%);
     --color-warning-border: var(--color-orange);
 
-    --header-height: 3.5rem;
+    --header-height: 5rem;
     --main-padding: 2rem;
     --dialog-width: 50rem;
-    --top-nav-height: 2.5rem;
     --app-nav-width: 20rem;
 }
 
@@ -71,51 +70,10 @@ html {
 body {
     margin: 0;
     padding: 0;
+    position: relative;
 }
 
 
-
-body > nav.top {
-    box-sizing: border-box;
-    display: flex;
-    justify-content: space-between;
-
-    background: black;
-    font-size: .66rem;
-    padding: .5rem 1rem;
-    height: var(--top-nav-height);
-}
-body > nav.top > ul {
-    display: flex;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-body > nav.top > ul > li {
-    display: inline-block;
-    margin: 0;
-    padding: 0;
-    color: var(--color-white);
-}
-body > nav.top > ul > li:after {
-    content: '/';
-    opacity: .33;
-    margin: 0 .5em;
-}
-body > nav.top > ul > li:last-child:after {
-    content: '';
-    margin: 0;
-}
-body > nav.top > ul > li > a {
-    padding: 0 .5em;
-    display: inline-block;
-    text-decoration: none;
-    color: var(--color-white);
-}
-body > nav.top > ul > li > a.current {
-    text-decoration: underline;
-    font-weight: bold;
-}
 
 nav.bottom {
     margin-top: 4em;
@@ -128,11 +86,32 @@ nav.bottom > ul > li {
     margin-bottom: .5em;
 }
 
+ul.select-lang {
+    position: absolute;
+    bottom: .5rem;
+    left: .5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+ul.select-lang li {
+    display: inline-block;
+    margin: 0;
+}
+
+ul.select-lang a {
+    padding: .5rem .5rem;
+}
+ul.select-lang a.current {
+    text-decoration-style: double;
+    color: var(--color-link-visited);
+}
+
 
 
 .app-container {
     display: flex;
-    min-height: calc(100vh - var(--top-nav-height));
+    min-height: 100vh;
 }
 .app-container nav.app {
     box-sizing: border-box;
@@ -145,7 +124,7 @@ nav.bottom > ul > li {
     background: var(--color-tinted-bg);
 }
 .app-container main.container {
-    min-height: calc(100vh - var(--top-nav-height) - var(--header-height));
+    min-height: calc(100vh - var(--header-height));
 }
 
 header.container, main.container {
@@ -156,16 +135,19 @@ main.container {
     padding: var(--main-padding);
 }
 header.container {
-    padding: 1rem;
-    max-height: var(--header-height);
+    height: var(--header-height);
     background-repeat: no-repeat;
     background-size: contain;
     background-position: right;
     background-color: var(--color-tinted-bg);
 }
 header.container h1 {
-    margin: 0;
+    box-sizing: border-box;
+    height: 5rem;
+    margin: 0 2rem;
+    padding: 1.8rem 0 0 0;
     font-size: 1.33rem;
+    border-bottom: solid white 1px;
 }
 
 span.site-sub-title {
@@ -180,16 +162,23 @@ span.site-sub-title:after {
 
 
 
+nav.app a.root {
+    color: unset;
+    text-decoration: none;
+}
+
 nav.app h1 {
     font-size: 1rem;
     padding: 0 1rem;
     margin: 0;
 }
 nav.app h2 {
-    font-size: .75rem;
+    font-size: .66rem;
     padding: 0 1rem 1rem 1rem;
-    margin: 0 0 1rem 0;
-    border-bottom: solid black 1px;
+    margin: 0 0 3rem 0;
+    border-bottom: solid var(--color-separator) 1px;
+    color: var(--site-color);
+    text-transform: uppercase;
 }
 
 nav.app ul {
@@ -199,7 +188,7 @@ nav.app ul li {
     margin: 0;
 }
 
-nav.app a {
+nav.app li a {
     display: block;
     padding: .75rem 1rem;
     line-height: 1rem;
@@ -585,7 +574,7 @@ dialog#modal-dialog {
     margin: 10rem auto;
 }
 dialog#drawer-dialog {
-    top: var(--top-nav-height);
+    top: 0;
     right: 0;
     left: unset;
     bottom: 0;
@@ -619,8 +608,8 @@ dialog#drawer-dialog main.container .edit-form button.delete {
 
 dialog .dialog-close {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
+    top: 2rem;
+    right: 2rem;
     text-decoration: none;
     font-size: 1.5rem;
     color: var(--color-text-gray);
