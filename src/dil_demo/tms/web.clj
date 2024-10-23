@@ -19,44 +19,56 @@
 
 (defn list-trips [trips {:keys [eori->name]}]
   [:main
-   (when-not (seq trips)
-     [:article.empty
-      [:p (t "empty")]])
+   [:div.table-list-wrapper
+    [:table.list.trips
+     [:thead
+      [:th.ref (t "label/ref")]
+      [:th.load-location (t "label/load-location")]
+      [:th.load-date (t "label/load-date")]
+      [:th.unload-location (t "label/unload-location")]
+      [:th.unload-date (t "label/unload-date")]
+      [:th.license-plate (t "label/license-plate")]
+      [:th.driver-id-digits (t "label/driver-id-digits")]
+      [:th.status (t "label/status")]
+      [:th.actions]]
+     [:tbody
+      (when-not (seq trips)
+        [:tr.empty [:td {:colspan 999} (t "empty")]])
 
-   (for [{:keys [id ref status load unload driver-id-digits license-plate carriers]} trips]
-     [:article
-      [:header
-       [:div.status (t (str "status/" status))]
-       [:div.ref-date ref " / " (:date load)]
-       [:div.from-to
-        (-> load :location-eori eori->name)
-        " → "
-        (:location-name unload)]]
-      (cond
-        (and driver-id-digits license-plate)
-        [:p.assigned
-         (t "tms/assigned" {:driver-id-digits driver-id-digits
-                            :license-plate    license-plate})]
+      (for [{:keys [id ref load unload license-plate driver-id-digits status carriers]} trips]
+        [:tr
+         [:td.ref [:span ref]]
+         [:td.load-location [:span (-> load :location-eori eori->name)]]
+         [:td.load-date [:span (:date load)]]
+         [:td.unload-location [:span (-> unload :location-name)]]
+         [:td.unload-date [:span (:date unload)]]
+         (if (= otm/status-outsourced status)
+           [:td.outsourced {:colspan 2}
+            [:span (-> carriers last :eori eori->name)]]
+           [:div
+            [:td.license-plate (if license-plate
+                                 [:span license-plate]
+                                 [:span "—"])]
+            [:td.driver-id-digits (if driver-id-digits
+                                    [:span driver-id-digits]
+                                    [:span.empty "—"])]])
+         [:td.status [:span {:class (str "status-" status)} (t (str "status/" status))]]
+         [:td.actions
+          (when (= otm/status-requested status)
+            [:a.button.primary {:href      (str "assign-" id)
+                                :title     (t "tms/tooltip/assign")
+                                :fx-dialog "#modal-dialog"}
+             (t "tms/button/assign")])
 
-        (and (= otm/status-outsourced status) (-> carriers last :eori))
-        [:p.outsourced
-         (t "tms/outsourced" {:carrier (-> carriers last :eori eori->name)})]
+          (when (= otm/status-requested status)
+            [:a.button.secondary {:href      (str "outsource-" id)
+                                  :title     (t "tms/tooltip/outsource")
+                                  :fx-dialog "#modal-dialog"}
+             (t "tms/button/outsource")])
 
-        :else
-        [:em (t "tms/unassigned")])
-      [:footer.actions
-       (when (= otm/status-requested status)
-         [:a.button.primary {:href      (str "assign-" id)
-                             :title     (t "tms/tooltip/assign")
-                             :fx-dialog "#modal-dialog"}
-          (t "tms/button/assign")])
-       (when (= otm/status-requested status)
-         [:a.button.secondary {:href      (str "outsource-" id)
-                               :title     (t "tms/tooltip/outsource")
-                               :fx-dialog "#modal-dialog"}
-          (t "tms/button/outsource")])
-       (f/delete-button (str "trip-" id)
-                        {:form {:fx-dialog "#modal-dialog"}})]])])
+          (when (not= otm/status-requested status)
+            (f/delete-button (str "trip-" id)
+                             {:form {:fx-dialog "#modal-dialog"}}))]])]]]])
 
 (defn qr-code-dil-demo [{:keys [carriers driver-id-digits license-plate]}]
   (w/qr-code (str ":dil-demo"
@@ -66,20 +78,26 @@
 
 (defn chauffeur-list-trips [trips {:keys [eori->name]}]
   [:main
-   (when-not (seq trips)
-     [:article.empty
-      [:p (t "empty")]])
+   [:div.table-list-wrapper
+    [:table.list.trips
+     [:thead
+      [:th.ref (t "label/ref")]
+      [:th.load-location (t "label/load-location")]
+      [:th.load-date (t "label/load-date")]
+      [:th.unload-location (t "label/unload-location")]
+      [:th.unload-date (t "label/unload-date")]]
+     [:tbody
+      (when-not (seq trips)
+        [:tr.empty [:td {:colspan 999} (t "empty")]])
 
-   (for [{:keys [id ref load unload]} trips]
-     [:article
-      [:header
-       [:div.ref-date ref " / " (:date load)]]
-      [:div.from-to
-       (-> load :location-eori eori->name)
-       " → "
-       (:location-name unload)]
-      [:footer.actions
-       [:a.button.primary {:href (str "trip-" id)} (t "button/show")]]])])
+      (for [{:keys [id ref load unload]} trips]
+        [:tr.fx-clickable
+         [:td.ref
+          [:a {:href (str "trip-" id), :fx-onclick-tr true} ref]]
+         [:td.load-location [:span (-> load :location-eori eori->name)]]
+         [:td.load-date [:span (:date load)]]
+         [:td.unload-location [:span (-> unload :location-name)]]
+         [:td.unload-date [:span (:date unload)]]])]]]])
 
 (defn chauffeur-trip [trip]
   [:div.trip

@@ -29,6 +29,7 @@
     --color-main-bg: #fff;
     --color-tinted-bg: color-mix(in srgb, var(--site-color) 5%, white 95%);
     --color-separator: #ddd;
+    --color-hover: color-mix(in srgb, var(--color-blue) 5%, white 95%);
 
     --color-button-border: #ccc;
     --color-button-primary: color-mix(in srgb, var(--site-other-color) 30%, white 70%);
@@ -341,6 +342,66 @@ section:last-child {
     margin-bottom: 0;
 }
 
+
+
+section.actions :is(button, .button).create {
+    float: right;
+}
+.table-list-wrapper { /* need wrapper because of border-collapse */
+    border-radius: .5rem;
+    border: solid var(--color-table-border) 1px;
+    overflow: auto;
+}
+table.list {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+table.list th, table.list td {
+    padding: 1rem;
+    text-align: left;
+}
+table.list th {
+    font-weight: normal;
+    color: var(--color-text-gray);
+}
+
+table.list tbody tr.fx-clickable:hover {
+    background: var(--color-hover);
+}
+table.list tbody td {
+    border-top: solid var(--color-table-border) 1px;
+}
+
+table.list td.goods {
+    font-weight: bold;
+}
+table.list td.publish .carrier {
+    color: var(--color-text-gray);
+}
+
+table.list :is(th, td):is(.load-date, .unload-date, .driver-id-digits, .status, .actions) {
+    width: 6rem;
+}
+table.list :is(th, td):is(.ref, .license-plate) {
+    width: 8rem;
+}
+table.list.consignments :is(th, td):is(.ref, .goods, .unload-date, .status) {
+    border-right: solid var(--color-table-border) 1px;
+}
+table.list.trips :is(th, td):is(.ref, .unload-date, .driver-id-digits, .license-plate, .outsourced, .status) {
+    border-right: solid var(--color-table-border) 1px;
+}
+table.list.trips td.outsourced span:before {
+    content: "→ ";
+    font-size: 150%;
+}
+table.list.transport-orders :is(th, td):is(.ref, .goods, .load-date, .status) {
+    border-right: solid var(--color-table-border) 1px;
+}
+
+
+
 article {
     border-radius: .5rem;
     padding: 1rem;
@@ -599,6 +660,11 @@ video {
 
 
 
+a[fx-onclick-tr] {
+    text-decoration: unset;
+    color: unset;
+}
+
 dialog {
     border: none;
     width: var(--dialog-width);
@@ -650,6 +716,9 @@ dialog .dialog-close {
     text-decoration: none;
     font-size: 1.5rem;
     color: var(--color-text-gray);
+}
+dialog .dialog-close:is(:focus, :focus-visible) {
+    outline: none;
 }
 
 ::backdrop {

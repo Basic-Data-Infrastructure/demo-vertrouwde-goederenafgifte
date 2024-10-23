@@ -23,33 +23,33 @@
 
 (defn list-transport-orders [transport-orders]
   [:main
-   (when-not (seq transport-orders)
-     [:article.empty
-      [:p (t "empty")]])
+   [:div.table-list-wrapper
+    [:table.list.transport-orders
+     [:thead
+      [:th.ref (t "label/ref")]
+      [:th.goods (t "label/goods")]
+      [:th.load-date (t "label/load-date")]
+      [:th.status (t "label/status")]
+      [:th.actions]]
+     [:tbody
+      (when-not (seq transport-orders)
+        [:tr.empty [:td {:colspan 999} (t "empty")]])
 
-   (for [{:keys [id ref load goods status]} transport-orders]
-     [:article
-      [:header
-       [:div.status (t (str "status/" status))]
-       [:div.ref-date ref " / " (:date load)]]
-      [:div.goods goods]
-
-
-      [:footer.actions
-       (cond
-         (= status otm/status-confirmed)
-         (f/post-button (str "send-gate-out-" id)
-                        {:label  (t "wms/button/gate-out")
-                         :button {:class "primary"}
-                         :form   {:fx-dialog "#modal-dialog"}})
-
-         (= status otm/status-requested)
-         [:a.button.primary {:href      (str "verify-" id)
-                             :fx-dialog "#modal-dialog"}
-          (t "wms/button/verify")])
-
-       (f/delete-button (str "transport-order-" id)
-                        {:form {:fx-dialog "#modal-dialog"}})]])])
+      (for [{:keys [id ref load goods status]} transport-orders]
+        [:tr.fx-clickable
+         [:td.ref
+          (if (= status otm/status-requested)
+            [:a.verify {:href          (str "verify-" id)
+                        :fx-dialog     "#modal-dialog"
+                        :fx-onclick-tr true}
+             ref]
+            ref)]
+         [:td.goods [:span goods]]
+         [:td.load-date [:span (:date load)]]
+         [:td.status [:span {:class (str "status-" status)} (t (str "status/" status))]]
+         [:td.actions
+          (f/delete-button (str "transport-order-" id)
+                           {:form {:fx-dialog "#modal-dialog"}})]])]]]])
 
 (defn qr-code-scan-button [carrier-id driver-id plate-id]
   (let [id (str "qr-code-video-" (UUID/randomUUID))]
@@ -89,12 +89,12 @@
     [:div.actions
      [:a.button.cancel {:href "."} (t "button/cancel")]
 
-     [:button.button-primary
+     [:button.button-primary.submit
       {:type    "submit"
        :onclick (f/confirm-js (t "confirm/driver-and-license-plate"))}
       (t "wms/button/verify")]]))
 
-(defn accepted-transport-order [transport-order
+(defn accepted-transport-order [{:keys [id] :as transport-order}
                                 {:keys [carrier-eoris driver-id-digits license-plate]}
                                 {:keys [explanation]}
                                 {:keys [eori->name]}]
@@ -107,8 +107,11 @@
                                (last carrier-eoris))
          :driver-id-digits driver-id-digits
          :license-plate    license-plate})]
-    [:div.actions
-     [:a.button {:href "."} (t "button/list")]]]
+
+    (f/post-button (str "send-gate-out-" id)
+                   {:label  (t "wms/button/gate-out")
+                    :button {:class "primary"}
+                    :form   {:fx-dialog "#modal-dialog"}})]
    (w/explanation explanation)])
 
 (defn rejected-transport-order [transport-order

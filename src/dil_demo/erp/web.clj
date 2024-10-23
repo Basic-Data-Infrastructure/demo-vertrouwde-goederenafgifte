@@ -22,34 +22,48 @@
 (defn list-consignments [consignments {:keys [eori->name]}]
   [:main
    [:section.actions
-    [:a.button.primary {:href      "consignment-new"
-                        :fx-dialog "#drawer-dialog"}
+    [:a.button.primary.create
+     {:href      "consignment-new"
+      :fx-dialog "#drawer-dialog"}
      (t "erp/button/new")]]
 
-   (when-not (seq consignments)
-     [:article.empty
-      [:p (t "empty")]])
+   [:div.table-list-wrapper
+    [:table.list.consignments
+     [:thead
+      [:th.ref (t "label/ref")]
+      [:th.goods (t "label/goods")]
+      [:th.load-location (t "label/load-location")]
+      [:th.load-date (t "label/load-date")]
+      [:th.unload-location (t "label/unload-location")]
+      [:th.unload-date (t "label/unload-date")]
+      [:th.status (t "label/status")]
+      [:th.publish (t "erp/button/publish")]]
+     [:tbody
+      (when-not (seq consignments)
+        [:tr.empty [:td {:colspan 999} (t "empty")]])
 
-   (for [{:keys [id ref goods load unload carrier status]} consignments]
-     [:article
-      [:header
-       [:div.status (t (str "status/" status))]
-       [:div.ref-date ref " / " (:date load)]
-       [:div.from-to (-> load :location-eori eori->name) " → " (:location-name unload)]]
-
-      [:div.goods goods]
-      [:div.carrier (-> carrier :eori eori->name)]
-
-      [:footer.actions
-       [:a.button.primary {:href      (str "consignment-" id)
-                           :title     (t "tooltip/edit")
-                           :fx-dialog "#drawer-dialog"}
-        (t "button/edit")]
-       (when (= otm/status-draft status)
-         [:a.button.secondary {:href      (str "publish-" id)
-                               :title     (t "erp/tooltip/publish")
-                               :fx-dialog "#modal-dialog"}
-          (t "erp/button/publish")])]])])
+      (for [{:keys [id ref goods load unload carrier status]} consignments]
+        [:tr.fx-clickable
+         [:td.ref
+          [:a {:href          (str "consignment-" id)
+               :title         (t "tooltip/edit")
+               :fx-dialog     "#drawer-dialog"
+               :fx-onclick-tr true}
+           ref]]
+         [:td.goods [:span goods]]
+         [:td.load-location [:span (-> load :location-eori eori->name)]]
+         [:td.load-date [:span (:date load)]]
+         [:td.unload-location [:span (-> unload :location-name)]]
+         [:td.unload-date [:span (:date unload)]]
+         [:td.status [:span {:class (str "status-" status)} (t (str "status/" status))]]
+         [:td.publish
+          (if (= otm/status-draft status)
+            [:a.button.secondary.publish
+             {:href      (str "publish-" id)
+              :title     (t "erp/tooltip/publish")
+              :fx-dialog "#modal-dialog"}
+             (t "erp/button/publish")]
+            [:span.carrier (-> carrier :eori eori->name)])]])]]]])
 
 (defn editable? [{:keys [status]}]
   (or (nil? status)
@@ -100,7 +114,7 @@
   [:div
    [:section
     [:div.actions
-     [:a.button {:href "."} (t "button/list")]]]
+     [:a.button.list {:href "."} (t "button/list")]]]
    (w/explanation explanation)])
 
 (defn publish-consignment [consignment {:keys [eori->name warehouse-addresses]}]
@@ -145,6 +159,7 @@
         [:pre goods]]]
 
       (f/submit-cancel-buttons {:submit {:label   (t "erp/button/publish")
+                                         :class   "publish"
                                          :onclick (f/confirm-js)}}))))
 
 (defn published-consignment [consignment

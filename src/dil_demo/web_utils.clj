@@ -34,6 +34,8 @@
     [:link {:rel "stylesheet", :href (str "/assets/" site ".css")}]
 
     [:script {:src "/assets/qr-scanner.legacy.min.js"}] ;; https://github.com/nimiq/qr-scanner
+    [:script {:src "/assets/qrcode.js"}] ;; https://davidshimjs.github.io/qrcodejs/
+
     [:script {:src "/assets/scan-qr.js"}]
     [:script {:src "/assets/fx.js"}]]
 
@@ -102,8 +104,6 @@
 (defn qr-code [text]
   (let [id (str "qrcode-" (UUID/randomUUID))]
     [:div.qr-code-container
-     [:script {:src "/assets/qrcode.js"}] ;; https://davidshimjs.github.io/qrcodejs/
-
      [:div.qr-code {:id id}]
      [:script (hiccup/raw
                (str "new QRCode(document.getElementById("
