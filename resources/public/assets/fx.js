@@ -90,6 +90,7 @@
 
     anchor.addEventListener('click', async function (ev) {
       ev.preventDefault()
+      ev.stopPropagation()
 
       showModal(dialog)
       addClassName(dialog, 'fx-busy')
@@ -125,10 +126,30 @@
     })
   }
 
+  const setupFxOnClickTr = (el) => {
+    el.closest('tr').addEventListener('click', ev => {
+      if (el.getAttribute('fx-dialog')) {
+        el.dispatchEvent(
+          new MouseEvent('click', { // eslint-disable-line no-undef
+            view: ev.window,
+            bubbles: true,
+            cancelable: true
+          })
+        )
+      } else {
+        el.dispatchEvent(
+          // bubbles and cancelable will cause endless loop
+          new MouseEvent('click') // eslint-disable-line no-undef
+        )
+      }
+    })
+  }
+
   /* Decorate all fx annotated elements of `target`. */
   const onLoad = ({ target }) => {
     target.querySelectorAll('a[fx-dialog]').forEach(setupFxDialogAnchor)
     target.querySelectorAll('form[fx-dialog]').forEach(setupFxDialogForm)
+    target.querySelectorAll('[fx-onclick-tr]').forEach(setupFxOnClickTr)
   }
 
   // Show busy state when dialog-close link clicked.
