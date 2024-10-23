@@ -123,10 +123,11 @@
   {:pre [eori dataspace-id key-file chain-file
          satellite-id satellite-base-url]}
   {:ishare/client-id                       eori
+   :ishare/fetch-party-info-fn             (ishare-client/mk-cached-fetch-party-info 1000)
    :ishare/dataspace-id                    dataspace-id
    :ishare/satellite-id                    satellite-id
    :ishare/satellite-base-url              satellite-base-url
-   :ishare/authorization-registry-id      ar-id
+   :ishare/authorization-registry-id       ar-id
    :ishare/authorization-registry-base-url ar-base-url
    :ishare/authorization-registry-type     (keyword ar-type)
    :ishare/private-key                     (ishare-client/private-key key-file)

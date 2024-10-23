@@ -143,7 +143,7 @@
     (str server-id " (" server-name ")")
     server-id))
 
-(defmulti ishare-interaction-summary #(-> % :request :ishare/message-type))
+(defmulti ishare-interaction-summary #(-> % :request :ishare/operation))
 
 (defmethod ishare-interaction-summary :default
   [_]
@@ -173,7 +173,7 @@
   [{:keys [request]}]
   [:span (t "explanation/poort8/create-policy" {:party (server-description request)})])
 
-(defmethod ishare-interaction-summary :delegation
+(defmethod ishare-interaction-summary :delegation-evidence
   [{:keys [request]}]
   [:span (t "explanation/ishare/delegation" {:party (server-description request)})])
 
