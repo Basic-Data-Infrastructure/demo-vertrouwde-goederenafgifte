@@ -208,11 +208,12 @@
 (defn make-handler [{:keys [eori site-id site-name]}]
   {:pre [(keyword? site-id) site-name]}
   (let [slug     (name site-id)
-        render   (fn render [title main flash & {:keys [slug-postfix]}]
+        render   (fn render [title main flash & {:keys [slug-postfix html-class]}]
                    (w/render (str slug slug-postfix)
                              main
                              :flash flash
                              :title title
+                             :html-class html-class
                              :site-name site-name))
         params-> (fn params-> [params]
                    (-> params
@@ -222,7 +223,8 @@
      (GET "/" {:keys [flash master-data ::store/store]}
        (render (t "erp/title/list")
                (list-consignments (get-consignments store) master-data)
-               flash))
+               flash
+               :html-class "list"))
 
      (GET "/consignment-new" {:keys [flash master-data ::store/store user-number]}
        (render (t "erp/title/new")
@@ -232,7 +234,8 @@
                  :unload {:date (w/format-date (Date.))}
                  :status otm/status-draft}
                 master-data)
-               flash))
+               flash
+               :html-class "details"))
 
      (POST "/consignment-new" {:keys [params]}
        (let [{:keys [ref] :as consignment}
@@ -249,7 +252,8 @@
        (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
          (render (t "erp/title/edit" {:ref ref})
                  (edit-consignment consignment master-data)
-                 flash)))
+                 flash
+                 :html-class "details")))
 
      (POST "/consignment-:id" {:keys [params]}
        (let [{:keys [ref] :as consignment} (params-> params)]
@@ -273,14 +277,16 @@
      (GET "/deleted" {:keys [flash]}
        (render (t "erp/title/deleted")
                (deleted-consignment flash)
-               flash))
+               flash
+               :html-class "delete"))
 
      (GET "/publish-:id" {:keys        [flash master-data ::store/store]
                           {:keys [id]} :params}
        (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
          (render (t "erp/title/publish" {:ref ref})
                  (publish-consignment consignment master-data)
-                 flash)))
+                 flash
+                 :html-class "publish")))
 
      (POST "/publish-:id" {:keys        [master-data ::store/store
                                          user-number]
@@ -323,4 +329,5 @@
        (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
          (render (t "erp/title/published" {:ref ref})
                  (published-consignment consignment master-data flash)
-                 flash))))))
+                 flash
+                 :html-class "publish"))))))

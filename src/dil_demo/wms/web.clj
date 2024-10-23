@@ -169,18 +169,20 @@
 
 (defn make-handler [{:keys [site-id site-name client-data]}]
   (let [slug   (name site-id)
-        render (fn render [title main flash & {:keys [slug-postfix]}]
+        render (fn render [title main flash & {:keys [slug-postfix html-class]}]
                  (w/render (str slug slug-postfix)
                            main
                            :flash flash
                            :title title
-                           :site-name site-name))]
+                           :site-name site-name
+                           :html-class html-class))]
     (routes
      (GET "/" {:keys        [flash]
                ::store/keys [store]}
        (render (t "wms/title/list")
                (list-transport-orders (get-transport-orders store))
-               flash))
+               flash
+               :html-class "list"))
 
      (DELETE "/transport-order-:id" {::store/keys [store]
                                      {:keys [id]} :params}
@@ -193,7 +195,8 @@
      (GET "/deleted" {:keys [flash]}
        (render (t "erp/title/deleted")
                (deleted-transport-order flash)
-               flash))
+               flash
+               :html-class "delete"))
 
      (GET "/verify-:id" {:keys        [flash]
                          ::store/keys [store]
@@ -201,7 +204,8 @@
        (when-let [transport-order (get-transport-order store id)]
          (render (t "wms/title/verify")
                  (verify-transport-order transport-order)
-                 flash)))
+                 flash
+                 :html-class "verify")))
 
      (POST "/verify-:id" {:keys                   [flash master-data ::store/store]
                           {:keys [id] :as params} :params}
@@ -211,12 +215,14 @@
            (if (wms.verify/permitted? result)
              (-> (render (t "wms/title/verification-accepted")
                          (accepted-transport-order transport-order params result master-data)
-                         flash)
+                         flash
+                         :html-class "verify")
                  (assoc ::store/commands [[:put! :transport-orders
                                            (assoc transport-order :status otm/status-confirmed)]]))
              (render (t "wms/title/verification-rejected")
                      (rejected-transport-order transport-order params result master-data)
-                     flash)))))
+                     flash
+                     :html-class "verify")))))
 
      (POST "/send-gate-out-:id" {:keys        [master-data ::store/store user-number]
                                  {:keys [id]} :params
@@ -249,4 +255,5 @@
        (when-let [transport-order (get-transport-order store id)]
          (render (t "wms/title/sent-gate-out")
                  (gate-out-transport-order transport-order flash)
-                 flash))))))
+                 flash
+                 :html-class "pulse"))))))

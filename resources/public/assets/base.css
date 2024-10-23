@@ -22,6 +22,7 @@
     --color-red: #D93526;
     --color-green: #398712;
     --color-orange: #FFBF00;
+    --color-blue: #1f41f7;
 
     --color-text-gray: #888;
     --color-table-border: #ddd;
@@ -150,6 +151,43 @@ header.container h1 {
     border-bottom: solid white 1px;
 }
 
+header.container h1:before {
+    display: inline-block;
+    max-height: 1.33rem;
+    line-height: 1.33rem;
+    font-family: 'icons';
+    content: '';
+    font-size: 1.33rem;
+    vertical-align: bottom;
+    color: var(--color-blue);
+    padding: 0;
+}
+header.container.list h1:before {
+    content: var(--icon-list);
+    padding: 0 1rem 0 0;
+}
+header.container.pulse h1:before,
+header.container.pulses h1:before {
+    content: var(--icon-notifications);
+    padding: 0 1rem 0 0;
+}
+header.container.delete h1:before {
+    content: var(--icon-delete);
+    padding: 0 1rem 0 0;
+}
+header.container.publish h1:before,
+header.container.assign h1:before,
+header.container.outsource h1:before {
+    content: var(--icon-send);
+    padding: 0 1rem 0 0;
+}
+header.container.verify h1:before {
+    content: var(--icon-qr_code);
+    padding: 0 1rem 0 0;
+}
+
+
+
 span.site-sub-title {
     padding-left: .5em;
 }
@@ -197,7 +235,7 @@ nav.app li a {
 }
 nav.app .current {
     color: white;
-    background: blue;
+    background: var(--color-blue);
     border-radius: .5em;
 }
 nav.app li a:before {
@@ -210,7 +248,7 @@ nav.app li a:before {
     content: ' ';
     display: inline-block;
     width: 1rem;
-    color: blue;
+    color: var(--color-blue);
 }
 nav.app li.current a:before {
     color: unset;
@@ -436,7 +474,6 @@ button, .button, a.button {
     border-radius: .5em;
     cursor: pointer;
 
-    text-transform: uppercase;
     text-align: center;
     font-size: .9em;
     line-height: 2rem;

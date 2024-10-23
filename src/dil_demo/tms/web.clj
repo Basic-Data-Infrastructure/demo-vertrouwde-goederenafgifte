@@ -219,13 +219,14 @@
 
 (defn make-handler [{:keys [site-id site-name], own-eori :eori}]
   (let [slug   (name site-id)
-        render (fn render [title main flash & {:keys [chauffeur]}]
+        render (fn render [title main flash & {:keys [chauffeur html-class]}]
                  (w/render (str slug (when chauffeur "-chauffeur"))
                            main
                            :flash flash
                            :title title
                            :app-name "tms"
                            :site-name site-name
+                           :html-class html-class
                            :navigation (if chauffeur
                                          {:current :contacts
                                           :paths   {:list     ".."
@@ -239,7 +240,8 @@
      (GET "/" {:keys [flash master-data ::store/store]}
        (render (t "tms/title/list")
                (list-trips (get-trips store) master-data)
-               flash))
+               flash
+               :html-class "list"))
 
      (GET "/chauffeur/" {:keys [flash master-data ::store/store]}
        (render (t "tms/title/list")
@@ -247,7 +249,8 @@
                                              (get-trips store))
                                      master-data)
                flash
-               :chauffeur true))
+               :chauffeur true
+               :html-class "list"))
 
      (GET "/chauffeur/trip-:id" {:keys        [flash ::store/store]
                                  {:keys [id]} :params}
@@ -256,7 +259,8 @@
            (render (:ref trip)
                    (chauffeur-trip trip)
                    flash
-                   :chauffeur true))))
+                   :chauffeur true
+                   :html-class "details"))))
 
      (DELETE "/trip-:id" {::store/keys [store]
                           :keys        [user-number]
@@ -273,7 +277,8 @@
      (GET "/deleted" {:keys [flash]}
        (render (t "tms/title/deleted")
                (deleted-trip flash)
-               flash))
+               flash
+               :html-class "delete"))
 
      (GET "/assign-:id" {:keys        [flash master-data]
                          ::store/keys [store]
@@ -281,7 +286,8 @@
        (when-let [{:keys [ref] :as trip} (get-trip store id)]
          (render (t "tms/title/assign" {:ref ref})
                  (assign-trip trip master-data)
-                 flash)))
+                 flash
+                 :html-class "assign")))
 
      (POST "/assign-:id" {::store/keys            [store]
                           :keys                   [user-number]
@@ -307,7 +313,8 @@
        (when-let [{:keys [ref] :as trip} (get-trip store id)]
          (render (t "tms/title/assigned" {:ref ref})
                  (assigned-trip trip flash)
-                 flash)))
+                 flash
+                 :html-class "assign")))
 
      (GET "/outsource-:id" {:keys        [flash master-data ::store/store]
                             {:keys [id]} :params}
@@ -316,7 +323,8 @@
                  (outsource-trip trip (-> master-data
                                           ;; can't outsource to ourselves
                                           (update :carriers dissoc own-eori)))
-                 flash)))
+                 flash
+                 :html-class "outsource")))
 
      (POST "/outsource-:id" {:keys                [master-data ::store/store user-number]
                              {:keys [id carrier]} :params}
@@ -340,4 +348,5 @@
        (when-let [{:keys [ref] :as trip} (get-trip store id)]
          (render (t "tms/title/outsourced" {:ref ref})
                  (outsourced-trip trip flash master-data)
-                 flash))))))
+                 flash
+                 :html-class "outsource"))))))
