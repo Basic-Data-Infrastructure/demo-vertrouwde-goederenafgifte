@@ -60,7 +60,7 @@
      [:main]
      [:div.busy]]]])
 
-(defn template [site main & {:keys [app-name flash title site-name navigation]
+(defn template [site main & {:keys [app-name flash title site-name navigation html-class]
                              :or   {navigation {:current :list
                                                 :paths   {:list   "."
                                                           :pulses "pulses/"}}}
@@ -91,8 +91,9 @@
             (t "nav/pulses")]]])]
 
       [:div.app
-       [:header.container [:h1 title]]
-       [:main.container
+       [:header.container {:class html-class}
+        [:h1 title]]
+       [:main.container {:class html-class}
         (for [[type message] (select-keys flash [:error :success :warning])]
           [:article.flash {:class (str "flash-" (name type))} message])
         main]]]

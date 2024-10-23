@@ -93,13 +93,14 @@
 (defn- make-handler
   "Handler on /pulses/"
   [{:keys [site-id site-name app-name client-data]}]
-  (let [render (fn render [main flash title]
+  (let [render (fn render [main flash title & {:keys [html-class]}]
                  (w/render (name site-id)
                            main
                            :flash flash
                            :title title
                            :site-name site-name
                            :app-name app-name
+                           :html-class html-class
                            :navigation {:current :pulses
                                         :paths   {:list   ".."
                                                   :pulses "."}}))]
@@ -107,11 +108,16 @@
      (GET "/pulses/" {:keys [pulses flash]}
        (render (list-pulses pulses)
                flash
-               (t "events/title/list")))
+               (t "events/title/list")
+               :html-class "pulses"))
+
      (GET "/pulses/:id" {:keys [pulses params flash]}
        (when-let [{:keys [payload]} (get pulses (:id params))]
          (let [res (fetch-event payload client-data)]
-           (render (show-pulse res) flash (t "events/title/event"))))))))
+           (render (show-pulse res)
+                   flash
+                   (t "events/title/event")
+                   :html-class "pulse")))))))
 
 (defn wrap
   "Add route /pulses serving basic screen for viewing received pulses."
