@@ -67,8 +67,8 @@ nl:
   status/outsourced: "Uitbesteed"
 
   erp/button/new: "Nieuwe order aanmaken"
-  erp/button/publish: "Versturen"
-  erp/tooltip/publish: "Opdracht versturen naar locatie en vervoerder"
+  erp/button/publish: "Verzenden"
+  erp/tooltip/publish: "Opdracht verzenden naar locatie en vervoerder"
   erp/explanation/send-consignment-tms: "Stuur OTM Trip naar TMS van Vervoerder"
   erp/explanation/send-consignment-wms: "Stuur OTM Transportopdracht naar WMS van DC"
   erp/explanation/pickup-delegation: "Toevoegen policy toestemming pickup"
