@@ -20,7 +20,7 @@
     --color-black: #000;
     --color-white: #fff;
     --color-red: #D93526;
-    --color-green: #398712;
+    --color-green: #22c480;
     --color-orange: #FFBF00;
     --color-blue: #1f41f7;
 
@@ -32,13 +32,13 @@
     --color-hover: color-mix(in srgb, var(--color-blue) 5%, white 95%);
 
     --color-button-border: #ccc;
-    --color-button-primary: color-mix(in srgb, var(--site-other-color) 30%, white 70%);
-    --color-button-primary-border: color-mix(in srgb, var(--site-other-color) 70%, white 30%);
-    --color-button-primary-text: inherit;
+    --color-button-primary: var(--color-green);
+    --color-button-primary-border: var(--color-green);
+    --color-button-primary-text: white;
 
-    --color-button-secondary: color-mix(in srgb, var(--site-color) 30%, white 70%);
-    --color-button-secondary-border: color-mix(in srgb, var(--site-color) 70%, white 30%);
-    --color-button-secondary-text: inherit;
+    --color-button-secondary: var(--color-blue);
+    --color-button-secondary-border: var(--color-blue);
+    --color-button-secondary-text: white;
 
     --color-button-danger: white;
     --color-button-danger-border: var(--color-red);
@@ -118,7 +118,7 @@ ul.select-lang a.current {
 .app-container nav.app {
     box-sizing: border-box;
     width: var(--app-nav-width);
-    padding: 1rem;
+    padding: 1rem 1.5rem;
 }
 .app-container div.app {
     box-sizing: border-box;
@@ -208,12 +208,12 @@ nav.app a.root {
 
 nav.app h1 {
     font-size: 1rem;
-    padding: 0 1rem;
+    padding: 0;
     margin: 0;
 }
 nav.app h2 {
     font-size: .66rem;
-    padding: 0 1rem 1rem 1rem;
+    padding: 0 1rem 1rem 0;
     margin: 0 0 3rem 0;
     border-bottom: solid var(--color-separator) 1px;
     color: var(--site-color);
@@ -364,8 +364,8 @@ table.list th, table.list td {
 table.list th {
     font-weight: normal;
     color: var(--color-text-gray);
+    text-wrap-mode: nowrap;
 }
-
 table.list tbody tr.fx-clickable:hover {
     background: var(--color-hover);
 }
@@ -398,6 +398,14 @@ table.list.trips td.outsourced span:before {
 }
 table.list.transport-orders :is(th, td):is(.ref, .goods, .load-date, .status) {
     border-right: solid var(--color-table-border) 1px;
+}
+
+td .actions-wrapper {
+    display: flex;
+}
+table.list :is(button, .button) {
+    line-height: 1.5rem;
+    border-radius: .25rem;
 }
 
 
@@ -475,7 +483,7 @@ legend {
     max-width: calc(100vw - 7rem);
     font-family: inherit;
     font-size: 1rem;
-    padding: .5rem;
+    padding: .66rem;
     box-sizing: content-box;
     border-radius: .2rem;
     border: 1px solid var(--color-button-border);
@@ -522,7 +530,7 @@ button, .button, a.button {
     position: relative;
     display: inline-block;
     margin: 0 .5rem 0 0;
-    padding: 0 1em;
+    padding: 0 1rem;
 
     color: var(--color-black);
     background: var(--color-white);
@@ -531,27 +539,28 @@ button, .button, a.button {
     box-sizing: border-box;
     user-select: none;
     border: solid 1px var(--color-button-border);
-    box-shadow: 0 0 .2em rgba(0, 0, 0, .1);
     border-radius: .5em;
     cursor: pointer;
 
     text-align: center;
-    font-size: .9em;
-    line-height: 2rem;
+    text-wrap-mode: nowrap;
+    font-size: .9rem;
+    font-weight: 500;
+    line-height: 2.5rem;
 }
 :is(button, .button).primary, button[type="submit"] {
     background: var(--color-button-primary);
-    border: solid 1px var(--color-button-primary-border);
+    border-color: var(--color-button-primary-border);
     color: var(--color-button-primary-text);
 }
 :is(button, .button).secondary {
     background: var(--color-button-secondary);
-    border: solid 1px var(--color-button-secondary-border);
+    border-color: var(--color-button-secondary-border);
     color: var(--color-button-secondary-text);
 }
 :is(button, .button).danger {
     background: var(--color-button-danger);
-    border: solid 1px var(--color-button-danger-border);
+    border-color: var(--color-button-danger-border);
     color: var(--color-button-danger-text);
 }
 button:last-child, .button:last-child {
@@ -565,6 +574,48 @@ form.delete {
 .dummy {
     opacity: .5;
 }
+
+:is(button, .button):before {
+    display: inline-block;
+    font-family: 'icons';
+    content: '';
+    font-size: 1.33em;
+    vertical-align: bottom;
+    color: inherit;
+    padding: 0;
+}
+:is(button, .button).publish:before {
+    content: var(--icon-send);
+    padding: 0 .5rem 0 0;
+}
+:is(button, .button).assign:before {
+    content: var(--icon-login);
+    padding: 0 .5rem 0 0;
+}
+:is(button, .button).outsource:before {
+    content: var(--icon-logout);
+    padding: 0 .5rem 0 0;
+}
+:is(button, .button):is(.scan-qr, .verify):before {
+    content: var(--icon-qr_code);
+    padding: 0 .5rem 0 0;
+}
+:is(button, .button):is(.delete):before {
+    content: var(--icon-delete);
+    padding: 0 .5rem 0 0;
+}
+:is(button, .button):is(.gate-out):before {
+    content: var(--icon-local_shipping);
+    padding: 0 .5rem 0 0;
+}
+:is(button, .button).create {
+    background: none;
+    border-width: 2px;
+    border-color: var(--color-button-secondary-border);
+    color: var(--color-button-secondary-border);
+    font-weight: 600;
+}
+
 
 
 dl > div {
@@ -671,6 +722,13 @@ dialog {
     min-height: 20rem;
     padding: 0;
 }
+dialog header.container {
+    height: 4rem;
+}
+dialog header.container h1 {
+    padding-top: 1.5rem;
+    margin: 0 1.5rem;
+}
 dialog#modal-dialog {
     border-radius: .5rem;
     max-height: calc(100% - 20rem);
@@ -711,8 +769,13 @@ dialog#drawer-dialog main.container .edit-form button.delete {
 
 dialog .dialog-close {
     position: absolute;
-    top: 2rem;
-    right: 2rem;
+    display: block;
+    width: 4rem;
+    height: 4rem;
+    line-height: 4rem;
+    text-align: center;
+    top: 0;
+    right: 0;
     text-decoration: none;
     font-size: 1.5rem;
     color: var(--color-text-gray);

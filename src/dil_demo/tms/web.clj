@@ -54,17 +54,20 @@
                                     [:span.empty "—"])]])
          [:td.status [:span {:class (str "status-" status)} (t (str "status/" status))]]
          [:td.actions
-          (when (= otm/status-requested status)
-            [:a.button.primary {:href      (str "assign-" id)
-                                :title     (t "tms/tooltip/assign")
-                                :fx-dialog "#modal-dialog"}
-             (t "tms/button/assign")])
+          [:div.actions-wrapper
+           (when (= otm/status-requested status)
+             [:a.button.primary.assign
+              {:href      (str "assign-" id)
+               :title     (t "tms/tooltip/assign")
+               :fx-dialog "#modal-dialog"}
+              (t "tms/button/assign")])
 
-          (when (= otm/status-requested status)
-            [:a.button.secondary {:href      (str "outsource-" id)
-                                  :title     (t "tms/tooltip/outsource")
-                                  :fx-dialog "#modal-dialog"}
-             (t "tms/button/outsource")])
+           (when (= otm/status-requested status)
+             [:a.button.primary.outsource
+              {:href      (str "outsource-" id)
+               :title     (t "tms/tooltip/outsource")
+               :fx-dialog "#modal-dialog"}
+              (t "tms/button/outsource")])]
 
           (when (not= otm/status-requested status)
             (f/delete-button (str "trip-" id)
@@ -163,7 +166,8 @@
      (f/text :license-plate {:label    (t "label/license-plate")
                              :required true})]
 
-    (f/submit-cancel-buttons {:submit {:label (t "tms/button/assign")}})))
+    (f/submit-cancel-buttons {:submit {:label (t "tms/button/assign")
+                                       :class "assign"}})))
 
 (defn assigned-trip [{:keys [ref] :as trip} {:keys [explanation]}]
   [:div
@@ -186,6 +190,7 @@
                                  :list carriers, :required true})]
 
     (f/submit-cancel-buttons {:submit {:label   (t "tms/button/outsource")
+                                       :class   "outsource"
                                        :onclick (f/confirm-js)}})))
 
 (defn outsourced-trip [{:keys [ref carriers]}

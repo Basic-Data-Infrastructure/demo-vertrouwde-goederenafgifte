@@ -22,7 +22,7 @@
 (defn list-consignments [consignments {:keys [eori->name]}]
   [:main
    [:section.actions
-    [:a.button.primary.create
+    [:a.button.create
      {:href      "consignment-new"
       :fx-dialog "#drawer-dialog"}
      (t "erp/button/new")]]
@@ -37,7 +37,7 @@
       [:th.unload-location (t "label/unload-location")]
       [:th.unload-date (t "label/unload-date")]
       [:th.status (t "label/status")]
-      [:th.publish (t "erp/button/publish")]]
+      [:th.actions]]
      [:tbody
       (when-not (seq consignments)
         [:tr.empty [:td {:colspan 999} (t "empty")]])
@@ -58,7 +58,7 @@
          [:td.status [:span {:class (str "status-" status)} (t (str "status/" status))]]
          [:td.publish
           (if (= otm/status-draft status)
-            [:a.button.secondary.publish
+            [:a.button.primary.publish
              {:href      (str "publish-" id)
               :title     (t "erp/tooltip/publish")
               :fx-dialog "#modal-dialog"}
@@ -159,7 +159,7 @@
         [:pre goods]]]
 
       (f/submit-cancel-buttons {:submit {:label   (t "erp/button/publish")
-                                         :class   "publish"
+                                         :class   "primary publish"
                                          :onclick (f/confirm-js)}}))))
 
 (defn published-consignment [consignment

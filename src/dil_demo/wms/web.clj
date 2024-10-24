@@ -36,7 +36,7 @@
         [:tr.empty [:td {:colspan 999} (t "empty")]])
 
       (for [{:keys [id ref load goods status]} transport-orders]
-        [:tr.fx-clickable
+        [:tr (when (= status otm/status-requested) {:class "fx-clickable"})
          [:td.ref
           (if (= status otm/status-requested)
             [:a.verify {:href          (str "verify-" id)
@@ -48,18 +48,33 @@
          [:td.load-date [:span (:date load)]]
          [:td.status [:span {:class (str "status-" status)} (t (str "status/" status))]]
          [:td.actions
-          (f/delete-button (str "transport-order-" id)
-                           {:form {:fx-dialog "#modal-dialog"}})]])]]]])
+          [:div.actions-wrapper
+           (when (= status otm/status-requested)
+             [:a.button.primary.verify
+              {:href          (str "verify-" id)
+               :fx-dialog     "#modal-dialog"}
+              (t "wms/button/verify")])
+
+           (when (= status otm/status-confirmed)
+             (f/post-button (str "send-gate-out-" id)
+                            {:label  (t "wms/button/gate-out")
+                             :button {:class "primary gate-out"}
+                             :form   {:fx-dialog "#modal-dialog"}}))
+
+           (when (= status otm/status-in-transit)
+             (f/delete-button (str "transport-order-" id)
+                              {:form {:fx-dialog "#modal-dialog"}}))]]])]]]])
 
 (defn qr-code-scan-button [carrier-id driver-id plate-id]
   (let [id (str "qr-code-video-" (UUID/randomUUID))]
     [:div.qr-code-scan-container
      [:video {:id id, :style "display:none"}]
-     [:a.button.secondary {:onclick (str "scanDriverQr(this, "
-                                         (json-str id) ", "
-                                         (json-str carrier-id) ", "
-                                         (json-str driver-id) ", "
-                                         (json-str plate-id) ")")}
+     [:a.button.secondary.scan-qr
+      {:onclick (str "scanDriverQr(this, "
+                     (json-str id) ", "
+                     (json-str carrier-id) ", "
+                     (json-str driver-id) ", "
+                     (json-str plate-id) ")")}
       (t "wms/button/scan-qr")]]))
 
 (defn verify-transport-order [{:keys [id] :as transport-order}]
@@ -89,7 +104,7 @@
     [:div.actions
      [:a.button.cancel {:href "."} (t "button/cancel")]
 
-     [:button.button-primary.submit
+     [:button.primary.submit.verify
       {:type    "submit"
        :onclick (f/confirm-js (t "confirm/driver-and-license-plate"))}
       (t "wms/button/verify")]]))
@@ -110,7 +125,7 @@
 
     (f/post-button (str "send-gate-out-" id)
                    {:label  (t "wms/button/gate-out")
-                    :button {:class "primary"}
+                    :button {:class "primary gate-out"}
                     :form   {:fx-dialog "#modal-dialog"}})]
    (w/explanation explanation)])
 
