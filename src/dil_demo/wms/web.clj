@@ -46,7 +46,7 @@
             ref)]
          [:td.goods [:span goods]]
          [:td.load-date [:span (:date load)]]
-         [:td.status [:span {:class (str "status-" status)} (t (str "status/" status))]]
+         [:td.status (w/status-span status)]
          [:td.actions
           [:div.actions-wrapper
            (when (= status otm/status-requested)

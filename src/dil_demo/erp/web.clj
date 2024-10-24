@@ -55,7 +55,7 @@
          [:td.load-date [:span (:date load)]]
          [:td.unload-location [:span (-> unload :location-name)]]
          [:td.unload-date [:span (:date unload)]]
-         [:td.status [:span {:class (str "status-" status)} (t (str "status/" status))]]
+         [:td.status (w/status-span status)]
          [:td.publish
           (if (= otm/status-draft status)
             [:a.button.primary.publish

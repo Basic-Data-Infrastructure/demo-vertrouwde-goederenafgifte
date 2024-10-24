@@ -17,6 +17,19 @@
     --tms-2-color: #FFBF00;
     --tms-2-other-color: #A5D601;
 
+    --status-assigned-bg: #fac3f8;
+    --status-assigned: #692567;
+    --status-confirmed-bg: #d6ffec;
+    --status-confirmed: #235340;
+    --status-draft-bg: #eeeeee;
+    --status-draft: #626262;
+    --status-in-transit-bg: #cfe1ff;
+    --status-in-transit: #1f41f7;
+    --status-outsourced-bg: #fac3f8;
+    --status-outsourced: #692567;
+    --status-requested-bg: #fbf0c8;
+    --status-requested: #c38518;
+
     --color-black: #000;
     --color-white: #fff;
     --color-red: #D93526;
@@ -392,6 +405,10 @@ table.list.consignments :is(th, td):is(.ref, .goods, .unload-date, .status) {
 table.list.trips :is(th, td):is(.ref, .unload-date, .driver-id-digits, .license-plate, .outsourced, .status) {
     border-right: solid var(--color-table-border) 1px;
 }
+table.list.trips td.outsourced {
+    text-align: center;
+    color: var(--color-text-gray);
+}
 table.list.trips td.outsourced span:before {
     content: "→ ";
     font-size: 150%;
@@ -689,6 +706,39 @@ video {
 
 
 
+span.status {
+    display: inline-block;
+    line-height: 1.5rem;
+    padding: 0 .75rem;
+    border-radius: .25rem;
+}
+span.status.status-draft {
+    color: var(--status-draft);
+    background: var(--status-draft-bg);
+}
+span.status.status-requested {
+    color: var(--status-requested);
+    background: var(--status-requested-bg);
+}
+span.status.status-confirmed {
+    color: var(--status-confirmed);
+    background: var(--status-confirmed-bg);
+}
+span.status.status-inTransit {
+    color: var(--status-in-transit);
+    background: var(--status-in-transit-bg);
+}
+span.status.status-outsourced {
+    color: var(--status-outsourced);
+    background: var(--status-outsourced-bg);
+}
+span.status.status-assigned {
+    color: var(--status-assigned);
+    background: var(--status-assigned-bg);
+}
+
+
+
 .verification-rejected:before, .verification-accepted:before {
     font-size: 4em;
     display: block;
@@ -780,10 +830,9 @@ dialog .dialog-close {
     font-size: 1.5rem;
     color: var(--color-text-gray);
 }
-dialog .dialog-close:is(:focus, :focus-visible) {
+:focus, :focus-visible {
     outline: none;
 }
-
 ::backdrop {
     background: rgba(0, 0, 0, 0.25);
 }

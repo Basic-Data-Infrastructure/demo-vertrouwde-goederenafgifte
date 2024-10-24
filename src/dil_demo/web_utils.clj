@@ -272,3 +272,6 @@
 (defn append-explanation [res & explanation]
   (update-in res [:flash :explanation] (fnil into [])
              explanation))
+
+(defn status-span [status]
+  [:span.status {:class (str "status-" status)} (t (str "status/" status))])

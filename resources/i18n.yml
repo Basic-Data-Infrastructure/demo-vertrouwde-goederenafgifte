@@ -57,10 +57,10 @@ nl:
   label/date: "Datum"
   label/remarks: "Opmerkingen"
 
-  status/draft: "Klad"
+  status/draft: "Concept"
   status/requested: "Ingediend"
   status/confirmed: "Bevestigd"
-  status/inTransit: "Onderweg"
+  status/inTransit: "In transit"
   status/completed: "Afgerond"
   status/cancelled: "Geannuleerd"
   status/assigned: "Toegewezen"
