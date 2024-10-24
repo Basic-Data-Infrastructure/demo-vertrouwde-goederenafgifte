@@ -52,7 +52,7 @@
             [:td.driver-id-digits (if driver-id-digits
                                     [:span driver-id-digits]
                                     [:span.empty "—"])]])
-         [:td.status [:span {:class (str "status-" status)} (t (str "status/" status))]]
+         [:td.status (w/status-span status)]
          [:td.actions
           [:div.actions-wrapper
            (when (= otm/status-requested status)
