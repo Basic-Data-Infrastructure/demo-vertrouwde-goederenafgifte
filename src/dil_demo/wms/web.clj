@@ -77,31 +77,45 @@
                      (json-str plate-id) ")")}
       (t "wms/button/scan-qr")]]))
 
-(defn verify-transport-order [{:keys [id] :as transport-order}]
+(defn verify-transport-order [{:keys [id ref load goods] :as transport-order}]
   (f/form transport-order {:method    "POST"
                            :action    (str "verify-" id)
                            :fx-dialog "#modal-dialog"}
-    (f/input :ref {:label (t "label/ref"), :disabled true})
-    (f/input [:load :date] {:label (t "label/date"), :disabled true})
-    (f/input :goods {:label (t "label/goods"), :disabled true})
+    [:fieldset.primary
+     [:dl
+      [:div
+       [:dt (t "label/ref")]
+       [:dd ref]]
+      [:div
+       [:dt (t "label/load-date")]
+       [:dd (:date load)]]
+      [:div
+       [:dt (t "label/goods")]
+       [:dd goods]]
+      (when-not (string/blank? (:remarks load))
+        [:div
+         [:dt (t "label/remarks")]
+         [:dd [:pre (:remarks load)]]])]
 
-    (when-not (string/blank? (:remarks load))
-      (f/textarea [:load :remarks] {:label (t "label/remarks"), :disabled true}))
+     [:div.actions
+      (qr-code-scan-button "carrier-eoris" "driver-id-digits" "license-plate")]]
 
-    [:div.actions
-     (qr-code-scan-button "carrier-eoris" "driver-id-digits" "license-plate")]
+    [:fieldset
+     [:legend (t "label/carrier-data")]
 
-    (f/text :carrier-eoris {:id       "carrier-eoris"
-                            :label    (t "label/carrier-eories")
-                            :required true})
-    (f/text :driver-id-digits {:id       "driver-id-digits"
-                               :label    (t "label/driver-id-digits")
-                               :required true})
-    (f/text :license-plate {:id       "license-plate"
-                            :label    (t "label/license-plate")
-                            :required true})
+     (f/text :carrier-eoris {:id       "carrier-eoris"
+                             :label    (t "label/carrier-eories")
+                             :required true})
 
-    [:div.actions
+     [:fieldpair
+      (f/text :driver-id-digits {:id       "driver-id-digits"
+                                 :label    (t "label/driver-id-digits")
+                                 :required true})
+      (f/text :license-plate {:id       "license-plate"
+                              :label    (t "label/license-plate")
+                              :required true})]]
+
+    [:section.actions
      [:a.button.cancel {:href "."} (t "button/cancel")]
 
      [:button.primary.submit.verify
@@ -109,24 +123,20 @@
        :onclick (f/confirm-js (t "confirm/driver-and-license-plate"))}
       (t "wms/button/verify")]]))
 
-(defn accepted-transport-order [{:keys [id] :as transport-order}
+(defn accepted-transport-order [transport-order
                                 {:keys [carrier-eoris driver-id-digits license-plate]}
                                 {:keys [explanation]}
                                 {:keys [eori->name]}]
   [:div
-   [:section.verification-accepted
+   [:section.primary.verification-accepted
     [:p
      (t "wms/verification-accepted"
         {:ref              (:ref transport-order)
          :carrier          (or (-> carrier-eoris last eori->name)
                                (last carrier-eoris))
          :driver-id-digits driver-id-digits
-         :license-plate    license-plate})]
+         :license-plate    license-plate})]]
 
-    (f/post-button (str "send-gate-out-" id)
-                   {:label  (t "wms/button/gate-out")
-                    :button {:class "primary gate-out"}
-                    :form   {:fx-dialog "#modal-dialog"}})]
    (w/explanation explanation)])
 
 (defn rejected-transport-order [transport-order
@@ -134,7 +144,7 @@
                                 {:keys [explanation] :as result}
                                 {:keys [eori->name]}]
   [:div
-   [:section.verification-rejected
+   [:section.primary.verification-rejected
     [:p
      (t "wms/verification-rejected"
         {:ref              (:ref transport-order)
@@ -149,23 +159,22 @@
 
     [:ul.rejections
      (for [rejection (wms.verify/rejection-reasons result)]
-       [:li rejection])]
+       [:li rejection])]]
 
-    [:div.actions
-     [:a.button {:href "."} (t "button/list")]]]
    (w/explanation explanation)])
 
-(defn deleted-transport-order [{:keys [explanation]}]
+(defn deleted-transport-order [transport-order {:keys [explanation]}]
   [:div
-   [:section
-    [:div.actions
-     [:a.button {:href "."} (t "button/list")]]]
+   [:section.primary
+    [:p (t "wms/transport-order-deleted" transport-order)]]
+
    (w/explanation explanation)])
 
-(defn gate-out-transport-order [_transport-order {:keys [explanation]}]
+(defn gate-out-transport-order [transport-order {:keys [explanation]}]
   [:div
-   [:div.actions
-    [:a.button {:href "."} (t "button/list")]]
+   [:section.primary
+    [:p (t "wms/gate-out-sent" transport-order)]]
+
    (w/explanation explanation)])
 
 
@@ -204,15 +213,16 @@
 
      (DELETE "/transport-order-:id" {::store/keys [store]
                                      {:keys [id]} :params}
-       (when (get-transport-order store id)
+       (when-let [transport-order (get-transport-order store id)]
          (-> "deleted"
              (redirect :see-other)
-             (assoc :flash {:success (t "wms/flash/delete-success")})
+             (assoc :flash {:success         (t "wms/flash/delete-success")
+                            :transport-order transport-order})
              (assoc ::store/commands [[:delete! :transport-orders id]]))))
 
-     (GET "/deleted" {:keys [flash]}
+     (GET "/deleted" {:keys [flash], {:keys [transport-order]} :flash}
        (render (t "erp/title/deleted")
-               (deleted-transport-order flash)
+               (deleted-transport-order transport-order flash)
                flash
                :html-class "delete"))
 

@@ -243,7 +243,7 @@
 (defn explanation [explanation]
   (when (seq explanation)
     [:details.explanation
-     [:summary.button.secondary (t "explanation")]
+     [:summary.button (t "explanation")]
      [:ol
       (for [[title {:keys [otm-object ishare-log event http-request http-response]}] explanation]
         [:li

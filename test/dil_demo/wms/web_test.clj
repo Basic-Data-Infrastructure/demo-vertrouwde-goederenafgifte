@@ -56,7 +56,7 @@
     (let [{:keys [status headers body]} (do-request :get "/verify-31415")]
       (is (= http-status/ok status))
       (is (= "text/html; charset=utf-8" (get headers "Content-Type")))
-      (is (re-find #"<input [^>]*\bvalue=\"31415\"[^>]*>" body))))
+      (is (re-find #"<dd\b[^>]*>31415</dd>" body))))
 
   (testing "POST /verify-31415"
     "TODO, this calls out to satellite and ARs")
