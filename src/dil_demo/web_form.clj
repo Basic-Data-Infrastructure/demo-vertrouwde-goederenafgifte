@@ -36,7 +36,7 @@
         list-id (str "list-" (UUID/randomUUID))
         attrs   (if list (assoc attrs :list list-id) attrs)]
     [:div.field
-     [:label {:for id} label]
+     (when label [:label {:for id} label])
      [:input (-> attrs
                  (dissoc :label)
                  (assoc :id id
@@ -58,23 +58,24 @@
 (defn select [ks {:keys [id label list] :as attrs}]
   (let [id (or id (str "id-" (UUID/randomUUID)))]
     [:div.field
-     [:label {:for id} label]
-     [:select (-> attrs
-                  (dissoc :label :list)
-                  (assoc :id id
-                         :name (ks->name ks)))
-      (let [value (ks->value ks)]
-        (for [option list]
-          (if (vector? option)
-            (let [[k v] option]
-              [:option {:value k, :selected (= k value)} v])
-            [:option {:value option, :selected (= option value)} option])))
-      (ks->value ks)]]))
+     (when label [:label {:for id} label])
+     [:div.select-wrapper
+      [:select (-> attrs
+                   (dissoc :label :list)
+                   (assoc :id id
+                          :name (ks->name ks)))
+       (let [value (ks->value ks)]
+         (for [option list]
+           (if (vector? option)
+             (let [[k v] option]
+               [:option {:value k, :selected (= k value)} v])
+             [:option {:value option, :selected (= option value)} option])))
+       (ks->value ks)]]]))
 
 (defn textarea [ks {:keys [id label] :as attrs}]
   (let [id (or id (str "id-" (UUID/randomUUID)))]
     [:div.field
-     [:label {:for id} label]
+     (when label [:label {:for id} label])
      [:textarea (-> attrs
                     (dissoc :label)
                     (assoc :id id

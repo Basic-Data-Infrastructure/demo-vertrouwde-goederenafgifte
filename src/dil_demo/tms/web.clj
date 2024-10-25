@@ -121,8 +121,8 @@
 
 (defn trip-details [{:keys [ref load unload]}
                     {:keys [eori->name warehouse-addresses]}]
-  [:section
-   [:section.details
+  [:div
+   [:fieldset.primary
     [:dl
      [:div
       [:dt (t "label/ref")]
@@ -139,14 +139,14 @@
      [:legend (t "label/load-location")]
      [:h3 (-> load :location-eori eori->name)]
      (when-let [address (-> load :location-eori warehouse-addresses)]
-       [:pre address])
+       [:p.address address])
      (when-not (string/blank? (:remarks load))
        [:blockquote.remarks (:remarks load)])]
     [:fieldset.unload-location
      [:legend (t "label/unload-location")]
      [:h3 (:location-name unload)]
      (when-let [address (-> unload :location-name d/locations)]
-       [:pre address])
+       [:p.address address])
      (when-not (string/blank? (:remarks unload))
        [:blockquote.remarks (:remarks unload)])]]])
 
@@ -159,25 +159,23 @@
 
     (trip-details trip master-data)
 
-    [:section
-     (f/text :driver-id-digits {:label       (t "label/driver-id-digits")
-                                :placeholder (t "tms/placeholder/driver-id-digits")
-                                :pattern     "\\d{4}", :required true})
-     (f/text :license-plate {:label    (t "label/license-plate")
-                             :required true})]
+    [:fieldset
+     [:legend (t "tms/button/assign")]
+     [:fieldpair
+      (f/text :driver-id-digits {:label       (t "label/driver-id-digits")
+                                 :placeholder (t "tms/placeholder/driver-id-digits")
+                                 :pattern     "\\d{4}", :required true})
+      (f/text :license-plate {:label    (t "label/license-plate")
+                              :required true})]]
 
     (f/submit-cancel-buttons {:submit {:label (t "tms/button/assign")
                                        :class "assign"}})))
 
-(defn assigned-trip [{:keys [ref] :as trip} {:keys [explanation]}]
+(defn assigned-trip [trip {:keys [explanation]}]
   [:div
-   [:section
-    [:p (t "tms/assigned-trip" {:ref ref})]
+   [:section.primary
+    [:p (t "tms/assigned-trip" trip)]]
 
-    (qr-code-dil-demo trip)
-
-    [:div.actions
-     [:a.button {:href "."} (t "button/list")]]]
    (w/explanation explanation)])
 
 (defn outsource-trip [trip {:keys [carriers] :as master-data}]
@@ -185,7 +183,9 @@
                 :fx-dialog "#modal-dialog"}
     (trip-details trip master-data)
 
-    [:section
+    [:fieldset
+     [:legend (t "tms/button/outsource")]
+
      (f/select [:carrier :eori] {:label (t "label/carrier")
                                  :list carriers, :required true})]
 
@@ -197,21 +197,17 @@
                        {:keys [explanation]}
                        master-data]
   [:div
-   [:section
+   [:section.primary
     [:p
      (t "tms/outsourced-trip" {:ref     ref
                                :carrier (get (:carriers master-data)
-                                             (-> carriers last :eori))})]
-
-    [:div.actions
-     [:a.button {:href "."} (t "button/list")]]]
+                                             (-> carriers last :eori))})]]
    (w/explanation explanation)])
 
-(defn deleted-trip [{:keys [explanation]}]
+(defn deleted-trip [trip {:keys [explanation]}]
   [:div
-   [:section
-    [:div.actions
-     [:a.button {:href "."} (t "button/list")]]]
+   [:section.primary
+    [:p (t "tms/deleted-trip" trip)]]
    (w/explanation explanation)])
 
 
@@ -291,23 +287,24 @@
        (when-let [trip (get-trip store id)]
          (-> "deleted"
              (redirect :see-other)
-             (assoc :flash {:success (t "tms/flash/delete-success")}
+             (assoc :flash {:success (t "tms/flash/delete-success")
+                            :trip    trip}
                     ::store/commands [[:delete! :trips id]]
                     ::events/commands [[:unsubscribe! (trip->subscription trip
                                                                           user-number
                                                                           site-id)]]))))
 
-     (GET "/deleted" {:keys [flash]}
+     (GET "/deleted" {:keys [flash], {:keys [trip]} :flash}
        (render (t "tms/title/deleted")
-               (deleted-trip flash)
+               (deleted-trip trip flash)
                flash
                :html-class "delete"))
 
      (GET "/assign-:id" {:keys        [flash master-data]
                          ::store/keys [store]
                          {:keys [id]} :params}
-       (when-let [{:keys [ref] :as trip} (get-trip store id)]
-         (render (t "tms/title/assign" {:ref ref})
+       (when-let [trip (get-trip store id)]
+         (render (t "tms/title/assign" trip)
                  (assign-trip trip master-data)
                  flash
                  :html-class "assign")))
@@ -317,14 +314,14 @@
                           {:keys [id
                                   driver-id-digits
                                   license-plate]} :params}
-       (when-let [{:keys [ref] :as trip} (get-trip store id)]
+       (when-let [trip (get-trip store id)]
          (let [trip (-> trip
                         (assoc :status otm/status-assigned
                                :driver-id-digits driver-id-digits
                                :license-plate license-plate))]
            (-> (str "assigned-" id)
                (redirect :see-other)
-               (assoc :flash {:success (t "tms/flash/assigned-success" {:ref ref})}
+               (assoc :flash {:success (t "tms/flash/assigned-success" trip)}
                       ::store/commands [[:put! :trips trip]]
                       ::events/commands [[:subscribe! (trip->subscription trip
                                                                           user-number
@@ -333,16 +330,16 @@
      (GET "/assigned-:id" {:keys        [flash]
                            ::store/keys [store]
                            {:keys [id]} :params}
-       (when-let [{:keys [ref] :as trip} (get-trip store id)]
-         (render (t "tms/title/assigned" {:ref ref})
+       (when-let [trip (get-trip store id)]
+         (render (t "tms/title/assigned" trip)
                  (assigned-trip trip flash)
                  flash
                  :html-class "assign")))
 
      (GET "/outsource-:id" {:keys        [flash master-data ::store/store]
                             {:keys [id]} :params}
-       (when-let [{:keys [ref] :as trip} (get-trip store id)]
-         (render (t "tms/title/outsource" {:ref ref})
+       (when-let [trip (get-trip store id)]
+         (render (t "tms/title/outsource" trip)
                  (outsource-trip trip (-> master-data
                                           ;; can't outsource to ourselves
                                           (update :carriers dissoc own-eori)))
@@ -351,12 +348,12 @@
 
      (POST "/outsource-:id" {:keys                [master-data ::store/store user-number]
                              {:keys [id carrier]} :params}
-       (when-let [{:keys [ref] :as trip} (get-trip store id)]
+       (when-let [trip (get-trip store id)]
          (let [trip (update trip :carriers conj carrier)]
            (-> (str "outsourced-" id)
                (redirect :see-other)
                (assoc :flash
-                      {:success     (t "tms/flash/outsource-success" {:ref ref})
+                      {:success     (t "tms/flash/outsource-success" trip)
                        :explanation [[(t "explanation/tms/outsource")
                                       {:otm-object (otm/->trip trip master-data)}]]}
 
@@ -368,8 +365,8 @@
 
      (GET "/outsourced-:id" {:keys        [flash master-data ::store/store]
                              {:keys [id]} :params}
-       (when-let [{:keys [ref] :as trip} (get-trip store id)]
-         (render (t "tms/title/outsourced" {:ref ref})
+       (when-let [trip (get-trip store id)]
+         (render (t "tms/title/outsourced" trip)
                  (outsourced-trip trip flash master-data)
                  flash
                  :html-class "outsource"))))))

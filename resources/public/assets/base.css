@@ -40,14 +40,18 @@
     --color-text-gray: #888;
     --color-table-border: #ddd;
     --color-main-bg: #fff;
+    --color-gray-bg: #f8f8f8;
     --color-tinted-bg: color-mix(in srgb, var(--site-color) 5%, white 95%);
     --color-separator: #ddd;
     --color-hover: color-mix(in srgb, var(--color-blue) 5%, white 95%);
 
-    --color-button-border: #ccc;
     --color-button-primary: var(--color-green);
     --color-button-primary-border: var(--color-green);
     --color-button-primary-text: white;
+
+    --color-button-border: #ccc;
+    --color-input-border: #ccc;
+    --color-input-bg: #fafafa;
 
     --color-button-secondary: var(--color-blue);
     --color-button-secondary-border: var(--color-blue);
@@ -162,7 +166,7 @@ header.container h1 {
     margin: 0 2rem;
     padding: 1.8rem 0 0 0;
     font-size: 1.33rem;
-    border-bottom: solid white 1px;
+    border-bottom: solid white 2px;
 }
 
 header.container h1:before {
@@ -345,6 +349,9 @@ p:first-child {
 p:last-child {
     margin-bottom: 0;
 }
+p.address {
+    white-space: pre;
+}
 
 
 
@@ -463,8 +470,9 @@ article > footer.actions:after {
     clear: both;
 }
 
-article.empty {
+table.list .empty td {
     font-style: italic;
+    text-align: center;
 }
 article .status {
     float: right;
@@ -473,47 +481,99 @@ article .status {
 
 
 
-fieldset {
-    border: 1px solid var(--color-table-border);
-}
-legend {
-    font-weight: bold;
-}
-
 .field {
     margin-bottom: 1rem;
+    width: 100%;
 }
 .field:last-child {
     margin-bottom: 0;
 }
 
 .field label {
-    width: 10em;
-    display: inline-block;
-    font-weight: bold;
+    display: block;
+    font-weight: normal;
     vertical-align: top;
-    padding-top: .5em;
+    padding: .5em 0;
 }
 
 .field :is(input, textarea, select) {
-    width: 30rem;
-    max-width: calc(100vw - 7rem);
+    width: 100%;
     font-family: inherit;
     font-size: 1rem;
     padding: .66rem;
-    box-sizing: content-box;
-    border-radius: .2rem;
-    border: 1px solid var(--color-button-border);
-    background: var(--color-tinted-bg);
-    box-shadow: 0 0 .1rem rgba(0, 0, 0, .1);
+    box-sizing: border-box;
+    border-radius: .4rem;
+    border: 1px solid var(--color-input-border);
+    background: var(--color-input-bg);
 }
 .field :is(input, textarea, select):focus {
     background: var(--color-white);
     outline: none;
 }
 
+fieldset {
+    border: none;
+}
+fieldset.primary, section.primary {
+    background: var(--color-tinted-bg);
+}
+
+.primary .field :is(input, textarea, select) {
+    background: white;
+}
+
+fieldset legend {
+    padding: var(--main-padding) 0 0 0;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+fieldpair {
+    display: flex;
+    grid-gap: var(--main-padding);
+}
+
+
+
+
+.select-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1em;
+    width: 100%;
+}
+.select-wrapper select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+.select-wrapper:after {
+    display: block;
+    width: auto;
+    height: auto;
+    line-height: 2.5rem;
+
+    position: absolute;
+    top: 50%;
+    left: auto;
+    right: .5rem;
+    transform: translateY(-50%);
+
+    font-family: "icons";
+    font-size: 1.5rem;
+    content: var(--icon-expand_more);
+    text-align: center;
+    text-transform: none;
+
+    speak: none;
+    pointer-events: none;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+}
+
+
+
 .field textarea {
-    height: 4em;
+    height: 6rem;
     resize: vertical
 }
 
@@ -635,9 +695,12 @@ form.delete {
 
 
 
+dl {
+    margin: 0
+}
 dl > div {
     display: flex;
-    margin-bottom: 1em;
+    margin-bottom: .5em;
 }
 dl > div:last-child {
     margin-bottom: 0;
@@ -689,19 +752,78 @@ article.flash {
 
 section.trip {
     display: flex;
+    grid-gap: 1rem;
 }
 section.trip fieldset {
-    flex: 1;
+    border: solid 1px var(--color-separator);
+    border-radius: .5rem;
+    width: 100%;
+    padding: 1rem !important;
+}
+section.trip fieldset legend {
+    padding: 0 .5em;
+    font-size: 1rem;
+    color: var(--color-blue);
+    margin-bottom: 0 !important;
+}
+section.trip fieldset h3 {
+    font-size: 1rem;
+    margin: 0;
+    position: relative;
+}
+section.trip h3:after {
+    font-family: 'icons';
+    position: absolute;
+    color: var(--color-blue);
+    right: 0;
+}
+section.trip .load h3:after {
+    content: var(--icon-upload);
+}
+section.trip .unload h3:after {
+    content: var(--icon-download);
+}
+section.trip fieldset p {
+    margin: .5rem 0 0 0;
+    line-height: 1.5;
+}
+section.actions {
+    padding-top: 0 !important;
+}
+
+
+
+details > summary.button {
+    display: block;
+    margin: 0 auto 1rem auto;
+    width: fit-content;
+    color: unset !important;
+    border-color: #ddd;
+    background: #ddd;
+}
+details > summary.button:before {
+    font-family: 'icons';
+    content: var(--icon-info);
+    padding-right: .5em;
 }
 
 details > ol {
-    padding: 2rem 3rem;
-    box-shadow: inset 0em 0em .3rem .3rem rgb(0, 0, 0, .1);
+    padding: 1rem 3rem;
     background: #fefefe;
 }
+details > ol ol {
+    list-style: none;
+    padding: .5rem 0;
+}
+details h3 {
+    font-size: 1rem;
+}
 
-video {
+
+
+.qr-code-scan-container video {
     width: 100%;
+    margin-bottom: var(--main-padding);
 }
 
 
@@ -769,15 +891,11 @@ a[fx-onclick-tr] {
 dialog {
     border: none;
     width: var(--dialog-width);
-    min-height: 20rem;
+    min-height: 10rem;
     padding: 0;
 }
-dialog header.container {
-    height: 4rem;
-}
-dialog header.container h1 {
-    padding-top: 1.5rem;
-    margin: 0 1.5rem;
+dialog .flash {
+    display: none;
 }
 dialog#modal-dialog {
     border-radius: .5rem;
@@ -802,9 +920,16 @@ dialog#drawer-dialog main.container {
 dialog#drawer-dialog main.container .edit-form {
     overflow: auto;
     box-sizing: border-box;
-    height: calc(100% - 4rem);
-    border-bottom: solid var(--color-separator) 2px;
-    padding-bottom: var(--main-padding);
+    height: calc(100% - 6rem);
+}
+dialog#drawer-dialog main.container .edit-form:after {
+    position: absolute;
+    bottom: 6.5rem;
+    left: var(--main-padding);
+    right: var(--main-padding);
+    display: block;
+    content: ' ';
+    border-bottom: solid var(--color-separator) 1px;
 }
 dialog#drawer-dialog main.container .edit-form button {
     position: absolute;
@@ -854,8 +979,13 @@ dialog .busy {
     opacity: 0;
     transition: opacity 3s;
 }
+
 dialog.fx-busy .busy {
     opacity: 1;
+}
+
+dialog.fx-busy {
+    min-height: 20rem;
 }
 
 dialog.fx-busy .busy {
@@ -879,4 +1009,29 @@ dialog.fx-busy .busy:after {
     position: absolute;
     top: calc(50% - 5rem);
     left: calc(50% - 5rem);
+}
+
+
+
+dialog header.container h1 {
+    padding-top: 1.5rem;
+    padding-left: 1rem;
+    margin: 0 1.5rem;
+}
+dialog#modal-dialog header.container h1 {
+    height: 4rem;
+}
+
+dialog main.container {
+    padding: 0;
+}
+dialog main.container :is(section, fieldset) {
+    padding: 2rem;
+}
+dialog main.container :is(section, fieldset) :is(section, fieldset) {
+    padding-left: 0;
+    padding-right: 0;
+}
+dialog main.container fieldset legend {
+    margin-bottom: -1.5rem;
 }
