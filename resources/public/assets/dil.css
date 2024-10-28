@@ -18,11 +18,18 @@
     padding: 5rem;
     background: var(--color-tinted-bg);
 }
+.list-apps img.dil-logo {
+    width: 30rem;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
 .list-apps ul {
     display: grid;
     grid-template-columns: 1fr 1fr;
     list-style: none;
-    margin: 0 auto;
+    margin: 10rem auto 0 auto;
     max-width: 60rem;
 }
 .list-apps ul li {

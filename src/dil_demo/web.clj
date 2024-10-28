@@ -63,6 +63,7 @@
 
 (defn list-apps [config]
   [:main.list-apps
+   [:img.dil-logo {:src "/assets/dil-logo-en.png"}]
    [:ul
     (for [{:keys [path slug title]} sites]
       [:li {:class slug}
