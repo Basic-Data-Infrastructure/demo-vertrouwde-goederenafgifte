@@ -1027,6 +1027,11 @@ dialog main.container {
 }
 dialog main.container :is(section, fieldset) {
     padding: 2rem;
+    padding-bottom: 0;
+}
+dialog main.container :is(section, fieldset).primary,
+dialog main.container :is(section, fieldset):last-child {
+    padding-bottom: 2rem;
 }
 dialog main.container :is(section, fieldset) :is(section, fieldset) {
     padding-left: 0;
