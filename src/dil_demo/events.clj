@@ -75,11 +75,12 @@
                                                         :actions  actions
                                                         :environment {:serviceProviders [(:token-server-id pulsar)]}}
                                                :rules  [{:effect "Permit"}]}]}]}]
-              (-> {:ishare/bearer-token token
-                   :ishare/base-url     authorization-registry-base-url
-                   :ishare/server-id    authorization-registry-id
-                   :ishare/message-type :ishare/policy
-                   :ishare/params       {:delegationEvidence delegation-evidence}}
+              (-> client-data
+                  (assoc :ishare/bearer-token token
+                         :ishare/base-url     authorization-registry-base-url
+                         :ishare/server-id    authorization-registry-id
+                         :ishare/message-type :ishare/policy
+                         :ishare/params       {:delegationEvidence delegation-evidence})
                   ishare-client/exec
                   :ishare/result)))))
        (catch Throwable ex

@@ -42,9 +42,9 @@
         (binding [ishare-client/log-interceptor-atom (atom [])]
           (let [token (-> client-data
                           (assoc :ishare/message-type :access-token
-                                 :ishare/endpoint url
+                                 :ishare/base-url url
                                  :ishare/server-id server-eori
-                                 :ishare/path server-path)
+                                 :path server-path)
                           (ishare-client/exec)
                           :ishare/result)
                 req   (assoc-in req [:headers "Authorization"]
