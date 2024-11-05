@@ -256,8 +256,8 @@
            (assoc-in [:flash :error] (t "error/create-policy-failed"))
 
            :and
-           (w/append-explanation [(t "explanation/events/access-policy"
-                                     {:ishare-log log})])))
+           (w/append-explanation [(t "explanation/events/access-policy")
+                                  {:ishare-log log}])))
 
        :subscribe!
        (let [{:keys [owner-eori topic user-number site-id]} opts]
