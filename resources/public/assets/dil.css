@@ -11,3 +11,81 @@
     --site-color: #444;
     --site-other-color: #8f8;
 }
+
+.list-apps {
+    box-sizing: border-box;
+    min-height: 100vh;
+    padding: 5rem;
+    background: var(--color-tinted-bg);
+}
+.list-apps img.dil-logo {
+    width: 30rem;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.list-apps ul {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    list-style: none;
+    margin: 10rem auto 0 auto;
+    max-width: 60rem;
+}
+.list-apps ul li {
+    background: var(--site-other-color);
+    margin: 1.5rem;
+    padding: 2rem;
+    min-height: 10rem;
+    border-radius: .5rem;
+    border: solid white .25rem;
+    box-shadow: .25rem .25rem .25rem rgba(0, 0, 0, .05);
+    position: relative;
+}
+.list-apps ul li a {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-decoration: none;
+    color: black;
+}
+.list-apps ul li a div {
+    position: absolute;
+    top: 50%;
+    left: 3rem;
+    transform: translateY(-50%);
+}
+.list-apps ul li a h2 {
+    font-size: 1.25rem;
+    margin: 0;
+}
+.list-apps ul li.erp {
+    background: linear-gradient(.45turn, white, color-mix(in srgb, var(--erp-color) 5%, white 95%));
+}
+.list-apps ul li.wms {
+    background: linear-gradient(.45turn, white, color-mix(in srgb, var(--wms-color) 5%, white 95%));
+}
+.list-apps ul li.tms-1 {
+    background: linear-gradient(.45turn, white, color-mix(in srgb, var(--tms-1-color) 5%, white 95%));
+}
+.list-apps ul li.tms-2 {
+    background: linear-gradient(.45turn, white, color-mix(in srgb, var(--tms-2-color) 5%, white 95%));
+}
+.list-apps ul li span.site-title:after {
+    content: '→';
+    font-size: 2rem;
+}
+.list-apps ul li.erp span {
+    color: var(--erp-color);
+}
+.list-apps ul li.wms span {
+    color: var(--wms-color);
+}
+.list-apps ul li.tms-1 span {
+    color: var(--tms-1-color);
+}
+.list-apps ul li.tms-2 span {
+    color: var(--tms-2-color);
+}

@@ -13,7 +13,8 @@
             [ring.mock.request :refer [request]]))
 
 (defn do-request [& args]
-  ((-> sut/handler
+  ((-> {}
+       (sut/make-root-handler)
        (i18n/wrap :throw-exceptions true))
    (apply request args)))
 

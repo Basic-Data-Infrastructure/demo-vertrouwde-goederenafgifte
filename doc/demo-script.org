@@ -45,7 +45,6 @@ inloggen met één van de volgende accounts:
   Schermen in het TMS speciaal bedoelt voor chauffeurs voor het laten
   zien van QR-code.
 
-- TMS-2 en TMS-2 (Chauffeur)
 
   TMS schermen van de andere transporteur.
 
@@ -55,23 +54,23 @@ inloggen met één van de volgende accounts:
 
 * ERP
 
-Ga naar: https://connekt-dil-demo.jomco.nl/erp/
+Ga naar: https://connekt-dil-demo.jomco.nl/erp/ (of kies ERP-1 op overzicht)
 
 #+ATTR_LATEX: :width 1.0\textwidth
 [[./demo-script/erp.png]]
 
-Maak een nieuwe opdracht aan met de "NIEUW ORDER AANMAKEN" knop.
+Maak een nieuwe opdracht aan met de "Nieuw order aanmaken" knop.
 
 #+ATTR_LATEX: :width 1.0\textwidth
 [[./demo-script/erp_new.png]]
 
-Vul hier het "Afleveradres", de "Goederen" en de "Vervoerder" in,
+Vul hier het "Afleveren / adres", de "Goederen" en de "Vervoerder" in,
 bijvoorbeeld "Nokia, Espoo", "Bananen" en "Precious Goods Transport",
-en sla op met "OPSLAAN".  Tip: kies een "Afleveradres" uit de
+en sla op met "Opslaan".  Tip: kies een "Afleveren / adres" uit de
 suggesties om in latere schermen een volledig adres te zien.  Goederen
 kunnen vrij ingevuld worden.
 
-Let op: voor "Ophaaladres" (het DC) en "Vervoerder" zijn beperkte
+Let op: voor "Ophalen / adres" (het DC) en "Vervoerder" zijn beperkte
 keuze mogelijkheiden.  Het gaat hier namelijk om de ook behandelde WMS
 en TMS omgevingen.
 
@@ -79,12 +78,12 @@ en TMS omgevingen.
 [[./demo-script/erp_created.png]]
 
 Verstuur de zojuist aangemaakte klantorder naar het DC en de
-vervoerder met de bijbehorende "VERSTUREN" knop.
+vervoerder met de bijbehorende "Verzenden" knop.
 
 #+ATTR_LATEX: :width 1.0\textwidth
 [[./demo-script/erp_publish.png]]
 
-Je bevind je nu op een bevestigingsscherm.  Druk "VERSTUREN" voor het
+Je bevind je nu op een bevestigingsscherm.  Druk "Verzenden" voor het
 daadwerkelijke doorzetten van de opdracht.
 
 #+ATTR_LATEX: :width 1.0\textwidth
@@ -102,7 +101,9 @@ van deze demo.
 * TMS-1
 
 De opdracht is nu aangekomen in het TMS van "Precious Goods
-Transport".  Ga naar: https://connekt-dil-demo.jomco.nl/tms-1/
+Transport".  Ga naar: https://connekt-dil-demo.jomco.nl/tms-1/ (of ga
+naar overzicht door linksboven op "smartphone shop" te klikken en dan
+in het overzicht TMS-1 te kiezen)
 
 #+ATTR_LATEX: :width 1.0\textwidth
 [[./demo-script/tms-1.png]]
@@ -111,12 +112,13 @@ Het is nu mogelijk deze opdracht toe te wijzen aan een chauffeur en
 vrachtwagen of uit te besteden bij een andere vervoerder.
 
 Om uit te besteden (toewijzen doen we straks bij de andere vervoerder)
-druk op de "UITBESTEDEN" knop.
+druk op de "Uitbesteden" knop.
 
 #+ATTR_LATEX: :width 1.0\textwidth
 [[./demo-script/tms-1_outsource.png]]
 
-Kies vervoerder "Flex Transport" en druk op "UITBESTEDEN".
+Kies vervoerder "Flex Transport" (enige en standaard keuze) en druk op
+"Uitbesteden".
 
 #+ATTR_LATEX: :width 1.0\textwidth
 [[./demo-script/tms-1_outsourced.png]]
@@ -133,12 +135,12 @@ naar het TMS van "Flex Transport" en dat dit geregistreerd is in het
 * TMS-2
 
 De opdracht is nu aangekomen in het TMS van "Flex Transport".  Ga
-naar: https://connekt-dil-demo.jomco.nl/tms-2/
+naar: https://connekt-dil-demo.jomco.nl/tms-2/ (of via het overzicht)
 
 #+ATTR_LATEX: :width 1.0\textwidth
 [[./demo-script/tms-2.png]]
 
-Druk op de "TOEWIJZEN" knop om een chauffeur en vrachtwagen toe te
+Druk op de "Toewijzen" knop om een chauffeur en vrachtwagen toe te
 wijzen.
 
 #+ATTR_LATEX: :width 1.0\textwidth
@@ -146,13 +148,10 @@ wijzen.
 
 Voer de "Rijbewijs" en "Kenteken" velden in om een chauffeur en
 vrachtwagen toe te wijzen aan deze opdracht, bijvoorbeeld "4321" en
-"ABC12YZ" en druk op "TOEWIJZEN".
+"ABC12YZ" en druk op "Toewijzen".
 
 #+ATTR_LATEX: :width 1.0\textwidth
 [[./demo-script/tms-2_assigned.png]]
-
-Hier zie je de QR-code die de chauffeur straks moet laten zien bij het
-DC (zie onder bij "TMS-2 (Chauffeur)").
 
 In de uitklapbare "Uitleg" is te zien dat de chauffeur en de
 vrachtwagen in het /Autorisatie Register/ van de vervoerder toegewezen
@@ -166,13 +165,14 @@ zijn.
 
 * TMS-2 (Chauffeur)
 
-De QR-code is nu ook beschikbaar voor de chauffeur.  Ga naar:
-https://connekt-dil-demo.jomco.nl/tms-2/chauffeur/
+De QR-code is nu beschikbaar voor de chauffeur.  Ga naar:
+https://connekt-dil-demo.jomco.nl/tms-2/chauffeur/ (of kies
+"Chauffeurs" in het linker menu)
 
 #+ATTR_LATEX: :width 1.0\textwidth
 [[./demo-script/tms-2_chauffeur.png]]
 
-Druk op "TONEN" om de QR-code te zien.
+Kies de rit om de QR-code te zien.
 
 #+ATTR_LATEX: :width 1.0\textwidth
 [[./demo-script/tms-2_chauffeur_trip.png]]
@@ -183,17 +183,18 @@ Druk op "TONEN" om de QR-code te zien.
 
 De opdracht is ook al in het WMS bekent en kan nu volledig
 geverifieerd worden.  Ga naar: https://connekt-dil-demo.jomco.nl/wms/
+(of via het overzicht)
 
 #+ATTR_LATEX: :width 1.0\textwidth
 [[./demo-script/wms.png]]
 
-Druk op "VERIFEREN" om te controleren of de chauffeur de vracht mag
+Druk op "Verifiëren" om te controleren of de chauffeur de vracht mag
 ontvangen.
 
 #+ATTR_LATEX: :width 1.0\textwidth
 [[./demo-script/wms_verify.png]]
 
-Hier zijn een "SCAN QR" knop en invoer velden te vinden.  Het scannen
+Hier zijn een "Scan QR" knop en invoer velden te vinden.  Het scannen
 van een QR-code zorgt dat de "Vervoerder EORI's", "Rijbewijs" en
 "Kenteken" velden automatisch ingevuld worden.  Het scannen van een
 QR-code is lastig in een video call het is daarom handiger om deze
@@ -204,7 +205,7 @@ velden met de hand in te vullen:
 - "Kenteken": "ABC12YZ" (let op, dit veld is op dit moment nog
   hoofdletter gevoelig!)
 
-Druk op "VERIFIEREN", er wordt nu nog extra gevraagd of het rijbewijs
+Druk op "Verifiëren", er wordt nu nog extra gevraagd of het rijbewijs
 en kenteken overeenkomen met die van de chauffeur en vrachtwagen.
 
 #+ATTR_LATEX: :width 1.0\textwidth
@@ -220,6 +221,52 @@ bevraagd worden.
 
 #+ATTR_LATEX: :width 1.0\textwidth
 [[./demo-script/wms_verified-uitleg.png]]
+
+** Gate-out
+
+#+ATTR_LATEX: :width 1.0\textwidth
+[[./demo-script/wms_afgehandeld.png]]
+
+Het is nu mogelijk een gate-out event te versturen door op de
+"Afgehandeld" knop te drukken.
+
+#+ATTR_LATEX: :width 1.0\textwidth
+[[./demo-script/wms_gate_out_sent.png]]
+
+In de uitklapbare "Uitleg" is te zien er een bericht gestuurd is met
+een URL erin naar de Event Broker.
+
+#+ATTR_LATEX: :width 1.0\textwidth
+[[./demo-script/wms_gate_out_sent-uitleg.png]]
+
+** In Transit
+
+Ga terug naar: https://connekt-dil-demo.jomco.nl/erp/ (of kies ERP-1
+op overzicht)
+
+#+ATTR_LATEX: :width 1.0\textwidth
+[[./demo-script/erp_in_transit.png]]
+
+Hier is te zien dat de order nu "In transit" is.   Kies "Notificaties"
+in het linker menu.
+
+#+ATTR_LATEX: :width 1.0\textwidth
+[[./demo-script/erp_pulses.png]]
+
+Hier zijn alle ontvangen berichten van de Event Broker te zien.  Klik
+op de link (die naar het WMS wijst omdat deze het event heeft
+verstuurd en dus eigenaar is van deze data).
+
+#+ATTR_LATEX: :width 1.0\textwidth
+[[./demo-script/erp_pulse.png]]
+
+Het zelfde bericht is ontvangen door TMS-1, daar is ook zichtbaar dat
+de opdracht "In Transit" is en is dezelfde notificatie te vinden.
+
+*Echter, het bericht is niet ontvangen door TMS-2 omdat de autorisatie
+hiervoor niet in de demo is geïmplementeerd op dit moment.*
+
+
 
 * Org export configuratie                                          :noexport:
 

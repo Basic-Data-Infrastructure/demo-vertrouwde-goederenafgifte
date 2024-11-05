@@ -75,11 +75,12 @@
                                                         :actions  actions
                                                         :environment {:serviceProviders [(:token-server-id pulsar)]}}
                                                :rules  [{:effect "Permit"}]}]}]}]
-              (-> {:ishare/bearer-token token
-                   :ishare/base-url     authorization-registry-base-url
-                   :ishare/server-id    authorization-registry-id
-                   :ishare/message-type :ishare/policy
-                   :ishare/params       {:delegationEvidence delegation-evidence}}
+              (-> client-data
+                  (assoc :ishare/bearer-token token
+                         :ishare/base-url     authorization-registry-base-url
+                         :ishare/server-id    authorization-registry-id
+                         :ishare/message-type :ishare/policy
+                         :ishare/params       {:delegationEvidence delegation-evidence})
                   ishare-client/exec
                   :ishare/result)))))
        (catch Throwable ex
@@ -87,17 +88,30 @@
          false))
      @ishare-client/log-interceptor-atom]))
 
+(defn retrying-call [f & {:keys [max-retries wait-msec]
+                          :or {max-retries 5, wait-msec 2000}}]
+  (try
+    (f)
+    (catch Exception ex
+      (if (pos? max-retries)
+        (do
+          (log/debug "Retrying after" ex)
+          (Thread/sleep wait-msec)
+          (retrying-call f :max-retries (dec max-retries) :wait-msec wait-msec))
+        (throw ex)))))
+
 (defn- get-token
   [{:keys                     [client-data]
     {:keys [token-endpoint
             token-server-id]} :pulsar}]
   {:pre [client-data token-endpoint token-server-id]}
-  (-> client-data
-      (assoc :ishare/message-type :access-token
-             :ishare/base-url token-endpoint
-             :ishare/server-id token-server-id)
-      ishare-client/exec
-      :ishare/result))
+  (retrying-call
+   #(-> client-data
+        (assoc :ishare/message-type :access-token
+               :ishare/base-url token-endpoint
+               :ishare/server-id token-server-id)
+        ishare-client/exec
+        :ishare/result)))
 
 (defn- make-on-message-handler
   [{:keys [eori] :as config}
@@ -138,18 +152,6 @@
 
 ;; live websockets
 (defonce websockets-atom (atom nil))
-
-(defn close-websockets!
-  "Close all currently opened websockets."
-  []
-  (doseq [[k websocket] @websockets-atom]
-    (try
-      (let [ws @websocket]
-        (log/debug "Closing websocket" ws)
-        (ws/close! ws))
-      (catch Throwable e
-        (log/debug "Close websocket for" k "failed;" e)))
-    (swap! websockets-atom dissoc k)))
 
 (defn subscribe!
   "Subscribe to websocket for `[owner-eori topic user-number site-id]`.
@@ -203,8 +205,19 @@
   "Unsubscribe (and close)."
   [_ subscription]
   (when-let [websocket (get @websockets-atom subscription)]
-    (ws/close! @websocket)
+    (try
+      (let [ws @websocket]
+        (log/debug "Closing websocket" ws)
+        (ws/close! ws))
+      (catch Throwable e
+        (log/debug "Close websocket for" subscription "failed;" e)))
     (swap! websockets-atom dissoc subscription)))
+
+(defn close-websockets!
+  "Close all currently opened websockets."
+  []
+  (doseq [[subscription _] @websockets-atom]
+    (unsubscribe! nil subscription)))
 
 (defn send-message!
   "Send message to `[owner-eori topic]`.  Authorization should already
@@ -246,8 +259,8 @@
            (assoc-in [:flash :error] (t "error/create-policy-failed"))
 
            :and
-           (w/append-explanation [(t "explanation/events/access-policy"
-                                     {:ishare-log log})])))
+           (w/append-explanation [(t "explanation/events/access-policy")
+                                  {:ishare-log log}])))
 
        :subscribe!
        (let [{:keys [owner-eori topic user-number site-id]} opts]

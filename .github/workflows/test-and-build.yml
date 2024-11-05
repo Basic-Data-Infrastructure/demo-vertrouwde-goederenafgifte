@@ -22,7 +22,7 @@ jobs:
 
     - name: Install packages
       run: |
-        sudo apt-get install -y reuse
+        sudo apt-get install -y reuse nodejs npm
 
     - name: Install clj runtime
       run: |

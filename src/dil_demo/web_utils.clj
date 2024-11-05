@@ -9,13 +9,19 @@
   (:require [clojure.data.json :as json]
             [clojure.string :as string]
             [dil-demo.i18n :as i18n :refer [t]]
-            [dil-demo.sites :refer [sites]]
             [ring.util.response :as response]
             [hiccup2.core :as hiccup])
   (:import (java.text SimpleDateFormat)
            (java.util UUID)))
 
-(defn template [site main & {:keys [flash title site-name]}]
+(defn dummy-link [title]
+  [:a.dummy
+   {:onclick (str "alert(" (json/write-str (t "dummy-link")) ")")
+    :title   (t "dummy-link")
+    :href    "#"}
+   title])
+
+(defn base-template [site main & {:keys [title site-name]}]
   [:html
    [:head
     [:meta {:charset "utf-8"}]
@@ -24,42 +30,80 @@
     [:title (str title " — " site-name)]
 
     [:link {:rel "stylesheet", :href "/assets/base.css"}]
-    [:link {:rel "stylesheet", :href (str "/assets/" site ".css")}]]
+    [:link {:rel "stylesheet", :href "/assets/icons.css"}]
+    [:link {:rel "stylesheet", :href (str "/assets/" site ".css")}]
+
+    [:script {:src "/assets/qr-scanner.legacy.min.js"}] ;; https://github.com/nimiq/qr-scanner
+    [:script {:src "/assets/qrcode.js"}] ;; https://davidshimjs.github.io/qrcodejs/
+
+    [:script {:src "/assets/scan-qr.js"}]
+    [:script {:src "/assets/fx.js"}]]
 
    [:body
-    [:nav.top
-     [:ul
-      [:li [:strong site-name]]]
-     [:ul
-      (for [{:keys [slug path title]} sites]
-        [:li [:a {:href path, :class (when (= slug site) "current")}
-              title
-              [:span.site-sub-title (t (str "site-sub-title/" slug))]]])]]
 
-    [:header.container [:h1 title]]
-    [:main.container
-     (for [[type message] (select-keys flash [:error :success :warning])]
-       [:article.flash {:class (str "flash-" (name type))} message])
-     main]
-    [:footer.container
-     [:ul.select-lang
-      (for [lang (keys i18n/*translations*)]
-        [:li
-         [:a.set-lang
-          {:href  (str ".?set-lang=" lang)
-           :class (cond-> (str "lang-" lang)
-                    (= i18n/*lang* lang) (str " current"))}
-          lang]])]
+    main
 
-     [:img {:src   "/assets/bdi-logo.png"
-            :title "Powered by BDI — Basic Data Infrastructure"
-            :alt   "Powered by BDI — Basic Data Infrastructure"}]]]])
+    [:ul.select-lang
+     (for [lang (keys i18n/*translations*)]
+       [:li
+        [:a.set-lang
+         {:href  (str ".?set-lang=" lang)
+          :class (cond-> (str "lang-" lang)
+                   (= i18n/*lang* lang) (str " current"))}
+         lang]])]
+    [:dialog#modal-dialog
+     [:a.dialog-close {:href "."} "✕"]
+     [:header]
+     [:main]
+     [:div.busy]]
+    [:dialog#drawer-dialog
+     [:a.dialog-close {:href "."} "✕"]
+     [:header]
+     [:main]
+     [:div.busy]]]])
+
+(defn template [site main & {:keys [app-name flash title site-name navigation html-class]
+                             :or   {navigation {:current :list
+                                                :paths   {:list   "."
+                                                          :pulses "pulses/"}}}
+                             :as   opts}]
+  (let [app-name (or app-name site)]
+    (base-template
+     site
+     [:div.app-container
+      [:nav.app
+       [:a.root
+        {:href "/"}
+        [:h1 site-name]
+        [:h2 site]]
+       (let [{:keys [current paths]} navigation]
+         [:ul
+          [:li.dashboard {:class (when (= :dashboard current) "current")}
+           (dummy-link (t "nav/dashboard"))]
+          [:li.list {:class (when (= :list current) "current")}
+           [:a {:href (:list paths)}
+            (t (str "nav/" app-name "/list"))]]
+          [:li.contacts {:class (when (= :contacts current) "current")}
+           (let [title (t (str "nav/" app-name "/contacts"))]
+             (if-let [path (:contacts paths)]
+               [:a {:href path} title]
+               (dummy-link title)))]
+          [:li.pulses {:class (when (= :pulses current) "current")}
+           [:a {:href (:pulses paths)}
+            (t "nav/pulses")]]])]
+
+      [:div.app
+       [:header.container {:class html-class}
+        [:h1 title]]
+       [:main.container {:class html-class}
+        (for [[type message] (select-keys flash [:error :success :warning])]
+          [:article.flash {:class (str "flash-" (name type))} message])
+        main]]]
+     opts)))
 
 (defn qr-code [text]
   (let [id (str "qrcode-" (UUID/randomUUID))]
     [:div.qr-code-container
-     [:script {:src "/assets/qrcode.js"}] ;; https://davidshimjs.github.io/qrcodejs/
-
      [:div.qr-code {:id id}]
      [:script (hiccup/raw
                (str "new QRCode(document.getElementById("
@@ -76,9 +120,11 @@
     "—"
     val))
 
-(defn render-body [site main & opts]
+(defn render-body [site main & {:keys [template-fn]
+                                :or   {template-fn template}
+                                :as   opts}]
   {:pre [(string? site) (coll? main)]}
-  (str "<!DOCTYPE HTML>" (hiccup/html (apply template site main opts))))
+  (str "<!DOCTYPE HTML>" (hiccup/html (template-fn site main opts))))
 
 (defn render [& args]
   (-> (apply render-body args)
@@ -197,7 +243,7 @@
 (defn explanation [explanation]
   (when (seq explanation)
     [:details.explanation
-     [:summary.button.secondary (t "explanation")]
+     [:summary.button (t "explanation")]
      [:ol
       (for [[title {:keys [otm-object ishare-log event http-request http-response]}] explanation]
         [:li
@@ -226,3 +272,6 @@
 (defn append-explanation [res & explanation]
   (update-in res [:flash :explanation] (fnil into [])
              explanation))
+
+(defn status-span [status]
+  [:span.status {:class (str "status-" status)} (t (str "status/" status))])

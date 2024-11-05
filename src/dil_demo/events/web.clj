@@ -42,9 +42,9 @@
         (binding [ishare-client/log-interceptor-atom (atom [])]
           (let [token (-> client-data
                           (assoc :ishare/message-type :access-token
-                                 :ishare/endpoint url
+                                 :ishare/base-url url
                                  :ishare/server-id server-eori
-                                 :ishare/path server-path)
+                                 :path server-path)
                           (ishare-client/exec)
                           :ishare/result)
                 req   (assoc-in req [:headers "Authorization"]
@@ -78,7 +78,7 @@
       [:header
        [:div.status publishTime]
        [:div.subscription (string/join " / " subscription)]]
-      [:a {:href id}
+      [:a {:href id, :fx-dialog "#modal-dialog"}
        [:pre (w/to-json payload)]]])])
 
 (defn- show-pulse [{:keys [flash] :as res}]
@@ -92,22 +92,32 @@
 
 (defn- make-handler
   "Handler on /pulses/"
-  [{:keys [site-id site-name client-data]}]
-  (routes
-   (GET "/pulses/" {:keys [pulses flash]}
-     (w/render (name site-id)
-               (list-pulses pulses)
-               :flash flash
-               :title (t "events/title/list")
-               :site-name site-name))
-   (GET "/pulses/:id" {:keys [pulses params flash]}
-     (when-let [{:keys [payload]} (get pulses (:id params))]
-       (let [res (fetch-event payload client-data)]
-         (w/render (name site-id)
-                   (show-pulse res)
-                   :flash flash
-                   :title (t "events/title/event")
-                   :site-name site-name))))))
+  [{:keys [site-id site-name app-name client-data]}]
+  (let [render (fn render [main flash title & {:keys [html-class]}]
+                 (w/render (name site-id)
+                           main
+                           :flash flash
+                           :title title
+                           :site-name site-name
+                           :app-name app-name
+                           :html-class html-class
+                           :navigation {:current :pulses
+                                        :paths   {:list   ".."
+                                                  :pulses "."}}))]
+    (routes
+     (GET "/pulses/" {:keys [pulses flash]}
+       (render (list-pulses pulses)
+               flash
+               (t "events/title/list")
+               :html-class "pulses"))
+
+     (GET "/pulses/:id" {:keys [pulses params flash]}
+       (when-let [{:keys [payload]} (get pulses (:id params))]
+         (let [res (fetch-event payload client-data)]
+           (render (show-pulse res)
+                   flash
+                   (t "events/title/event")
+                   :html-class "pulse")))))))
 
 (defn wrap
   "Add route /pulses serving basic screen for viewing received pulses."

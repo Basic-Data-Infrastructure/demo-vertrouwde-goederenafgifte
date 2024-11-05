@@ -8,6 +8,6 @@
  */
 
 :root {
-    --site-color: #7540BF;
-    --site-other-color: #058686;
+    --site-color: var(--erp-color);
+    --site-other-color: var(--erp-other-color);
 }

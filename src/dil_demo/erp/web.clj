@@ -22,87 +22,116 @@
 (defn list-consignments [consignments {:keys [eori->name]}]
   [:main
    [:section.actions
-    [:a.button.primary {:href "consignment-new"}
+    [:a.button.create
+     {:href      "consignment-new"
+      :fx-dialog "#drawer-dialog"}
      (t "erp/button/new")]]
 
-   (when-not (seq consignments)
-     [:article.empty
-      [:p (t "empty")]])
+   [:div.table-list-wrapper
+    [:table.list.consignments
+     [:thead
+      [:th.ref (t "label/ref")]
+      [:th.goods (t "label/goods")]
+      [:th.load-location (t "label/load-location")]
+      [:th.load-date (t "label/load-date")]
+      [:th.unload-location (t "label/unload-location")]
+      [:th.unload-date (t "label/unload-date")]
+      [:th.status (t "label/status")]
+      [:th.actions]]
+     [:tbody
+      (when-not (seq consignments)
+        [:tr.empty [:td {:colspan 999} (t "empty")]])
 
-   (for [{:keys [id ref goods load unload carrier status]} consignments]
-     [:article
-      [:header
-       [:div.status (t (str "status/" status))]
-       [:div.ref-date ref " / " (:date load)]
-       [:div.from-to (-> load :location-eori eori->name) " → " (:location-name unload)]]
+      (for [{:keys [id ref goods load unload carrier status]} consignments]
+        [:tr.fx-clickable
+         [:td.ref
+          [:a {:href          (str "consignment-" id)
+               :title         (t "tooltip/edit")
+               :fx-dialog     "#drawer-dialog"
+               :fx-onclick-tr true}
+           ref]]
+         [:td.goods [:span goods]]
+         [:td.load-location [:span (-> load :location-eori eori->name)]]
+         [:td.load-date [:span (:date load)]]
+         [:td.unload-location [:span (-> unload :location-name)]]
+         [:td.unload-date [:span (:date unload)]]
+         [:td.status (w/status-span status)]
+         [:td.publish
+          (if (= otm/status-draft status)
+            [:a.button.primary.publish
+             {:href      (str "publish-" id)
+              :title     (t "erp/tooltip/publish")
+              :fx-dialog "#modal-dialog"}
+             (t "erp/button/publish")]
+            [:span.carrier (-> carrier :eori eori->name)])]])]]]])
 
-      [:div.goods goods]
-      [:div.carrier (-> carrier :eori eori->name)]
+(defn editable? [{:keys [status]}]
+  (or (nil? status)
+      (= otm/status-draft status)))
 
-      [:footer.actions
-       (when (= otm/status-draft status)
-         [:a.button.primary {:href  (str "consignment-" id)
-                             :title (t "tooltip/edit")}
-          (t "button/edit")])
-       (when (= otm/status-draft status)
-         [:a.button.secondary {:href  (str "publish-" id)
-                               :title (t "erp/tooltip/publish")}
-          (t "erp/button/publish")])
-       (f/delete-button (str "consignment-" id))]])
+(defn edit-consignment [{:keys [id] :as consignment}
+                        {:keys [carriers warehouses]}]
+  [:div.edit-form
+   (f/form consignment {:method "POST"}
+     [:fieldset.primary
+      [:fieldpair
+       (f/number :ref {:label    (t "label/ref")
+                       :required true})
+       (f/select :status {:label    (t "label/status")
+                          :list     (reduce (fn [m status]
+                                              (assoc m status
+                                                     (t (str "status/" status))))
+                                            {}
+                                            otm/statuses)
+                          :required true})]]
 
-   [:nav.bottom
-    (t "see-also")
-    [:ul
-     [:li [:a {:href "pulses/"} (t "button/pulses")]]]]])
+     [:fieldset.secondary
+      [:legend (t "label/load")]
+      [:fieldpair
+       (f/date [:load :date] {:label    (t "label/date")
+                              :required true})
+       (f/select [:load :location-eori] {:label (t "label/location")
+                                         :list  warehouses, :required true})]
+      (f/textarea [:load :remarks] {:placeholder (t "placeholder/remarks")})]
 
-(defn edit-consignment [consignment {:keys [carriers warehouses]}]
-  (f/form consignment {:method "POST"}
-    [:section
-     (f/select :status {:label (t "label/status")
-                        :list (reduce (fn [m status]
-                                        (assoc m status
-                                               (t (str "status/" status))))
-                                      {}
-                                      otm/statuses)
-                        :required true})
-     (f/number :ref {:label (t "label/ref")
-                     :required true})]
+     [:fieldset.secondary
+      [:legend (t "label/unload")]
+      [:fieldpair
+       (f/date [:unload :date] {:label (t "label/date"), :required true})
+       (f/text [:unload :location-name] {:label (t "label/location")
+                                         :list  (keys d/locations), :required true})]
+      (f/textarea [:unload :remarks] {:placeholder (t "placeholder/remarks")})]
 
-    [:section
-     (f/date [:load :date] {:label (t "label/load-date")
-                            :required true})
-     (f/select [:load :location-eori] {:label (t "label/load-location")
-                                       :list warehouses, :required true})
-     (f/textarea [:load :remarks] {:label (t "label/load-remarks")})]
+     [:fieldset.secondary
+      [:legend (t "label/goods")]
+      (f/text :goods {:label (t "hint/goods"), :list d/goods, :required true})]
+     [:fieldset.secondary
+      [:legend (t "label/carrier")]
+      (f/select [:carrier :eori]
+                {:label (t "hint/carrier"), :list (into {nil nil} carriers), :required true})]
 
-    [:section
-     (f/date [:unload :date] {:label (t "label/unload-date"), :required true})
-     (f/text [:unload :location-name] {:label (t "label/unload-location")
-                                       :list (keys d/locations), :required true})
-     (f/textarea [:unload :remarks] {:label (t "label/unload-remarks")})]
+     (when (editable? consignment)
+       (f/submit-button {:class "secondary"})))
 
-    [:section
-     (f/text :goods {:label (t "label/goods")
-                     :list d/goods, :required true})
-     (f/select [:carrier :eori] {:label (t "label/carrier")
-                                 :list (into {nil nil} carriers), :required true})]
+   (when id
+     (f/delete-button (str "consignment-" id)
+                      {:form {:fx-dialog "#modal-dialog"}}))])
 
-    (f/submit-cancel-buttons)))
-
-(defn deleted-consignment [{:keys [explanation]}]
+(defn deleted-consignment [consignment {:keys [explanation]}]
   [:div
-   [:section
-    [:div.actions
-     [:a.button {:href "."} (t "button/list")]]]
+   [:section.primary
+    [:p (t "erp/consignment-deleted" consignment)]]
+
    (w/explanation explanation)])
 
 (defn publish-consignment [consignment {:keys [eori->name warehouse-addresses]}]
   (let [{:keys [status ref load unload goods carrier]} consignment]
-    (f/form consignment {:method "POST"}
+    (f/form consignment {:method    "POST"
+                         :fx-dialog "#modal-dialog"}
       (when (not= otm/status-draft status)
         [:div.flash.flash-warning (t "warning/already-published")])
 
-      [:section.details
+      [:fieldset.primary
        [:dl
         [:div
          [:dt (t "label/ref")]
@@ -115,40 +144,39 @@
          [:dd (:date unload)]]
         [:div
          [:dt (t "label/carrier")]
-         [:dd (-> carrier :eori eori->name)]]]]
+         [:dd (-> carrier :eori eori->name)]]
+        [:div
+         [:dt (t "label/goods")]
+         [:dd goods]]]]
       [:section.trip
-       [:fieldset.load-location
+       [:fieldset.location.load
         [:legend (t "label/load-location")]
         [:h3 (-> load :location-eori eori->name)]
         (when-let [address (-> load :location-eori warehouse-addresses)]
-          [:pre address])
+          [:p.address address])
         (when-not (string/blank? (:remarks load))
           [:blockquote.remarks (:remarks load)])]
-       [:fieldset.unload-location
+       [:fieldset.location.unload
         [:legend (t "label/unload-location")]
         [:h3 (:location-name unload)]
         (when-let [address (-> unload :location-name d/locations)]
-          [:pre address])
+          [:p.address address])
         (when-not (string/blank? (:remarks unload))
           [:blockquote.remarks (:remarks unload)])]]
-      [:section.goods
-       [:fieldset
-        [:legend (t "label/goods")]
-        [:pre goods]]]
 
       (f/submit-cancel-buttons {:submit {:label   (t "erp/button/publish")
+                                         :class   "primary publish"
                                          :onclick (f/confirm-js)}}))))
 
 (defn published-consignment [consignment
                              {:keys [eori->name]}
                              {:keys [explanation]}]
   [:div
-   [:section
+   [:section.primary
     [:p
      (t "erp/published" {:location (-> consignment :load :location-eori eori->name)
-                         :carrier  (-> consignment :carrier :eori eori->name)})]
-    [:div.actions
-     [:a.button {:href "."} (t "button/list")]]]
+                         :carrier  (-> consignment :carrier :eori eori->name)})]]
+
    (w/explanation explanation)])
 
 
@@ -200,11 +228,12 @@
 (defn make-handler [{:keys [eori site-id site-name]}]
   {:pre [(keyword? site-id) site-name]}
   (let [slug     (name site-id)
-        render   (fn render [title main flash & {:keys [slug-postfix]}]
+        render   (fn render [title main flash & {:keys [slug-postfix html-class]}]
                    (w/render (str slug slug-postfix)
                              main
                              :flash flash
                              :title title
+                             :html-class html-class
                              :site-name site-name))
         params-> (fn params-> [params]
                    (-> params
@@ -214,7 +243,8 @@
      (GET "/" {:keys [flash master-data ::store/store]}
        (render (t "erp/title/list")
                (list-consignments (get-consignments store) master-data)
-               flash))
+               flash
+               :html-class "list"))
 
      (GET "/consignment-new" {:keys [flash master-data ::store/store user-number]}
        (render (t "erp/title/new")
@@ -224,7 +254,8 @@
                  :unload {:date (w/format-date (Date.))}
                  :status otm/status-draft}
                 master-data)
-               flash))
+               flash
+               :html-class "details"))
 
      (POST "/consignment-new" {:keys [params]}
        (let [{:keys [ref] :as consignment}
@@ -241,7 +272,8 @@
        (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
          (render (t "erp/title/edit" {:ref ref})
                  (edit-consignment consignment master-data)
-                 flash)))
+                 flash
+                 :html-class "details")))
 
      (POST "/consignment-:id" {:keys [params]}
        (let [{:keys [ref] :as consignment} (params-> params)]
@@ -252,27 +284,30 @@
 
      (DELETE "/consignment-:id" {:keys        [::store/store user-number]
                                  {:keys [id]} :params}
-       (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
+       (when-let [consignment (get-consignment store id)]
          (-> "deleted"
              (redirect :see-other)
-             (assoc :flash {:success (t "erp/flash/delete-success" {:ref ref})}
+             (assoc :flash {:success     (t "erp/flash/delete-success" consignment)
+                            :consignment consignment}
                     ::store/commands [[:delete! :consignments id]]
                     ::events/commands [[:unsubscribe!
                                         (consignment->subscription consignment
                                                                    user-number
                                                                    site-id)]]))))
 
-     (GET "/deleted" {:keys [flash]}
+     (GET "/deleted" {:keys [flash], {:keys [consignment]} :flash}
        (render (t "erp/title/deleted")
-               (deleted-consignment flash)
-               flash))
+               (deleted-consignment consignment flash)
+               flash
+               :html-class "delete"))
 
      (GET "/publish-:id" {:keys        [flash master-data ::store/store]
                           {:keys [id]} :params}
-       (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
-         (render (t "erp/title/publish" {:ref ref})
+       (when-let [consignment (get-consignment store id)]
+         (render (t "erp/title/publish" consignment)
                  (publish-consignment consignment master-data)
-                 flash)))
+                 flash
+                 :html-class "publish")))
 
      (POST "/publish-:id" {:keys        [master-data ::store/store
                                          user-number]
@@ -286,7 +321,7 @@
                carrier-eori    (-> consignment :carrier :eori)]
            (-> (str "published-" id)
                (redirect :see-other)
-               (assoc :flash {:success     (t "erp/flash/published-success" {:ref ref})
+               (assoc :flash {:success     (t "erp/flash/published-success" consignment)
                               :explanation [[(t "erp/explanation/send-consignment-wms")
                                              {:otm-object (otm/->transport-order transport-order master-data)}]
                                             [(t "erp/explanation/send-consignment-tms")
@@ -312,7 +347,8 @@
 
      (GET "/published-:id" {:keys        [flash master-data ::store/store]
                             {:keys [id]} :params}
-       (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
-         (render (t "erp/title/published" {:ref ref})
+       (when-let [consignment (get-consignment store id)]
+         (render (t "erp/title/published" consignment)
                  (published-consignment consignment master-data flash)
-                 flash))))))
+                 flash
+                 :html-class "publish"))))))
