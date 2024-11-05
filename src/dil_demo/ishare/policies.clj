@@ -197,34 +197,49 @@
            :ishare/base-url  authorization-registry-base-url
            :ishare/server-id authorization-registry-id)))
 
-(defmethod ishare->http-request :ishare/policy ;; ishare AR specific
-  [{delegation-evidence :ishare/params :as request}]
-  {:pre [delegation-evidence]}
+(defn ishare-policy-request
+  [request delegation-evidence]
   (-> request
       (own-ar-request)
-      (assoc :method       :post
-             :path         "policy"
-             :as           :json
-             :json-params  delegation-evidence
+      (assoc :ishare/operation    :ishare/policy
+             :method              :post
+             :path                "policy"
+             :as                  :json
+             :json-params         delegation-evidence
              :ishare/unsign-token "policy_token"
              :ishare/lens         [:body "policy_token"])))
 
-(defmethod ishare->http-request :poort8/policy ;; Poort8 AR specific
-  [{params :ishare/params :as request}]
+(defmethod ishare->http-request :ishare/policy ;; ishare AR specific
+  [{delegation-evidence :ishare/params :as request}]
+  {:pre [delegation-evidence]}
+  (ishare-policy-request request delegation-evidence))
+
+(defn poort8-policy-request
+  [request params]
   (-> request
       (own-ar-request)
-      (assoc :method :post
+      (assoc :ishare/operation :poort8/policy
+             :method :post
              :path "../policies"
              :as :json
              :json-params (assoc params
                                  :useCase "iSHARE")
              :ishare/lens [:body])))
 
-(defmethod ishare->http-request :poort8/delete-policy ;; Poort8 AR specific
+(defmethod ishare->http-request :poort8/policy ;; Poort8 AR specific
   [{params :ishare/params :as request}]
+  (poort8-policy-request request params))
+
+(defn poort8-delete-policy-request
+  [request policy-id]
   (-> request
       (own-ar-request)
-      (assoc :method :delete
-             :path (str "../policies/" (:policyId params))
+      (assoc :ishare/operation :poort8/delete-policy
+             :method :delete
+             :path (str "../policies/" policy-id)
              :as :json
              :ishare/lens [:body])))
+
+(defmethod ishare->http-request :poort8/delete-policy ;; Poort8 AR specific
+  [{params :ishare/params :as request}]
+  (poort8-delete-policy-request request (:policyId params)))
