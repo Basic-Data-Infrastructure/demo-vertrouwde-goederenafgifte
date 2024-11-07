@@ -6,7 +6,8 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.wms.events
-  (:require [dil-demo.i18n :refer [t]]
+  (:require [compojure.core :refer [GET]]
+            [dil-demo.i18n :refer [t]]
             [dil-demo.store :as store]
             [nl.jomco.http-status-codes :as http-status]
             [org.bdinetwork.ishare.jwt :as jwt]
@@ -16,13 +17,9 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.util.response :as response]))
 
-(defn handler
-  "Handle `/event/:uuid` requests or return `nil`.  Returns `401
-  Unauthorized with `WWW-Authenticate` header when `client-id` not set
-  to direct caller to token endpoint."
-  [{:keys [base-uri client-id eori request-method uri ::store/store]}]
-  {:pre [base-uri request-method uri store]}
-  (when-let [[_ id] (and (= request-method :get) (re-matches #"/event/([a-f0-9-]+)" uri))]
+(def handler
+  (GET "/event/:id" {:keys [context client-id eori ::store/store]
+                     {:keys [id]} :params}
     (if client-id
       (if-let [{:keys [body content-type targets]} (get-in store [:events id])]
         (if (contains? targets client-id)
@@ -30,7 +27,7 @@
               (response/content-type content-type))
           (response/status http-status/forbidden))
         (response/not-found (t "events/no-found")))
-      (let [token-endpoint (str base-uri "/connect/token")]
+      (let [token-endpoint (str context "/connect/token")]
         (-> "unauthorized"
             (response/response)
             (response/status http-status/unauthorized)
@@ -40,7 +37,9 @@
                                   " server_eori=\"" eori "\""
                                   " server_token_endpoint=\"" token-endpoint "\"")))))))
 
-(defn url-for [{:keys [base-url user-number site-id]} event-id]
+(defn url-for
+  "URL to event in M2M part of this site."
+  [{:keys [base-url user-number site-id]} event-id]
   (str base-url "/" user-number "/" (name site-id) "/event/" event-id))
 
 (defn transport-order-gate-out-targets [transport-order]
@@ -64,7 +63,7 @@
     (fn association-wrapper [req]
       (app (assoc req :association association)))))
 
-(defn make-handler [{:keys                                   [eori client-data]
+(defn make-handler [{:keys                            [eori client-data]
                      {:ishare/keys [private-key x5c]} :client-data}]
   (let [public-key (jwt/x5c->first-public-key x5c)]
     (-> handler

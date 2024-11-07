@@ -257,7 +257,7 @@
                                  :as          req}
        (when-let [{:keys [ref] :as transport-order} (get-transport-order store id)]
          (let [event-id  (str (UUID/randomUUID))
-               event-url (wms.events/url-for req event-id)
+               event-url (wms.events/url-for (assoc req :site-id site-id) event-id)
                targets   (wms.events/transport-order-gate-out-targets transport-order)
                tstamp    (Instant/now)
                body      (wms.events/transport-order-gate-out-body transport-order

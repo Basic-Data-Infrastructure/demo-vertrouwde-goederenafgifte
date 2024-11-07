@@ -34,7 +34,7 @@
        ::store/store store
        :user-number 1
        :site-id :wms
-       :base-uri "/base/uri"
+       :context "/base/uri"
        :client-id *client-id*
        :eori eori)
       (sut/handler)))
