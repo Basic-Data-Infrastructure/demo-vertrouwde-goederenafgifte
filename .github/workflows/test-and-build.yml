@@ -37,15 +37,17 @@ jobs:
 
   build:
     needs: [check]
-    # only run on this branch
-    if: ${{ github.ref == 'refs/heads/master' }}
+    # only run when tagged with a version number
+    if: startsWith(github.ref, 'refs/tags/v0') || startsWith(github.ref, 'refs/tags/v1')
     name: 'Build and Push to ACR'
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - name: version
+        # need some shenanigans to get simple tag name from repo/tags/tagname ref
+        run: echo "version=$(echo $GITHUB_REF | cut -d / -f 3)" >> $GITHUB_OUTPUT
+        id: version
+        
       - name: Docker Login
         uses: azure/docker-login@v2
         with:
@@ -54,9 +56,11 @@ jobs:
           password: ${{ secrets.ACR_PASSWORD }}
 
       - name: Build and Push to ACR
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6.9.0
         with:
           push: true
-          tags: "${{ vars.ACR_HOSTNAME }}/${{ vars.IMAGE_TAG }}"
+          tags: |
+            ${{ vars.ACR_HOSTNAME }}/${{ vars.IMAGE_TAG }}:${{ steps.version.outputs.version }}
+            ${{ vars.ACR_HOSTNAME }}/${{ vars.IMAGE_TAG }}
 
           
