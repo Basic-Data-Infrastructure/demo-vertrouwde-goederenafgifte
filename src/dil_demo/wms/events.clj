@@ -8,7 +8,6 @@
 (ns dil-demo.wms.events
   (:require [compojure.core :refer [GET]]
             [dil-demo.i18n :refer [t]]
-            [dil-demo.store :as store]
             [nl.jomco.http-status-codes :as http-status]
             [org.bdinetwork.ishare.jwt :as jwt]
             [org.bdinetwork.ring.authentication :as authentication]
@@ -18,7 +17,7 @@
             [ring.util.response :as response]))
 
 (def handler
-  (GET "/event/:id" {:keys [context client-id eori ::store/store]
+  (GET "/event/:id" {:keys [context client-id eori store]
                      {:keys [id]} :params}
     (if client-id
       (if-let [{:keys [body content-type targets]} (get-in store [:events id])]
@@ -63,8 +62,8 @@
     (fn association-wrapper [req]
       (app (assoc req :association association)))))
 
-(defn make-handler [{:keys                            [eori client-data]
-                     {:ishare/keys [private-key x5c]} :client-data}]
+(defn make-api-handler [{:keys                            [eori client-data]
+                         {:ishare/keys [private-key x5c]} :client-data}]
   (let [public-key (jwt/x5c->first-public-key x5c)]
     (-> handler
         (authentication/wrap-authentication {:server-id                eori

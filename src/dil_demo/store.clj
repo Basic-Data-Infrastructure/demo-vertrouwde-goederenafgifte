@@ -6,9 +6,9 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.store
-  (:require [clojure.spec.alpha :as s]
-            [clojure.edn :as edn]
+  (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
+            [clojure.spec.alpha :as s]
             [clojure.tools.logging.readable :as log]
             [dil-demo.otm :as otm]))
 
@@ -27,21 +27,21 @@
                        :value   value
                        :explain data})))))
 
-(defmulti commit (fn [_store-atom _user-number _own-eori [cmd & _args]] cmd))
+(defmulti commit (fn [_store _user-number _own-eori [cmd & _args]] cmd))
 
 (defmethod commit :put! ;; put data in own database
-  [store-atom user-number own-eori [_cmd table-key {:keys [id] :as value}]]
+  [store user-number own-eori [_cmd table-key {:keys [id] :as value}]]
   (check! table-key value)
-  (swap! store-atom assoc-in [user-number own-eori table-key id] value))
+  (swap! store assoc-in [user-number own-eori table-key id] value))
 
 (defmethod commit :publish! ;; put data in other database
-  [store-atom user-number _own-eori [_cmd table-key target-eori {:keys [id] :as value}]]
+  [store user-number _own-eori [_cmd table-key target-eori {:keys [id] :as value}]]
   (check! table-key value)
-  (swap! store-atom assoc-in [user-number target-eori table-key id] value))
+  (swap! store assoc-in [user-number target-eori table-key id] value))
 
 (defmethod commit :delete!
-  [store-atom user-number own-eori [_cmd table-key id]]
-  (swap! store-atom update-in [user-number own-eori table-key] dissoc id))
+  [store user-number own-eori [_cmd table-key id]]
+  (swap! store update-in [user-number own-eori table-key] dissoc id))
 
 (defn load-store [filename]
   (let [file (io/file filename)]
@@ -54,29 +54,19 @@
 (defn save-store [store filename]
   (spit (io/file filename) (pr-str store)))
 
-(defn get-store-atom
-  "Return a store atom loaded with data from `filename` (EDN format) and
-  automatically stored to that file on changes."
-  [filename]
-  (let [store-atom (atom (load-store filename))]
-    (add-watch store-atom nil
-               (fn [_ _ old-store new-store]
-                 (when (not= old-store new-store)
-                   (future (save-store new-store filename)))))))
-
 (defn assoc-store [{:keys [user-number] :as req}
-                     {:keys [eori store-atom] :as _config}]
-  (if (and eori store-atom user-number)
-    (assoc req ::store (get-in @store-atom [user-number eori]))
+                   {:keys [store eori] :as _config}]
+  (if (and eori store user-number)
+    (assoc req :store (get-in @store [user-number eori]))
     req))
 
 (defn process-store [{:keys [user-number] :as _req}
-                      {::keys [commands] :as res}
-                      {:keys [eori store-atom] :as _config}]
-  (when (and eori store-atom user-number)
+                     {:keys [store/commands] :as res}
+                     {:keys [eori store] :as _config}]
+  (when (and eori store user-number)
     (doseq [cmd commands]
       (log/debug "committing" cmd)
-      (commit store-atom user-number eori cmd)))
+      (commit store user-number eori cmd)))
   res)
 
 (defn wrap
@@ -92,3 +82,13 @@
     (process-store req
                    (app (assoc-store req config))
                    config)))
+
+(defn make-store
+  "Return a store atom loaded with data from `file` (EDN format) and
+  automatically stored to that file on changes."
+  [{:keys [file]}]
+  (let [store (atom (load-store file))]
+    (add-watch store nil
+               (fn [_ _ old-store new-store]
+                 (when (not= old-store new-store)
+                   (future (save-store new-store file)))))))

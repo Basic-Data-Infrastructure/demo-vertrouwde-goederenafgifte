@@ -8,10 +8,8 @@
 (ns dil-demo.wms.web-test
   (:require [clojure.data.json :as json]
             [clojure.test :refer [deftest is testing]]
-            [dil-demo.events :as events]
             [dil-demo.i18n :as i18n]
             [dil-demo.otm :as otm]
-            [dil-demo.store :as store]
             [dil-demo.wms.web :as sut]
             [nl.jomco.http-status-codes :as http-status]
             [ring.mock.request :refer [request]]))
@@ -33,7 +31,7 @@
        (i18n/wrap :throw-exceptions true))
    (assoc (request method path params)
           :base-url "http://example.com"
-          ::store/store store
+          :store store
           :user-number 1
           :site-id :wms
           :master-data {:eori->name {}})))
@@ -45,7 +43,7 @@
       (is (= "text/html; charset=utf-8" (get headers "Content-Type")))))
 
   (testing "DELETE /transport-order-31415"
-    (let [{:keys [status ::store/commands]} (do-request :delete "/transport-order-31415")]
+    (let [{:keys [status :store/commands]} (do-request :delete "/transport-order-31415")]
       (is (= http-status/see-other status))
       (is (= [:delete! :transport-orders] (->> commands first (take 2))))))
 
@@ -63,8 +61,8 @@
 
   (testing "POST /send-gate-out-31415"
     (let [{:keys          [status]
-           event-commands ::events/commands
-           store-commands ::store/commands}
+           event-commands :event/commands
+           store-commands :store/commands}
           (do-request :post "/send-gate-out-31415")]
       (is (= http-status/see-other status))
 

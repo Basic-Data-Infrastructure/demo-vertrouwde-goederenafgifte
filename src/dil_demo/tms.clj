@@ -7,11 +7,8 @@
 
 (ns dil-demo.tms
   (:require [clojure.tools.logging.readable :as log]
-            [dil-demo.events :as events]
             [dil-demo.i18n :refer [t]]
             [dil-demo.ishare.policies :as policies]
-            [dil-demo.otm :as otm]
-            [dil-demo.store :as store]
             [dil-demo.tms.web :as tms.web]
             [dil-demo.web-utils :as w]
             [org.bdinetwork.ishare.client :as ishare-client]))
@@ -50,7 +47,7 @@
 (defmulti delete-policy-for-trip! ->ar-type)
 
 (defmethod delete-policy-for-trip! :poort8
-  [{:keys [::store/store] :as req} {:keys [id] :as _trip} _subject-fn]
+  [{:keys [store] :as req} {:keys [id] :as _trip} _subject-fn]
   (if-let [policy-id (get-in store [:trip-policies id :policy-id])]
     (-> req
         (ishare-exec! (t "explanation/remove-policy-for-trip")
@@ -60,7 +57,7 @@
                        ;; ignore HTTP errors for when policy already
                        ;; deleted
                        :throw false})
-        (update-in [::store/commands] (fnil conj [])
+        (update-in [:store/commands] (fnil conj [])
                    [:delete! :trip-policies id]))
     req))
 
@@ -88,7 +85,7 @@
 
     (if-let [policy-id (get-in res [:ishare/result "policyId"])]
       ;; poort8 AR will return a policy-id which can be used to delete the policy
-      (update-in res [::store/commands] (fnil conj [])
+      (update-in res [:store/commands] (fnil conj [])
                  [:put! :trip-policies {:id id, :policy-id policy-id}])
       res)))
 
@@ -103,7 +100,7 @@
   (fn [_req [cmd type & _args]] [cmd type]))
 
 (defmethod delegation-effect! [:delete! :trips]
-  [{:keys [::store/store] :as req} [_ _ id]]
+  [{:keys [store] :as req} [_ _ id]]
   (if-let [{:keys [driver-id-digits license-plate]
             :as   trip} (get-in store [:trips id])]
     (cond-> req
@@ -115,7 +112,7 @@
     req))
 
 (defmethod delegation-effect! [:put! :trips]
-  [{:keys [::store/store] :as req} [_ _ trip]]
+  [{:keys [store] :as req} [_ _ trip]]
   (let [old-trip (get-in store [:trips (:id trip)])]
 
     (cond-> req
@@ -143,54 +140,14 @@
 (defn- wrap-delegation
   "Create policies in AR when trip is stored."
   [app {:keys [client-data]}]
-  (fn delegation-wrapper [{::store/keys [store] :as req}]
-    (let [{::store/keys [commands] :as res} (app req)]
+  (fn delegation-wrapper [{:keys [store] :as req}]
+    (let [{:keys [store/commands] :as res} (app req)]
       (reduce delegation-effect!
               (assoc res
                      :client-data client-data
-                     ::store/store store)
+                     store store)
               commands))))
 
-(defn make-handler [config]
+(defn make-web-handler [config]
   (-> (tms.web/make-handler config)
       (wrap-delegation config)))
-
-(defn base-event-handler
-  [{:keys                         [::store/store subscription] :as event
-    {:keys [bizStep disposition]} :event-data}]
-  (let [[_ ref user-number site-id] subscription]
-    (when-let [trip (tms.web/get-trip-by-ref store ref)]
-      (when (and (= bizStep "departing")
-                 (= disposition "in_transit"))
-        (-> event
-            (update ::store/commands conj
-                    [:put! :trips (assoc trip :status otm/status-in-transit)])
-            (update ::events/commands conj
-                    [:unsubscribe! (tms.web/trip->subscription trip
-                                                               user-number
-                                                               site-id)]))))))
-
-(defn- subscribe-commands
-  "Collect event subscribe commands for still pending trips."
-  [{:keys                      [site-id store-atom]
-    {:ishare/keys [client-id]} :client-data}]
-  (->> @store-atom
-       (mapcat (fn [[user-number user-store]]
-                 (map (fn [{:keys [ref], {:keys [eori]} :owner}]
-                        {:topic       ref
-                         :owner-eori  eori
-                         :user-number user-number
-                         :site-id     site-id})
-                      (->> (get user-store client-id)
-                           :trips
-                           vals
-                           (filter #(= otm/status-assigned (:status %)))))))
-       (map (fn [sub] [:subscribe! sub]))
-       seq))
-
-(defn make-event-handler [{:keys [client-data] :as config}]
-  (let [handler (events/wrap-fetch-and-store-event base-event-handler client-data)]
-    (events/exec! {::events/commands (subscribe-commands config)}
-                  config
-                  (store/wrap handler config))
-    handler))

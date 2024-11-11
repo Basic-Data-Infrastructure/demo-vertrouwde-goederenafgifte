@@ -9,10 +9,14 @@
   (:require [babashka.http-client.websocket :as ws]
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]
+            [dil-demo.client-data :refer [->client-data]]
+            [dil-demo.erp.events :as erp]
             [dil-demo.events.web :as events.web]
             [dil-demo.i18n :refer [t]]
             [dil-demo.store :as store]
+            [dil-demo.tms.events :as tms]
             [dil-demo.web-utils :as w]
+            [nl.jomco.resources :as resources]
             [org.bdinetwork.ishare.client :as ishare-client])
   (:import (java.time Instant)
            (java.util Base64)))
@@ -36,17 +40,19 @@
 
 (defn authorize!
   "Setup delegation policies to allow access to topic."
-  [{:keys                                             [client-data pulsar]
-    {:ishare/keys [authorization-registry-id
-                   authorization-registry-base-url]} :client-data}
+  [config
    [owner-eori topic]
    read-eoris write-eoris]
-  {:pre [ ;; only owner can authorize access
-         (= owner-eori (:ishare/client-id client-data))]}
-
   (binding [ishare-client/log-interceptor-atom (atom [])]
     [(try
-       (let [read-eoris  (set read-eoris)
+       (let [{:ishare/keys [client-id
+                            authorization-registry-id
+                            authorization-registry-base-url]
+              :as          client-data} (->client-data config)
+
+             {{{:keys [token-server-id]} :pulsar} :events} config
+
+             read-eoris  (set read-eoris)
              write-eoris (set write-eoris)
              token       (-> client-data
                              (assoc :ishare/base-url     authorization-registry-base-url
@@ -55,6 +61,9 @@
                              ishare-client/exec
                              :ishare/result)
              now-secs    (unix-epoch-secs)]
+
+         (assert (= owner-eori client-id) "only owner can authorize access")
+
          (doall
           (for [eori (into read-eoris write-eoris)]
             ;; TODO make ishare/p8 AR agnostic
@@ -69,11 +78,11 @@
                    :policyIssuer owner-eori
                    :target       {:accessSubject (str eori "#" owner-eori "#" topic)}
                    :policySets   [{:target   {:environment {:licenses ["ISHARE.0001"]}}
-                                   :policies [{:target {:resource {:type        "http://rdfs.org/ns/void#Dataset"
-                                                                   :identifiers [(str owner-eori "#" topic)]
-                                                                   :attributes  ["*"]}
-                                                        :actions  actions
-                                                        :environment {:serviceProviders [(:token-server-id pulsar)]}}
+                                   :policies [{:target {:resource    {:type        "http://rdfs.org/ns/void#Dataset"
+                                                                      :identifiers [(str owner-eori "#" topic)]
+                                                                      :attributes  ["*"]}
+                                                        :actions     actions
+                                                        :environment {:serviceProviders [token-server-id]}}
                                                :rules  [{:effect "Permit"}]}]}]}]
               (-> client-data
                   (assoc :ishare/bearer-token token
@@ -101,9 +110,9 @@
         (throw ex)))))
 
 (defn- get-token
-  [{:keys                     [client-data]
-    {:keys [token-endpoint
-            token-server-id]} :pulsar}]
+  [{:keys                               [client-data]
+    {{:keys [token-endpoint
+             token-server-id]} :pulsar} :events}]
   {:pre [client-data token-endpoint token-server-id]}
   (retrying-call
    #(-> client-data
@@ -115,7 +124,7 @@
 
 (defn- make-on-message-handler
   [{:keys [eori] :as config}
-   [owner-eori topic user-number :as subscription] callback-fn]
+   [owner-eori topic user-number :as subscription] handler]
   {:pre [config owner-eori topic]}
 
   (fn on-message-handler [ws msg _last?]
@@ -142,7 +151,7 @@
                                :eori eori
                                :user-number user-number
                                :subscription subscription)]
-              (try (callback-fn event)
+              (try (handler event)
                    (catch Throwable e
                      (log/error "Handling event failed"
                                 e
@@ -156,8 +165,8 @@
 (defn subscribe!
   "Subscribe to websocket for `[owner-eori topic user-number site-id]`.
   Authorization should already been secured by owner."
-  [{:keys [eori] {:keys [url disabled]} :pulsar :as config}
-   [owner-eori topic _user-number _site-id :as subscription] callback-fn]
+  [{:keys [eori] {{:keys [url disabled]} :pulsar} :events :as config}
+   [owner-eori topic _user-number _site-id :as subscription] handler]
   {:pre [url config owner-eori topic]}
   (when-not disabled
     (let [open-websocket
@@ -178,7 +187,7 @@
               :on-open (fn on-open [_ws]
                          (log/debug "Consumer websocket open" subscription))
 
-              :on-message (make-on-message-handler config subscription callback-fn)
+              :on-message (make-on-message-handler config subscription handler)
 
               :on-close (fn on-close [ws status reason]
                           (log/debug "Consumer websocket closed" subscription status reason)
@@ -222,7 +231,7 @@
 (defn send-message!
   "Send message to `[owner-eori topic]`.  Authorization should already
   been secured by owner."
-  [{{:keys [url disabled]} :pulsar :as config}
+  [{{{:keys [url disabled]} :pulsar} :events :as config}
    [owner-eori topic] message]
   (when-not disabled
     (let [ws      (ws/websocket
@@ -242,94 +251,139 @@
 
 
 
-(defn exec! [res config callback-fn]
-  (reduce
-   (fn [res [cmd & [opts]]]
-     (log/debug "handling" cmd opts)
+(defmulti exec! (fn [command & _] (first command)))
 
-     (case cmd
-       :authorize!
-       (let [{:keys [owner-eori topic
-                     read-eoris write-eoris]} opts
+(defmethod exec! :authorize!
+  [[_ {:keys [owner-eori topic read-eoris write-eoris]}] config & [res] ]
+  (let [[result log] (authorize! config [owner-eori topic] read-eoris write-eoris)]
+    (when res
+      (cond-> res
+        (not result)
+        (assoc-in [:flash :error] (t "error/create-policy-failed"))
 
-             [result log]
-             (authorize! config [owner-eori topic] read-eoris write-eoris)]
-         (cond-> res
-           (not result)
-           (assoc-in [:flash :error] (t "error/create-policy-failed"))
+        :and
+        (w/append-explanation [(t "explanation/events/access-policy")
+                               {:ishare-log log}])))))
 
-           :and
-           (w/append-explanation [(t "explanation/events/access-policy")
-                                  {:ishare-log log}])))
+(defmethod exec! :subscribe!
+  [[_ {:keys [owner-eori topic user-number site-id]}]
+   {{:keys [handler]} :events :as config}
+   & [res]]
+  (subscribe! config
+              [owner-eori topic user-number site-id]
+              (fn user-number-site-id-wrapper [event]
+                (handler (assoc event
+                                :user-number user-number
+                                :site-id site-id))))
+  (when res
+    (w/append-explanation res
+                          [(t "explanation/events/subscribe"
+                              {:owner-eori owner-eori, :topic topic})])))
 
-       :subscribe!
-       (let [{:keys [owner-eori topic user-number site-id]} opts]
-         (subscribe! config [owner-eori topic user-number site-id] callback-fn)
-         (w/append-explanation res
-                               [(t "explanation/events/subscribe"
-                                   {:owner-eori owner-eori, :topic topic})]))
+(defmethod exec! :unsubscribe!
+  [[_ {:keys [owner-eori topic user-number site-id]}] config & [res]]
+  (unsubscribe! config [owner-eori topic user-number site-id])
 
-       :unsubscribe!
-       (let [{:keys [owner-eori topic user-number site-id]} opts]
-         (unsubscribe! config [owner-eori topic user-number site-id])
-         (w/append-explanation res
-                               [(t "explanation/events/unsubscribe"
-                                   {:owner-eori owner-eori, :topic topic})]))
+  (when res
+    (w/append-explanation res
+                          [(t "explanation/events/unsubscribe"
+                              {:owner-eori owner-eori, :topic topic})])))
 
-       :send!
-       (let [{:keys [owner-eori topic message]} opts]
-         (send-message! config [owner-eori topic] message)
-         (w/append-explanation res
-                               [(t "explanation/events/message-sent"
-                                   {:owner-eori owner-eori, :topic topic})
-                                {:event message}]))))
-   res
-   (::commands res)))
+(defmethod exec! :send!
+  [[_ {:keys [owner-eori topic message]}] config & [res]]
+  (send-message! config [owner-eori topic] message)
 
-(defn wrap
-  "Ring middleware providing event command processing."
-  [app {:keys [eori pulsar client-data]} callback-fn]
-  (let [config {:client-data        client-data
-                :eori               eori
-                :pulsar             pulsar}]
-    (fn events-wrapper [req]
-      (-> req
-          (app)
-          (exec! config callback-fn)))))
+  (when res
+    (w/append-explanation res
+                          [(t "explanation/events/message-sent"
+                              {:owner-eori owner-eori, :topic topic})
+                           {:event message}])))
+
+(defn wrap-exec-commands [app config]
+  (fn exec-commands-wrapper [req]
+    (let [res (app req)]
+      (reduce (fn exec-command [res cmd]
+                (log/debug "handling" cmd)
+                (exec! cmd config res))
+              res
+              (:event/commands res)))))
 
 (defn wrap-web
   "Ring middleware providing pulse access and event command processing."
-  [app config callback-fn]
+  [app config]
   (-> app
       (events.web/wrap config)
-      (wrap config callback-fn)))
+      (wrap-exec-commands config)))
 
 (defn wrap-fetch-and-store-event
   "Wrapper for event handlers to automatically fetch event data from
   remote services and store it."
-  [f client-data]
+  [f {:keys [client-data]}]
   (fn fetch-event-wrapper [{:keys [subscription messageId] :as req}]
-    (let [pulse (select-keys req [:properties
-                                  :payload
-                                  :publishTime
-                                  :redeliveryCount
-                                  :messageId])]
-      (if (get-in req [::store/store :pulses messageId])
-        (do
-          (log/debug "Skipping pulse, already seen" {:subscription subscription
-                                                     :pulse        pulse})
-          nil)
-        (do
-          (log/debug "Processing pulse" {:subscription subscription
-                                         :pulse        pulse})
-          (-> req
-              (assoc :event-data
-                     (-> pulse
-                         :payload
-                         (events.web/fetch-event client-data)
-                         :body
-                         (json/read-str :key-fn keyword)
-                         (assoc :subscription subscription)))
-              (update ::store/commands conj
-                      [:put! :pulses (assoc pulse :id messageId)])
-              (f)))))))
+    (when req
+      (let [pulse (select-keys req [:properties
+                                    :payload
+                                    :publishTime
+                                    :redeliveryCount
+                                    :messageId])]
+        (if (get-in req [:store :pulses messageId])
+          (do
+            (log/debug "Skipping pulse, already seen" {:subscription subscription
+                                                       :pulse        pulse})
+            nil)
+          (do
+            (log/debug "Processing pulse" {:subscription subscription
+                                           :pulse        pulse})
+            (-> req
+                (assoc :event-data
+                       (-> pulse
+                           :payload
+                           (events.web/fetch-event client-data)
+                           :body
+                           (json/read-str :key-fn keyword)
+                           (assoc :subscription subscription)))
+                (update :store/commands conj
+                        [:put! :pulses (assoc pulse :id messageId)])
+                (f))))))))
+
+(defn- ->site-config [{:keys [events pulsar store] :as config} site-id]
+  (let [site-config (get config site-id)]
+    (assoc site-config
+           :site-id         site-id
+           :client-data     (->client-data site-config)
+           :pulsar          pulsar ;; in events context
+           :events          events ;; in web context
+           :store           store)))
+
+(defn make-site-handler
+  [site-id config handler]
+  (let [config (->site-config config site-id)]
+    (-> (fn site-handler [req]
+          (when (= site-id (:site-id req))
+            (handler req)))
+        (wrap-fetch-and-store-event config)
+        (store/wrap config)
+        (wrap-exec-commands config))))
+
+(defn- resubscribe! [config]
+  (doseq [[config cmds] (->> {:erp erp/resubscribe-commands
+                              :tms-1 tms/resubscribe-commands
+                              :tms-2 tms/resubscribe-commands}
+                             (map (fn [[site-id f]]
+                                    (let [config (->site-config config site-id)]
+                                      [config (f config)]))))]
+    (doseq [cmd cmds] (exec! cmd config))))
+
+(defn make-resource
+  [{:keys [pulsar] :as config}]
+  (let [events (resources/closeable
+                {:handler (let [handlers [(make-site-handler :erp config erp/handler)
+                                          (make-site-handler :tms-1 config tms/handler)
+                                          (make-site-handler :tms-2 config tms/handler)]]
+                            (fn handler [req]
+                              (some #(% req) handlers)))
+                 :pulsar  pulsar}
+                (fn [_] (close-websockets!)))]
+    (resubscribe! (assoc config :events events))
+
+    events))

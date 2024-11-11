@@ -8,11 +8,8 @@
 (ns dil-demo.erp
   (:require [clojure.tools.logging :as log]
             [dil-demo.erp.web :as erp.web]
-            [dil-demo.events :as events]
             [dil-demo.i18n :refer [t]]
             [dil-demo.ishare.policies :as policies]
-            [dil-demo.otm :as otm]
-            [dil-demo.store :as store]
             [dil-demo.web-utils :as w]
             [org.bdinetwork.ishare.client :as ishare-client]))
 
@@ -50,9 +47,9 @@
   "When a trip is deleted, retract existing policies in the AR."
   [app {:keys [client-data]}]
   (fn policy-deletion-wrapper
-    [{:keys [::store/store] :as req}]
+    [{:keys [store] :as req}]
 
-    (let [{::store/keys [commands] :as res} (app req)]
+    (let [{:keys [store/commands] :as res} (app req)]
       (if-let [id (-> (filter #(= [:delete! :consignments] (take 2 %))
                               commands)
                       (first)
@@ -74,7 +71,7 @@
   "Create policies in AR when trip is published."
   [app {:keys [client-data]}]
   (fn delegation-wrapper [req]
-    (let [{::store/keys [commands] :as res} (app req)
+    (let [{:keys [store/commands] :as res} (app req)
           trip (->> commands
                     (filter #(= [:publish! :trips] (take 2 %)))
                     (map #(nth % 3))
@@ -90,49 +87,7 @@
             (assoc-in [:flash :error] (t "error/create-policy-failed"))))
         res))))
 
-(defn make-handler [config]
+(defn make-web-handler [config]
   (-> (erp.web/make-handler config)
       (wrap-policy-deletion config)
       (wrap-delegation config)))
-
-
-(defn base-event-handler
-  [{:keys                         [::store/store subscription] :as event
-    {:keys [bizStep disposition]} :event-data}]
-  (let [[_ ref user-number site-id] subscription]
-    (when-let [consignment (erp.web/get-consignment-by-ref store ref)]
-      (when (and (= bizStep "departing")
-                 (= disposition "in_transit"))
-        (-> event
-            (update ::store/commands conj
-                    [:put! :consignments (assoc consignment :status otm/status-in-transit)])
-            (update ::events/commands conj
-                    [:unsubscribe! (erp.web/consignment->subscription consignment
-                                                                      user-number
-                                                                      site-id)]))))))
-
-(defn- subscribe-commands
-  "Collect event subscribe commands for still pending consignments."
-  [{:keys                      [site-id store-atom]
-    {:ishare/keys [client-id]} :client-data}]
-  (->> @store-atom
-       (mapcat (fn [[user-number user-store]]
-                 (map (fn [{:keys [ref], {:keys [eori]} :owner}]
-                        {:topic       ref
-                         :owner-eori  eori
-                         :user-number user-number
-                         :site-id     site-id})
-                      (->> (get user-store client-id)
-                           :consignments
-                           vals
-                           (filter #(= otm/status-requested (:status %)))))))
-       (map (fn [sub] [:subscribe! sub]))
-       seq))
-
-(defn make-event-handler [{:keys [client-data] :as config}]
-  (let [handler (events/wrap-fetch-and-store-event base-event-handler
-                                                   client-data)]
-    (events/exec! {::events/commands (subscribe-commands config)}
-                  config
-                  (store/wrap handler config))
-    handler))

@@ -10,6 +10,7 @@
             [clojure.tools.logging :as log]
             [compojure.core :refer [context GET routes]]
             [compojure.route :refer [resources]]
+            [dil-demo.client-data :refer [->client-data]]
             [dil-demo.erp :as erp]
             [dil-demo.events :as events]
             [dil-demo.i18n :as i18n :refer [t]]
@@ -21,7 +22,6 @@
             [dil-demo.wms :as wms]
             [dil-demo.wms.events :as wms.events]
             [nl.jomco.ring-session-ttl-memory :refer [ttl-memory-store]]
-            [org.bdinetwork.ishare.client :as ishare-client]
             [ring.middleware.basic-authentication :refer [wrap-basic-authentication]]
             [ring.middleware.defaults :refer [api-defaults site-defaults wrap-defaults]]
             [ring.middleware.stacktrace :refer [wrap-stacktrace]]
@@ -112,55 +112,29 @@
                  (assoc :user-number basic-authentication))
              req)))))
 
-(defn- ->ishare-client-data
-  [{:keys [eori
-           dataspace-id
-           key-file chain-file
-           ar-id ar-base-url ar-type
-           satellite-id satellite-base-url]}]
-  {:pre [eori dataspace-id key-file chain-file
-         satellite-id satellite-base-url]}
-  {:ishare/client-id                       eori
-   :ishare/fetch-party-info-fn             (ishare-client/mk-cached-fetch-party-info 1000)
-   :ishare/dataspace-id                    dataspace-id
-   :ishare/satellite-id                    satellite-id
-   :ishare/satellite-base-url              satellite-base-url
-   :ishare/authorization-registry-id       ar-id
-   :ishare/authorization-registry-base-url ar-base-url
-   :ishare/authorization-registry-type     (keyword ar-type)
-   :ishare/private-key                     (ishare-client/private-key key-file)
-   :ishare/x5c                             (ishare-client/x5c chain-file)})
-
-(defn- ->site-config [config site-id]
+(defn- ->site-config [{:keys [events store] :as config} site-id]
   (let [site-config (get config site-id)]
     (assoc site-config
-           :client-data (->ishare-client-data site-config)
-           :pulsar     (:pulsar config)
-           :site-id    site-id
-           :store-atom (:store-atom config))))
+           :site-id         site-id
+           :client-data     (->client-data site-config)
+           :events          events
+           :store           store)))
 
-(defn- h2m-context [site-id config make-handler & [make-event-handler]]
+(defn- h2m-context [site-id config make-handler]
   (let [site-config (->site-config config site-id)
-        handler     (make-handler site-config)
-
-        ;; TODO remove (don't hook this up in web handler)
-        event-callback (-> (if make-event-handler
-                             (make-event-handler site-config)
-                             (constantly nil))
-                           (events/wrap site-config identity) ;; to allow unsubscribing
-                           (store/wrap site-config))]
+        handler     (make-handler site-config)]
 
     (context (str "/" (name site-id)) []
       (-> handler
-          (events/wrap-web site-config event-callback)
+          (events/wrap-web site-config)
           (store/wrap site-config)))))
 
 (defn- h2m-routes [config]
   (-> (routes
-       (h2m-context :erp config erp/make-handler erp/make-event-handler)
-       (h2m-context :tms-1 config tms/make-handler tms/make-event-handler)
-       (h2m-context :tms-2 config tms/make-handler tms/make-event-handler)
-       (h2m-context :wms config wms/make-handler)
+       (h2m-context :erp config erp/make-web-handler)
+       (h2m-context :tms-1 config tms/make-web-handler)
+       (h2m-context :tms-2 config tms/make-web-handler)
+       (h2m-context :wms config wms/make-web-handler)
        (make-root-handler config))
 
       (master-data/wrap config)
@@ -185,7 +159,7 @@
                                   :user-number (parse-long user-number))
                            (store/assoc-store site-config)
                            (handler)))
-                      api-defaults))))
+                     api-defaults))))
 
 (defn wrap-base-url
   "Set base-url that should be used for generating urls back to the service."
@@ -194,12 +168,9 @@
     (f (assoc req :base-url base-url))))
 
 (defn make-app [config]
-  (let [ ;; NOTE: single atom to keep store because of publication among apps
-        store-atom (store/get-store-atom (-> config :store :file))
-        config     (assoc config :store-atom store-atom)]
-    (-> (routes
-         (m2m-context :wms config wms.events/make-handler)
-         (h2m-routes config))
-        (wrap-base-url config)
-        (wrap-stacktrace)
-        (wrap-log))))
+  (-> (routes
+       (m2m-context :wms config wms.events/make-api-handler)
+       (h2m-routes config))
+      (wrap-base-url config)
+      (wrap-stacktrace)
+      (wrap-log)))

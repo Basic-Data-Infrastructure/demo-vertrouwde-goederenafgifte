@@ -10,9 +10,8 @@
             [clojure.data.json :as json]
             [clojure.string :as string]
             [compojure.core :refer [GET routes routing]]
-            [dil-demo.i18n :refer [t]]
             [dil-demo.http-utils :as http-utils]
-            [dil-demo.store :as store]
+            [dil-demo.i18n :refer [t]]
             [dil-demo.web-utils :as w]
             [nl.jomco.http-status-codes :as http-status]
             [org.bdinetwork.ishare.client :as ishare-client]))
@@ -48,14 +47,14 @@
                           (ishare-client/exec)
                           :ishare/result)
                 req   (assoc-in req [:headers "Authorization"]
-                              (str "Bearer " token))
+                                (str "Bearer " token))
                 res   (-> req
-                        (assoc :throw false)
-                        (http/request)
-                        ;; get flash/explaination from earlier request
-                        (assoc :flash (get res :flash))
-                        ;; remove request added by http client
-                        (dissoc :request))]
+                          (assoc :throw false)
+                          (http/request)
+                          ;; get flash/explaination from earlier request
+                          (assoc :flash (get res :flash))
+                          ;; remove request added by http client
+                          (dissoc :request))]
             (-> res
                 (w/append-explanation [(t "explanation/fetch-token")
                                        {:ishare-log @ishare-client/log-interceptor-atom}])
@@ -125,5 +124,5 @@
   (let [handler (make-handler config)]
     (fn [req]
       (-> req
-          (assoc :pulses (-> req (get-in [::store/store :pulses])))
+          (assoc :pulses (-> req (get-in [:store :pulses])))
           (routing handler app)))))

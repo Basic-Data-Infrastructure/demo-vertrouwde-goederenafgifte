@@ -7,12 +7,14 @@
 
 (ns dil-demo.core
   (:gen-class)
-  (:require [dil-demo.events :as events]
+  (:require [clojure.java.io :as io]
+            [dil-demo.events :as events]
+            [dil-demo.store :as store]
             [dil-demo.web :as web]
-            [clojure.java.io :as io]
-            [ring.adapter.jetty :refer [run-jetty]]
+            [environ.core :refer [env]]
             [nl.jomco.envopts :as envopts]
-            [environ.core :refer [env]]))
+            [nl.jomco.resources :as resources]
+            [ring.adapter.jetty :refer [run-jetty]]))
 
 (defn get-env
   ([k default]
@@ -96,22 +98,19 @@
                        :config config})))
     (process-config config)))
 
-(defonce server-atom (atom nil))
+(extend-protocol resources/Resource
+  org.eclipse.jetty.server.Server
+  (close [server] (.stop server)))
 
-(defn start-webserver [{config :jetty} app]
-  (run-jetty app (assoc config :join? false)))
-
-(defn stop! []
-  (when-let [server @server-atom]
-    (.stop server)
-    (reset! server-atom nil)
-    (events/close-websockets!)))
-
-(defn start! [config]
-  (stop!)
-  (reset! server-atom
-          (start-webserver config (web/make-app config))))
+(defn run-system [config]
+  (resources/mk-system
+      [store  (store/make-store (-> config :store))
+       events (events/make-resource (assoc config :store store))
+       webapp (web/make-app (assoc config
+                                   :store store
+                                   :events events))
+       _webserver (run-jetty webapp (-> config :jetty (assoc :join? false)))]))
 
 (defn -main []
-  (let [config (->config env)]
-    (start-webserver config (web/make-app config))))
+  (run-system (->config env))
+  (resources/wait-until-interrupted))

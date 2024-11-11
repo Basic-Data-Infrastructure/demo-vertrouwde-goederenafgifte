@@ -19,15 +19,14 @@
 
 (ns user
   (:require [dil-demo.core :as core]
-            [environ.core :refer [env]]))
+            [environ.core :refer [env]]
+            [nl.jomco.resources :refer [close defresource]]))
 
-(defn start! []
-  (core/start! (core/->config env)))
+(defresource system)
 
 (defn stop! []
-  (core/stop!))
+  (when system
+    (close system)))
 
-(defn restart! []
-  (stop!)
-  (start!))
-
+(defn start! []
+  (defresource system (core/run-system (core/->config env))))

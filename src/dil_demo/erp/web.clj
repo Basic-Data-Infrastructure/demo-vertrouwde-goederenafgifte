@@ -8,11 +8,9 @@
 (ns dil-demo.erp.web
   (:require [clojure.string :as string]
             [compojure.core :refer [DELETE GET POST routes]]
-            [dil-demo.events :as events]
             [dil-demo.i18n :refer [t]]
             [dil-demo.master-data :as d]
             [dil-demo.otm :as otm]
-            [dil-demo.store :as store]
             [dil-demo.web-form :as f]
             [dil-demo.web-utils :as w]
             [ring.util.response :refer [redirect]])
@@ -189,10 +187,10 @@
 
 (defn get-consignment-by-ref [store ref]
   (->> store
-      :consignments
-      vals
-      (some #(when (= (:ref %) ref)
-               %))))
+       :consignments
+       vals
+       (some #(when (= (:ref %) ref)
+                %))))
 
 (defn min-ref [user-number]
   (let [dt (LocalDateTime/now)]
@@ -240,13 +238,13 @@
                        (select-keys [:id :status :ref :load :unload :goods :carrier])
                        (assoc-in [:owner :eori] eori)))]
     (routes
-     (GET "/" {:keys [flash master-data ::store/store]}
+     (GET "/" {:keys [flash master-data store]}
        (render (t "erp/title/list")
                (list-consignments (get-consignments store) master-data)
                flash
                :html-class "list"))
 
-     (GET "/consignment-new" {:keys [flash master-data ::store/store user-number]}
+     (GET "/consignment-new" {:keys [flash master-data store user-number]}
        (render (t "erp/title/new")
                (edit-consignment
                 {:ref    (next-consignment-ref store user-number)
@@ -265,9 +263,9 @@
          (-> "."
              (redirect :see-other)
              (assoc :flash {:success (t "erp/flash/create-success" {:ref ref})})
-             (assoc ::store/commands [[:put! :consignments consignment]]))))
+             (assoc :store/commands [[:put! :consignments consignment]]))))
 
-     (GET "/consignment-:id" {:keys        [flash master-data ::store/store]
+     (GET "/consignment-:id" {:keys        [flash master-data store]
                               {:keys [id]} :params}
        (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
          (render (t "erp/title/edit" {:ref ref})
@@ -280,20 +278,20 @@
          (-> "."
              (redirect :see-other)
              (assoc :flash {:success (t "erp/flash/update-success" {:ref ref})})
-             (assoc ::store/commands [[:put! :consignments consignment]]))))
+             (assoc :store/commands [[:put! :consignments consignment]]))))
 
-     (DELETE "/consignment-:id" {:keys        [::store/store user-number]
+     (DELETE "/consignment-:id" {:keys        [store user-number]
                                  {:keys [id]} :params}
        (when-let [consignment (get-consignment store id)]
          (-> "deleted"
              (redirect :see-other)
              (assoc :flash {:success     (t "erp/flash/delete-success" consignment)
                             :consignment consignment}
-                    ::store/commands [[:delete! :consignments id]]
-                    ::events/commands [[:unsubscribe!
-                                        (consignment->subscription consignment
-                                                                   user-number
-                                                                   site-id)]]))))
+                    :store/commands [[:delete! :consignments id]]
+                    :event/commands [[:unsubscribe!
+                                      (consignment->subscription consignment
+                                                                 user-number
+                                                                 site-id)]]))))
 
      (GET "/deleted" {:keys [flash], {:keys [consignment]} :flash}
        (render (t "erp/title/deleted")
@@ -301,7 +299,7 @@
                flash
                :html-class "delete"))
 
-     (GET "/publish-:id" {:keys        [flash master-data ::store/store]
+     (GET "/publish-:id" {:keys        [flash master-data store]
                           {:keys [id]} :params}
        (when-let [consignment (get-consignment store id)]
          (render (t "erp/title/publish" consignment)
@@ -309,7 +307,7 @@
                  flash
                  :html-class "publish")))
 
-     (POST "/publish-:id" {:keys        [master-data ::store/store
+     (POST "/publish-:id" {:keys        [master-data store
                                          user-number]
                            {:keys [id]} :params}
        (when-let [consignment (get-consignment store id)]
@@ -327,25 +325,25 @@
                                             [(t "erp/explanation/send-consignment-tms")
                                              {:otm-object (otm/->trip trip master-data)}]]}
 
-                      ::store/commands [[:put! :consignments consignment]
-                                        [:publish! :transport-orders
-                                         warehouse-eori transport-order]
-                                        [:publish! ;; to carrier TMS
-                                         :trips
-                                         carrier-eori trip]]
+                      :store/commands [[:put! :consignments consignment]
+                                       [:publish! :transport-orders
+                                        warehouse-eori transport-order]
+                                       [:publish! ;; to carrier TMS
+                                        :trips
+                                        carrier-eori trip]]
 
                       ;; warehouse is the only party creating events currently
-                      ::events/commands [[:authorize!
-                                          {:topic       ref
-                                           :owner-eori  eori
-                                           :read-eoris  [eori carrier-eori]
-                                           :write-eoris [warehouse-eori]}]
-                                         [:subscribe!
-                                          (consignment->subscription consignment
-                                                                     user-number
-                                                                     site-id)]])))))
+                      :event/commands [[:authorize!
+                                        {:topic       ref
+                                         :owner-eori  eori
+                                         :read-eoris  [eori carrier-eori]
+                                         :write-eoris [warehouse-eori]}]
+                                       [:subscribe!
+                                        (consignment->subscription consignment
+                                                                   user-number
+                                                                   site-id)]])))))
 
-     (GET "/published-:id" {:keys        [flash master-data ::store/store]
+     (GET "/published-:id" {:keys        [flash master-data store]
                             {:keys [id]} :params}
        (when-let [consignment (get-consignment store id)]
          (render (t "erp/title/published" consignment)
