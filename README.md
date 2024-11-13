@@ -91,11 +91,13 @@ Run the web server with the following:
 clojure -M -m dil-demo.core
 ```
 
-Point a web browser to [http://localhost:8080](http://localhost:8080) and login with user `demo1` with password `31415`.
+Point a web browser to [http://localhost:8080](http://localhost:8080)
+and login with user `demo1` with password `31415`.
 
 ## Deploy
 
-The following creates an uber-jar containing all necessary dependencies to run the demo environments:
+The following creates an uber-jar containing all necessary
+dependencies to run the demo environments:
 
 ```sh
 make
@@ -109,12 +111,20 @@ java -jar target/dil-demo.jar
 
 ## Docker builds
 
-To build and run a docker image locally, with the configuration environment vars in a `.env` file, and keys and certificates in `./credentials`, do
+To build and run a docker image locally, with the configuration
+environment vars in a `.env` file, and keys and certificates in
+`./credentials`, do
 
 ```sh
 docker build . -t my-image
 docker run --env-file=.env --mount="type=bind,source=${PWD}/credentials,destination=/credentials" -p8080:8080 my-image
 ```
+
+## Fully local demo
+
+See [docker-example](./docker-example) for a docker-compose
+configuration that runs the demo locally without dependencies on
+external services.
 
 ## Architecture documentation
 

@@ -1,0 +1,173 @@
+# SPDX-FileCopyrightText: 2024 Jomco B.V.
+# SPDX-FileCopyrightText: 2024 Topsector Logistiek
+# SPDX-FileContributor: Joost Diepenmaat <joost@jomco.nl>
+# SPDX-FileContributor: Remco van 't Veer <remco@jomco.nl>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+trusted_list:
+  - "config/ca.cert.pem"
+  
+parties:
+  - party_id: EU.EORI.CLIENT
+    party_name: Some Client
+    capability_url: ''
+    auth_registries:
+    - name: BDI Authorization Register
+      id: EU.EORI.AUTHORIZATION-REGISTER
+      url: http://bdi-authorization-register:8882
+      dataspace_id: ORG.BDI.VGU-DEMO
+      dataspace_name: Local Test DataSpace
+    certificates:
+    - "config/client.cert.pem"
+    adherence:
+      status: Active
+      start_date: '2024-02-12T00:00:00.000Z'
+      end_date: '2025-02-13T00:00:00.000Z'
+    registrar_id: EU.EORI.ASSOCIATION-REGISTER
+    roles:
+    - role: ServiceConsumer
+      start_date: '2024-02-12T00:00:00.000Z'
+      end_date: '2025-02-12T00:00:00.000Z'
+      loa: 'Low'
+      complaiancy_verified: false
+      legal_adherence: false
+    agreements: []
+
+  - party_id: EU.EORI.ASSOCIATION-REGISTER
+    party_name: BDI Association Register
+    capability_url: ''
+    certificates:
+    - "config/association_register.cert.pem"
+    adherence:
+      status: Active
+      start_date: '2024-02-12T00:00:00.000Z'
+      end_date: '2025-02-13T00:00:00.000Z'
+    registrar_id: EU.EORI.ASSOCIATION-REGISTER
+    roles:
+    - role: iShareSatellite
+      start_date: '2024-02-12T00:00:00.000Z'
+      end_date: '2025-02-12T00:00:00.000Z'
+      loa: 'Low'
+      complaiancy_verified: false
+      legal_adherence: false 
+    agreements: []
+
+  - party_id: EU.EORI.AUTHORIZATION-REGISTER
+    party_name: BDI Authorization Register
+    capability_url: ''
+    certificates:
+    - "config/authorization_register.cert.pem"
+    adherence:
+      status: Active
+      start_date: '2024-02-12T00:00:00.000Z'
+      end_date: '2025-02-13T00:00:00.000Z'
+    registrar_id: EU.EORI.ASSOCIATION-REGISTER
+    roles:
+    - role: iShareSatellite
+      start_date: '2024-02-12T00:00:00.000Z'
+      end_date: '2025-02-12T00:00:00.000Z'
+      loa: 'Low'
+      complaiancy_verified: false
+      legal_adherence: false 
+    agreements: []
+
+  - party_id: EU.EORI.NLSMARTPHON
+    party_name: Smartphone Webshop
+    capability_url: ''
+    auth_registries:
+    - name: BDI Authorization Register
+      id: EU.EORI.AUTHORIZATION-REGISTER
+      url: http://bdi-authorization-register:8882
+      dataspace_id: ORG.BDI.VGU-DEMO
+      dataspace_name: Local Test DataSpace
+    certificates:
+    - "config/nlsmartphon.cert.pem"
+    adherence:
+      status: Active
+      start_date: '2024-02-12T00:00:00.000Z'
+      end_date: '2025-02-13T00:00:00.000Z'
+    registrar_id: EU.EORI.ASSOCIATION-REGISTER
+    roles:
+    - role: ServiceConsumer
+      start_date: '2024-02-12T00:00:00.000Z'
+      end_date: '2025-02-12T00:00:00.000Z'
+      loa: 'Low'
+      complaiancy_verified: false
+      legal_adherence: false
+    agreements: []
+
+  - party_id: EU.EORI.NLSECURESTO
+    party_name: Secure Storage BV
+    capability_url: ''
+    auth_registries:
+    - name: BDI Authorization Register
+      id: EU.EORI.AUTHORIZATION-REGISTER
+      url: http://bdi-authorization-register:8882
+      dataspace_id: ORG.BDI.VGU-DEMO
+      dataspace_name: Local Test DataSpace
+    certificates:
+    - "config/nlsecuresto.cert.pem"
+    adherence:
+      status: Active
+      start_date: '2024-02-12T00:00:00.000Z'
+      end_date: '2025-02-13T00:00:00.000Z'
+    registrar_id: EU.EORI.ASSOCIATION-REGISTER
+    roles:
+    - role: ServiceConsumer
+      start_date: '2024-02-12T00:00:00.000Z'
+      end_date: '2025-02-12T00:00:00.000Z'
+      loa: 'Low'
+      complaiancy_verified: false
+      legal_adherence: false
+    agreements: []
+
+  - party_id: EU.EORI.NLPRECIOUSG
+    party_name: Precious Goods Transport
+    capability_url: ''
+    auth_registries:
+    - name: BDI Authorization Register
+      id: EU.EORI.AUTHORIZATION-REGISTER
+      url: http://bdi-authorization-register:8882
+      dataspace_id: ORG.BDI.VGU-DEMO
+      dataspace_name: Local Test DataSpace
+    certificates:
+    - "config/nlpreciousg.cert.pem"
+    adherence:
+      status: Active
+      start_date: '2024-02-12T00:00:00.000Z'
+      end_date: '2025-02-13T00:00:00.000Z'
+    registrar_id: EU.EORI.ASSOCIATION-REGISTER
+    roles:
+    - role: ServiceConsumer
+      start_date: '2024-02-12T00:00:00.000Z'
+      end_date: '2025-02-12T00:00:00.000Z'
+      loa: 'Low'
+      complaiancy_verified: false
+      legal_adherence: false
+    agreements: []        
+
+  - party_id: EU.EORI.NLFLEXTRANS
+    party_name: FlexTrans BV
+    capability_url: ''
+    auth_registries:
+    - name: BDI Authorization Register
+      id: EU.EORI.AUTHORIZATION-REGISTER
+      url: http://bdi-authorization-register:8882
+      dataspace_id: ORG.BDI.VGU-DEMO
+      dataspace_name: Local Test DataSpace
+    certificates:
+    - "config/nlflextrans.cert.pem"
+    adherence:
+      status: Active
+      start_date: '2024-02-12T00:00:00.000Z'
+      end_date: '2025-02-13T00:00:00.000Z'
+    registrar_id: EU.EORI.ASSOCIATION-REGISTER
+    roles:
+    - role: ServiceConsumer
+      start_date: '2024-02-12T00:00:00.000Z'
+      end_date: '2025-02-12T00:00:00.000Z'
+      loa: 'Low'
+      complaiancy_verified: false
+      legal_adherence: false
+    agreements: []        

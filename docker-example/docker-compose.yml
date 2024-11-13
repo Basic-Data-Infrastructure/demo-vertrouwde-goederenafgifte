@@ -1,0 +1,85 @@
+# SPDX-FileCopyrightText: 2024 Jomco B.V.
+# SPDX-FileCopyrightText: 2024 Topsector Logistiek
+# SPDX-FileContributor: Joost Diepenmaat <joost@jomco.nl>
+# SPDX-FileContributor: Remco van 't Veer <remco@jomco.nl>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+version: "3.9"
+services:
+  bdi-association-register:
+    image: bdinetwork.azurecr.io/association-register:latest
+    environment:
+      PRIVATE_KEY: /config/association_register.key.pem
+      PUBLIC_KEY:  /config/association_register.cert.pem
+      X5C: /config/association_register.x5c.pem
+      DATA_SOURCE: /config/association-register-config.yml
+      SERVER_ID: EU.EORI.ASSOCIATION-REGISTER
+      PORT: "8881"
+    volumes:
+      - ./config:/config
+    ports:
+      - "8881:8881"
+  bdi-authorization-register:
+    image: bdinetwork.azurecr.io/authorization-register:latest
+    environment:
+      PRIVATE_KEY: /config/authorization_register.key.pem
+      PUBLIC_KEY:  /config/authorization_register.cert.pem
+      X5C: /config/authorization_register.x5c.pem
+      SERVER_ID: EU.EORI.AUTHORIZATION-REGISTER
+      ASSOCIATION_SERVER_ID: EU.EORI.ASSOCIATION-REGISTER
+      ASSOCIATION_SERVER_URL: http://bdi-association-register:8881
+      POLICIES_DB: /policies.db
+      PORT: "8882"
+    ports:
+      - "8882:8882"
+    volumes:
+      - ./config:/config
+      - ./policies.db:/policies.db
+    links:
+      - bdi-association-register
+  vgu-demo:
+    build:
+      context: '..'
+      dockerfile: 'Dockerfile'
+    environment:
+      ERP_EORI: EU.EORI.NLSMARTPHON
+      ERP_KEY_FILE: /config/nlsmartphon.key.pem
+      ERP_CHAIN_FILE: /config/nlsmartphon.x5c.pem
+      ERP_AR_ID: EU.EORI.AUTHORIZATION-REGISTER
+      ERP_AR_ENDPOINT: http://bdi-authorization-register:8882
+
+      WMS_EORI: EU.EORI.NLSECURESTO
+      WMS_KEY_FILE: /config/nlsecuresto.key.pem
+      WMS_CHAIN_FILE: /config/nlsecuresto.x5c.pem
+
+      TMS1_EORI: EU.EORI.NLPRECIOUSG
+      TMS1_KEY_FILE: /config/nlpreciousg.key.pem
+      TMS1_CHAIN_FILE: /config/nlpreciousg.x5c.pem
+      TMS1_AR_ID: EU.EORI.AUTHORIZATION-REGISTER
+      TMS1_AR_ENDPOINT: http://bdi-authorization-register:8882
+      TMS1_AR_TYPE: ishare
+      
+      TMS2_EORI: EU.EORI.NLFLEXTRANS
+      TMS2_KEY_FILE: /config/nlflextrans.key.pem
+      TMS2_CHAIN_FILE: /config/nlflextrans.x5c.pem
+      TMS2_AR_ID: EU.EORI.AUTHORIZATION-REGISTER
+      TMS2_AR_ENDPOINT: http://bdi-authorization-register:8882
+      TMS2_AR_TYPE: ishare
+      
+      DATASPACE_ID: ORG.BDI.VGU-DEMO
+      SATELLITE_ID: EU.EORI.ASSOCIATION-REGISTER
+      SATELLITE_ENDPOINT: http://bdi-association-register:8881
+
+      PULSAR_DISABLED: "true"
+      PULSAR_SERVER_ID: EU.EORI.NL809023854
+      PULSAR_TOKEN_ENDPOINT: https://ishare-common-container-app.orangebush-8d078598.westeurope.azurecontainerapps.io/
+      PULSAR_URL: wss://pulsar.westeurope.cloudapp.azure.com/ws/v2/
+      PORT: 80
+    ports:
+      - "9009:80"
+    links:
+      - bdi-association-register
+      - bdi-authorization-register
+    volumes:
+      - ./config:/config
