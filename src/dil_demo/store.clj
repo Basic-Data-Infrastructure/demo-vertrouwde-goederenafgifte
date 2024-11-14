@@ -84,8 +84,9 @@
                    config)))
 
 (defn make-store
-  "Return a store atom loaded with data from `file` (EDN format) and
-  automatically stored to that file on changes."
+  "Return store atom loaded from `file` (EDN format).
+
+  Changes are automatically stored to that file."
   [{:keys [file]}]
   (let [store (atom (load-store file))]
     (add-watch store nil

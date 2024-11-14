@@ -9,8 +9,8 @@
   (:require [clojure.data.json :as json]
             [clojure.string :as string]
             [dil-demo.i18n :as i18n :refer [t]]
-            [ring.util.response :as response]
-            [hiccup2.core :as hiccup])
+            [hiccup2.core :as hiccup]
+            [ring.util.response :as response])
   (:import (java.text SimpleDateFormat)
            (java.util UUID)))
 

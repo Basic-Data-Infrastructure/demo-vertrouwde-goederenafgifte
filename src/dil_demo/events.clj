@@ -229,8 +229,9 @@
     (unsubscribe! nil subscription)))
 
 (defn send-message!
-  "Send message to `[owner-eori topic]`.  Authorization should already
-  been secured by owner."
+  "Send message to `[owner-eori topic]`.
+
+  Authorization should already been secured by owner."
   [{{{:keys [url disabled]} :pulsar} :events :as config}
    [owner-eori topic] message]
   (when-not disabled
@@ -316,8 +317,7 @@
       (wrap-exec-commands config)))
 
 (defn wrap-fetch-and-store-event
-  "Wrapper for event handlers to automatically fetch event data from
-  remote services and store it."
+  "Wrapper for event handlers to automatically fetch event data from remote services and store it."
   [f {:keys [client-data]}]
   (fn fetch-event-wrapper [{:keys [subscription messageId] :as req}]
     (when req

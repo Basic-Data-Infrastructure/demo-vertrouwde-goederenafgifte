@@ -90,7 +90,7 @@
      (w/explanation (:explanation flash))]))
 
 (defn- make-handler
-  "Handler on /pulses/"
+  "Handler on /pulses/."
   [{:keys [site-id site-name app-name client-data]}]
   (let [render (fn render [main flash title & {:keys [html-class]}]
                  (w/render (name site-id)

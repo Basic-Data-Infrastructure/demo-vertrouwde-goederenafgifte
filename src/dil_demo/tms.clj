@@ -57,8 +57,8 @@
                        ;; ignore HTTP errors for when policy already
                        ;; deleted
                        :throw false})
-        (update-in [:store/commands] (fnil conj [])
-                   [:delete! :trip-policies id]))
+        (update :store/commands (fnil conj [])
+                [:delete! :trip-policies id]))
     req))
 
 (defmethod delete-policy-for-trip! :ishare
@@ -85,8 +85,8 @@
 
     (if-let [policy-id (get-in res [:ishare/result "policyId"])]
       ;; poort8 AR will return a policy-id which can be used to delete the policy
-      (update-in res [:store/commands] (fnil conj [])
-                 [:put! :trip-policies {:id id, :policy-id policy-id}])
+      (update res :store/commands (fnil conj [])
+              [:put! :trip-policies {:id id, :policy-id policy-id}])
       res)))
 
 (defmethod create-policy-for-trip! :ishare

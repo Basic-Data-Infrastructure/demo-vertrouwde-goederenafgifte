@@ -50,13 +50,12 @@
          [:span.site-title title]]]])]])
 
 (defn wrap-max-age-cache-control
-  "Add the `must-revalidate` and `max-age` directives for
-  `Cache-Control` forcing the browser to reconsider if the resource
-  needs to be fetched every `seconds`.  Note that
-  `compojure.route/resources` adds a `Last-Modified` header (works for
-  files in jar-files too) to allow the browser to make an
-  `If-Modified-Since` request which will yield a `304 Not Modified`
-  response if the resource has not been updated."
+  "Add `max-age` directives for `Cache-Control` set to `seconds`.
+
+  Note that `compojure.route/resources` adds a `Last-Modified`
+  header (works for files in jar-files too) to allow the browser to
+  make an `If-Modified-Since` request which will yield a `304 Not
+  Modified` response if the resource has not been updated."
   [app seconds]
   (fn cache-asset-wrapper [req]
     (when-let [res (app req)]
@@ -100,9 +99,9 @@
                n))))))
 
 (defn wrap-user-number
-  "Moves `basic-authentication` request key to `user-number` for
-  clarity.  Needs to be wrapped by `wrap-basic-authentication`
-  middleware."
+  "Set `user-number` on request from `basic-authentication`.
+
+  Needs to be wrapped by `wrap-basic-authentication` middleware."
   [app]
   (fn user-number-wrapper [req]
     (let [{:keys [basic-authentication]} req]
