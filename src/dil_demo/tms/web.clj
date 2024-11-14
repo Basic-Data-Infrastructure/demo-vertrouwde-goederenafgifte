@@ -228,7 +228,6 @@
 (def ^:dynamic *slug* nil)
 
 (defn trip->subscription [{:keys [ref], {:keys [eori]} :owner} user-number site-id]
-  ;; TODO put user-number in trip
   {:topic       ref
    :owner-eori  eori
    :user-number user-number

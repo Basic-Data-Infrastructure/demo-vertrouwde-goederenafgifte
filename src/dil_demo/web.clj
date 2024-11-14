@@ -10,7 +10,7 @@
             [clojure.tools.logging :as log]
             [compojure.core :refer [context GET routes]]
             [compojure.route :refer [resources]]
-            [dil-demo.client-data :refer [->client-data]]
+            [dil-demo.config :refer [->site-config]]
             [dil-demo.erp :as erp]
             [dil-demo.events :as events]
             [dil-demo.i18n :as i18n :refer [t]]
@@ -110,14 +110,6 @@
                  (dissoc :basic-authentication)
                  (assoc :user-number basic-authentication))
              req)))))
-
-(defn- ->site-config [{:keys [events store] :as config} site-id]
-  (let [site-config (get config site-id)]
-    (assoc site-config
-           :site-id         site-id
-           :client-data     (->client-data site-config)
-           :events          events
-           :store           store)))
 
 (defn- h2m-context [site-id config make-handler]
   (let [site-config (->site-config config site-id)

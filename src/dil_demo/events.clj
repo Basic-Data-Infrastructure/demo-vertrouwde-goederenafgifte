@@ -9,7 +9,7 @@
   (:require [babashka.http-client.websocket :as ws]
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]
-            [dil-demo.client-data :refer [->client-data]]
+            [dil-demo.config :refer [->site-config]]
             [dil-demo.erp.events :as erp]
             [dil-demo.events.web :as events.web]
             [dil-demo.i18n :refer [t]]
@@ -40,19 +40,16 @@
 
 (defn authorize!
   "Setup delegation policies to allow access to topic."
-  [config
+  [{{:ishare/keys [client-id
+                   authorization-registry-id
+                   authorization-registry-base-url]
+     :as          client-data} :client-data
+    {{:keys [token-server-id]} :pulsar} :events}
    [owner-eori topic]
    read-eoris write-eoris]
   (binding [ishare-client/log-interceptor-atom (atom [])]
     [(try
-       (let [{:ishare/keys [client-id
-                            authorization-registry-id
-                            authorization-registry-base-url]
-              :as          client-data} (->client-data config)
-
-             {{{:keys [token-server-id]} :pulsar} :events} config
-
-             read-eoris  (set read-eoris)
+       (let [read-eoris  (set read-eoris)
              write-eoris (set write-eoris)
              token       (-> client-data
                              (assoc :ishare/base-url     authorization-registry-base-url
@@ -345,15 +342,6 @@
                 (update :store/commands conj
                         [:put! :pulses (assoc pulse :id messageId)])
                 (f))))))))
-
-(defn- ->site-config [{:keys [events pulsar store] :as config} site-id]
-  (let [site-config (get config site-id)]
-    (assoc site-config
-           :site-id         site-id
-           :client-data     (->client-data site-config)
-           :pulsar          pulsar ;; in events context
-           :events          events ;; in web context
-           :store           store)))
 
 (defn make-site-handler
   [site-id config handler]
