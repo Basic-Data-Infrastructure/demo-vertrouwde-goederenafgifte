@@ -47,7 +47,7 @@ intermediate.cert.pem intermediate.key.pem : ca.cert.pem ca.key.pem
 %.x5c.pem: %.cert.pem intermediate.cert.pem ca.cert.pem
 	cat $^ >$@
 
-.PHONY: certs
+.PHONY: certs default
 
 .SECONDARY:
 

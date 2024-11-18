@@ -5,9 +5,14 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+.PHONY: config test clean
+
 config:
-	$(MAKE) -C
+	$(MAKE) -C config
 
 test:
 	$(MAKE) -C bdi-stack test
 	$(MAKE) -C vgu-demo test
+
+clean:
+	$(MAKE) -C config clean

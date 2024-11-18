@@ -16,7 +16,7 @@ The event bus (Pulsar) is disabled for now.
 First create the local certificates:
 
 ```sh
-make certs
+make config
 ```
 
 Then start the environment using
@@ -26,7 +26,7 @@ docker-compose up
 ```
 
 This will create a docker image for the VGU demo and start the
-contains, connected to the local BDI stack in separate containers.
+container, connected to the local BDI stack in separate containers.
 
 To connect to the UI, open http://localhost:9009/
 
