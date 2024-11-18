@@ -6,7 +6,7 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 {:deps {buddy/buddy-sign                                    {:mvn/version "3.6.1-359"}
-        ch.qos.logback/logback-classic                      {:mvn/version "1.5.6"}
+        org.slf4j/slf4j-simple                              {:mvn/version "2.0.16"}
         clj-commons/clj-yaml                                {:mvn/version "1.0.27"}
         compojure/compojure                                 {:mvn/version "1.7.1"}
         environ/environ                                     {:mvn/version "1.2.0"}
@@ -16,7 +16,7 @@
         nl.jomco/ring-session-ttl-memory                    {:git/url "https://git.sr.ht/~jomco/ring-session-ttl-memory" :git/sha "0415dedace39e2d28b6dc66fcf1321e8e136ca2c"}
         org.babashka/http-client                            {:mvn/version "0.4.19"}
         org.babashka/json                                   {:mvn/version "0.1.6"}
-        org.bdinetwork/bdi-stack                            {:git/url "https://github.com/Basic-Data-Infrastructure/bdi-stack" :git/sha "14ea1bc839d89d313fa30281e16dbb4062997b1f"}
+        org.bdinetwork/bdi-stack                            {:git/url "https://github.com/Basic-Data-Infrastructure/bdi-stack" :git/sha "c7b468df775a61bc71ec0075371e90de56c34787"}
         org.clojure/data.json                               {:mvn/version "2.5.0"}
         org.clojure/tools.logging                           {:mvn/version "1.3.0"}
         ring-basic-authentication/ring-basic-authentication {:mvn/version "1.2.0"}

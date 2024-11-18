@@ -10,9 +10,8 @@
             [dil-demo.store :as store]
             [nl.jomco.http-status-codes :as http-status]
             [org.bdinetwork.ishare.jwt :as jwt]
-            [org.bdinetwork.service-provider.authentication :as authentication]
-            [org.bdinetwork.service-provider.remote-association
-             :refer [remote-association]]
+            [org.bdinetwork.ring.authentication :as authentication]
+            [org.bdinetwork.ring.remote-association :refer [remote-association]]
             [ring.middleware.json :refer [wrap-json-response]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.util.response :as response]))
