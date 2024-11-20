@@ -83,7 +83,7 @@
       (ks->value ks)]]))
 
 (defn confirm-js [& [message]]
-  (str "return confirm(" (json/write-str (or message (t "confirm"))) ")"))
+  (str "event.stopPropagation(); return confirm(" (json/write-str (or message (t "confirm"))) ")"))
 
 (defn delete-button
   [path & {:keys [label] :or {label (t "button/delete")} :as attrs}]
