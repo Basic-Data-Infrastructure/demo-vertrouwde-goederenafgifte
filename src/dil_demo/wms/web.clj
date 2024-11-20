@@ -59,9 +59,8 @@
                              :button {:class "primary gate-out"}
                              :form   {:fx-dialog "#modal-dialog"}}))
 
-           (when (= status otm/status-in-transit)
-             (f/delete-button (str "transport-order-" id)
-                              {:form {:fx-dialog "#modal-dialog"}}))]]])]]]])
+           (f/delete-button (str "transport-order-" id)
+                            {:form {:fx-dialog "#modal-dialog"}})]]])]]]])
 
 (defn qr-code-scan-button [carrier-id driver-id plate-id]
   (let [id (str "qr-code-video-" (UUID/randomUUID))]

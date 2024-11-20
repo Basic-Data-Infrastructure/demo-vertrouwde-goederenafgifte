@@ -388,6 +388,7 @@ table.list th {
 }
 table.list tbody tr.fx-clickable:hover {
     background: var(--color-hover);
+    cursor: pointer;
 }
 table.list tbody td {
     border-top: solid var(--color-table-border) 1px;
