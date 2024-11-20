@@ -19,7 +19,7 @@
 (def ^:dynamic *throws-exception* false)
 
 (defn- check-translations
-  "Throw an exception when languages in `translations` (top level keys) do not have the same keys."
+  "Throw an exception when languages in `translations` do not have the same keys."
   [translations]
   (let [langs (keys translations)
         all-keys (into #{} (->> translations

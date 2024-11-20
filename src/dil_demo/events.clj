@@ -119,12 +119,17 @@
         ishare-client/exec
         :ishare/result)))
 
-(defn- make-on-message-handler
+(defn- make-on-message-callback
+  "Wrap `handler` into a callback for on-message events from web sockets.
+
+  This callback responds to `AUTH_CHALLENGE` message and regular
+  \"pulses\" which will be decoded, enhanced with receiver information
+  and passed to `handler`."
   [{:keys [eori] :as config}
    [owner-eori topic user-number :as subscription] handler]
   {:pre [config owner-eori topic]}
 
-  (fn on-message-handler [ws msg _last?]
+  (fn on-message-callback [ws msg _last?]
     (let [{:strs [type]} (json/read-str (str msg))]
       (if (= "AUTH_CHALLENGE" type)
         (let [token (get-token config)]
@@ -181,12 +186,12 @@
                             eori)
 
               :async   true ;; returns a future ws
-              :on-open (fn on-open [_ws]
+              :on-open (fn on-open-callback [_ws]
                          (log/debug "Consumer websocket open" subscription))
 
-              :on-message (make-on-message-handler config subscription handler)
+              :on-message (make-on-message-callback config subscription handler)
 
-              :on-close (fn on-close [ws status reason]
+              :on-close (fn on-close-callback [ws status reason]
                           (log/debug "Consumer websocket closed" subscription status reason)
 
                           (when-not (= 1000 status) ;; 1000 = Normal Closure
@@ -196,7 +201,7 @@
                             (Thread/sleep sleep-before-reconnect-msec)
                             (swap! websockets-atom assoc subscription (open-websocket))))
 
-              :on-error (fn on-error [ws err]
+              :on-error (fn on-error-callback [ws err]
                           (log/info "Consumer error for" subscription err)
 
                           ;; just close it and try again

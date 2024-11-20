@@ -61,7 +61,7 @@
     req))
 
 (defn process-store [{:keys [user-number] :as _req}
-                     {:keys [store/commands] :as res}
+                     {:store/keys [commands] :as res}
                      {:keys [eori store] :as _config}]
   (when (and eori store user-number)
     (doseq [cmd commands]
@@ -92,4 +92,4 @@
     (add-watch store nil
                (fn [_ _ old-store new-store]
                  (when (not= old-store new-store)
-                   (future (save-store new-store file)))))))
+                   (save-store new-store file))))))

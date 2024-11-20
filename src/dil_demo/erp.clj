@@ -49,7 +49,7 @@
   (fn policy-deletion-wrapper
     [{:keys [store] :as req}]
 
-    (let [{:keys [store/commands] :as res} (app req)]
+    (let [{:store/keys [commands] :as res} (app req)]
       (if-let [id (-> (filter #(= [:delete! :consignments] (take 2 %))
                               commands)
                       (first)
@@ -71,7 +71,7 @@
   "Create policies in AR when trip is published."
   [app {:keys [client-data]}]
   (fn delegation-wrapper [req]
-    (let [{:keys [store/commands] :as res} (app req)
+    (let [{:store/keys [commands] :as res} (app req)
           trip (->> commands
                     (filter #(= [:publish! :trips] (take 2 %)))
                     (map #(nth % 3))

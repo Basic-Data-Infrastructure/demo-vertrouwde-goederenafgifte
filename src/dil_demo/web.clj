@@ -111,21 +111,19 @@
                  (assoc :user-number basic-authentication))
              req)))))
 
-(defn- h2m-context [site-id config make-handler]
-  (let [site-config (->site-config config site-id)
-        handler     (make-handler site-config)]
-
-    (context (str "/" (name site-id)) []
-      (-> handler
-          (events/wrap-web site-config)
-          (store/wrap site-config)))))
+(defn- h2m-context [{:keys [site-id] :as site-config} make-handler]
+  (context (str "/" (name site-id)) []
+    (-> site-config
+        (make-handler)
+        (events/wrap-web site-config)
+        (store/wrap site-config))))
 
 (defn- h2m-routes [config]
   (-> (routes
-       (h2m-context :erp config erp/make-web-handler)
-       (h2m-context :tms-1 config tms/make-web-handler)
-       (h2m-context :tms-2 config tms/make-web-handler)
-       (h2m-context :wms config wms/make-web-handler)
+       (h2m-context (->site-config config :erp) erp/make-web-handler)
+       (h2m-context (->site-config config :tms-1) tms/make-web-handler)
+       (h2m-context (->site-config config :tms-2) tms/make-web-handler)
+       (h2m-context (->site-config config :wms) wms/make-web-handler)
        (make-root-handler config))
 
       (master-data/wrap config)

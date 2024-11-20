@@ -166,14 +166,24 @@
       (seq))))
 
 (defn outsource-pickup-access-subject
-  "Returns an \"accessSubject\" to denote a pickup is outsourced to some party."
+  "Returns an \"accessSubject\" to denote a pickup is outsourced to some party.
+
+  Note: the given trip/transport-order can have either a directly
+  assigned `carrier` or, in case of an outsourced trip, a list of
+  `carriers` in which case the last is the party to perform the
+  pickup."
   [{:keys [ref carrier carriers]}]
   (let [carrier-eori (or (:eori carrier) (-> carriers last :eori))]
     (assert (and ref carrier-eori))
     (str carrier-eori "#ref=" ref)))
 
 (defn pickup-access-subject
-  "Returns an \"accessSubject\" to denote a pickup will be done by a driver / vehicle."
+  "Returns an \"accessSubject\" to denote a pickup will be done by a driver / vehicle.
+
+  Note: the given trip/transport-order can have either a directly
+  assigned `carrier` or, in case of an outsourced trip, a list of
+  `carriers` in which case the last is the party to perform the
+  pickup."
   [{:keys [carrier carriers driver-id-digits license-plate]}]
   (let [carrier-eori (or (:eori carrier) (-> carriers last :eori))]
     (assert (and carrier-eori driver-id-digits license-plate))
@@ -181,7 +191,7 @@
 
 
 (defn- own-ar-request
-  "Set base-url and server-id from authorization-registry key of not already set."
+  "Set base-url and server-id from authorization-registry keys if not already set."
   [{:ishare/keys [authorization-registry-id
                   authorization-registry-base-url
                   base-url

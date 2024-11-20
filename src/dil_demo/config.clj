@@ -10,22 +10,6 @@
             [nl.jomco.envopts :as envopts]
             [org.bdinetwork.ishare.client :as ishare-client]))
 
-(defn get-env
-  ([k default]
-   (or (System/getenv k) default))
-  ([k]
-   (or (System/getenv k)
-       (throw (Exception. (str "environment variable " k " not set"))))))
-
-(defn get-filename
-  [& [k :as args]]
-  (let [fname (apply get-env args)]
-    (when-not (.exists (io/file fname))
-      (throw (ex-info (str "File `" fname "` does not exist")
-                      {:fname fname
-                       :key k})))
-    fname))
-
 (defmethod envopts/parse :file
   [s _]
   ;; ensure that given file option exists, returns the path as string

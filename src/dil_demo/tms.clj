@@ -141,7 +141,7 @@
   "Create policies in AR when trip is stored."
   [app {:keys [client-data]}]
   (fn delegation-wrapper [{:keys [store] :as req}]
-    (let [{:keys [store/commands] :as res} (app req)]
+    (let [{:store/keys [commands] :as res} (app req)]
       (reduce delegation-effect!
               (assoc res
                      :client-data client-data
