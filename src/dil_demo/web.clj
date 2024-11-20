@@ -8,8 +8,9 @@
 (ns dil-demo.web
   (:require [clojure.string :refer [re-quote-replacement]]
             [clojure.tools.logging :as log]
-            [compojure.core :refer [GET routes] :as compojure]
+            [compojure.core :refer [context GET routes]]
             [compojure.route :refer [resources]]
+            [dil-demo.config :refer [->site-config]]
             [dil-demo.erp :as erp]
             [dil-demo.events :as events]
             [dil-demo.i18n :as i18n :refer [t]]
@@ -21,34 +22,10 @@
             [dil-demo.wms :as wms]
             [dil-demo.wms.events :as wms.events]
             [nl.jomco.ring-session-ttl-memory :refer [ttl-memory-store]]
-            [org.bdinetwork.ishare.client :as ishare-client]
-            [ring.middleware.basic-authentication
-             :refer [wrap-basic-authentication]]
-            [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
+            [ring.middleware.basic-authentication :refer [wrap-basic-authentication]]
+            [ring.middleware.defaults :refer [api-defaults site-defaults wrap-defaults]]
             [ring.middleware.stacktrace :refer [wrap-stacktrace]]
-            [ring.util.response :refer [content-type not-found redirect]])
-  (:import (java.util.regex Pattern)))
-
-(defn rewrite-relative-redirect [res url-prefix]
-  (let [loc (get-in res [:headers "Location"])]
-    (if (and loc (not (re-matches #"^(/|\w*://).*" loc)))
-      (update-in res [:headers "Location"] #(str url-prefix "/" %))
-      res)))
-
-(defn wrap-with-prefix [app url-prefix handler]
-  (let [url-prefix-re (Pattern/compile (str "^" url-prefix "(/.*)"))]
-    (fn prefix-wrapper [{:keys [uri] :as req}]
-      (let [path (last (re-find url-prefix-re uri))]
-        (cond
-          path
-          (or (handler (assoc req :uri path))
-              (app req))
-
-          (= uri url-prefix)
-          (redirect (str uri "/"))
-
-          :else
-          (app req))))))
+            [ring.util.response :refer [content-type not-found]]))
 
 (defn not-found-handler [_]
   (-> (w/render-body "dil"
@@ -73,13 +50,12 @@
          [:span.site-title title]]]])]])
 
 (defn wrap-max-age-cache-control
-  "Add the `must-revalidate` and `max-age` directives for
-  `Cache-Control` forcing the browser to reconsider if the resource
-  needs to be fetched every `seconds`.  Note that
-  `compojure.route/resources` adds a `Last-Modified` header (works for
-  files in jar-files too) to allow the browser to make an
-  `If-Modified-Since` request which will yield a `304 Not Modified`
-  response if the resource has not been updated."
+  "Add `max-age` directives for `Cache-Control` set to `seconds`.
+
+  Note that `compojure.route/resources` adds a `Last-Modified`
+  header (works for files in jar-files too) to allow the browser to
+  make an `If-Modified-Since` request which will yield a `304 Not
+  Modified` response if the resource has not been updated."
   [app seconds]
   (fn cache-asset-wrapper [req]
     (when-let [res (app req)]
@@ -123,9 +99,9 @@
                n))))))
 
 (defn wrap-user-number
-  "Moves `basic-authentication` request key to `user-number` for
-  clarity.  Needs to be wrapped by `wrap-basic-authentication`
-  middleware."
+  "Set `user-number` on request from `basic-authentication`.
+
+  Needs to be wrapped by `wrap-basic-authentication` middleware."
   [app]
   (fn user-number-wrapper [req]
     (let [{:keys [basic-authentication]} req]
@@ -135,56 +111,20 @@
                  (assoc :user-number basic-authentication))
              req)))))
 
+(defn- h2m-context [{:keys [site-id] :as site-config} make-handler]
+  (context (str "/" (name site-id)) []
+    (-> site-config
+        (make-handler)
+        (events/wrap-web site-config)
+        (store/wrap site-config))))
 
-(defn ->ishare-client-data
-  [{:keys [eori
-           dataspace-id
-           key-file chain-file
-           ar-id ar-base-url ar-type
-           satellite-id satellite-base-url]}]
-  {:pre [eori dataspace-id key-file chain-file
-         satellite-id satellite-base-url]}
-  {:ishare/client-id                       eori
-   :ishare/fetch-party-info-fn             (ishare-client/mk-cached-fetch-party-info 1000)
-   :ishare/dataspace-id                    dataspace-id
-   :ishare/satellite-id                    satellite-id
-   :ishare/satellite-base-url              satellite-base-url
-   :ishare/authorization-registry-id       ar-id
-   :ishare/authorization-registry-base-url ar-base-url
-   :ishare/authorization-registry-type     (keyword ar-type)
-   :ishare/private-key                     (ishare-client/private-key key-file)
-   :ishare/x5c                             (ishare-client/x5c chain-file)})
-
-(defn wrap-h2m-app [app site-id {:keys [pulsar store-atom] :as config}
-                    make-handler
-                    make-event-handler
-                    & [app-name]]
-  (let [config         (get config site-id)
-        config         (assoc config
-                              :site-id     site-id
-                              :client-data (->ishare-client-data config)
-                              :pulsar      pulsar
-                              :store-atom  store-atom
-                              :app-name    app-name)
-        event-callback (-> (if make-event-handler
-                             (make-event-handler config)
-                             (constantly nil))
-                           (events/wrap config identity) ;; to allow unsubscribing
-                           (store/wrap config))
-        handler        (make-handler config)]
-    (wrap-with-prefix app
-                      (str "/" (name site-id))
-                      (-> (fn wrap-h2m-app [req] (handler (assoc req :site-id site-id)))
-                          (events/wrap-web config event-callback)
-                          (store/wrap config)))))
-
-(defn make-h2m-app [config]
-  (-> config
-      (make-root-handler)
-      (wrap-h2m-app :erp config erp/make-handler erp/make-event-handler)
-      (wrap-h2m-app :wms config wms/make-handler nil)
-      (wrap-h2m-app :tms-1 config tms/make-handler tms/make-event-handler "tms")
-      (wrap-h2m-app :tms-2 config tms/make-handler tms/make-event-handler "tms")
+(defn- h2m-routes [config]
+  (-> (routes
+       (h2m-context (->site-config config :erp) erp/make-web-handler)
+       (h2m-context (->site-config config :tms-1) tms/make-web-handler)
+       (h2m-context (->site-config config :tms-2) tms/make-web-handler)
+       (h2m-context (->site-config config :wms) wms/make-web-handler)
+       (make-root-handler config))
 
       (master-data/wrap config)
 
@@ -198,44 +138,28 @@
                          ;; serve resource ourselves to allow applying cache-control
                          (assoc-in [:static :resources] false)))))
 
-(defn wrap-m2m-app [app id {:keys [store-atom] :as config} make-handler]
-  (let [app-config  (get config id)
-        app-config  (assoc app-config
-                           :client-data (->ishare-client-data app-config)
-                           :store-atom store-atom)
-        handler (make-handler app-config)]
-    (-> (fn [{:keys [uri] :as req}]
-          (let [[_ base-uri user-number site-id uri]
-                (re-matches #"(/(\d+)/([^/]+))(/.*)" uri)] ; /1/wms ipv /wms
-            (if (and user-number site-id (= site-id (name id)))
-              (-> req
-                  (assoc :base-uri base-uri
-                         :uri uri
-                         :user-number (parse-long user-number)
-                         :eori (:eori app-config))
-                  (store/assoc-store app-config)
-                  (handler))
-              (app req))))
-
-        ;; FIXME: enabling this breaks h2m anti-forgery middleware
-        #_ (wrap-defaults api-defaults))))
-
-(defn make-m2m-app [config]
-  (-> (constantly nil)
-      (wrap-m2m-app :wms config wms.events/make-handler)))
+(defn- m2m-context [site-id config make-handler]
+  (let [site-config (->site-config config site-id)
+        handler     (make-handler site-config)]
+    (context [(str "/:user-number/" (name site-id)) :user-number #"\d+"] [user-number]
+      (wrap-defaults (fn m2m-context-wrapper [req]
+                       (-> req
+                           (assoc :eori (:eori site-config)
+                                  :user-number (parse-long user-number))
+                           (store/assoc-store site-config)
+                           (handler)))
+                     api-defaults))))
 
 (defn wrap-base-url
   "Set base-url that should be used for generating urls back to the service."
-  [f base-url]
+  [f {:keys [base-url]}]
   (fn [req]
     (f (assoc req :base-url base-url))))
 
 (defn make-app [config]
-  (let [ ;; NOTE: single atom to keep store because of publication among apps
-        store-atom (store/get-store-atom (-> config :store :file))
-        config     (assoc config :store-atom store-atom)]
-    (-> (routes (make-m2m-app config)
-                (make-h2m-app config))
-        (wrap-stacktrace)
-        (wrap-base-url (:base-url config))
-        (wrap-log))))
+  (-> (routes
+       (m2m-context :wms config wms.events/make-api-handler)
+       (h2m-routes config))
+      (wrap-base-url config)
+      (wrap-stacktrace)
+      (wrap-log)))

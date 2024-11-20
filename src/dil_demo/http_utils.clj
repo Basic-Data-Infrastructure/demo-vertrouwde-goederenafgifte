@@ -8,7 +8,9 @@
 (ns dil-demo.http-utils)
 
 (defn parse-www-authenticate
-  "Parse given `WWW-Authenticate` header with expected format:
+  "Parse given `WWW-Authenticate` header.
+
+  Expects the following format:
 
     auth-scheme key=\"value\" other=\"thing\"
 

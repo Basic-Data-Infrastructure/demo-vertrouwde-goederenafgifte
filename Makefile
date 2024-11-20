@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-.PHONY: all lint lint-license lint-clj lint-js test check clean test-certs
+.PHONY: all lint lint-license prep-lint-clj lint-clj lint-js test check clean test-certs
 
 all: clean check target/dil-demo.jar
 
@@ -48,7 +48,10 @@ test-certs: resources/test/pem/client.cert.pem
 lint-license:
 	reuse lint
 
-lint-clj:
+prep-lint-clj:
+	clojure -M:lint --lint $$(clojure -Spath)  --copy-configs --dependencies --skip-lint
+
+lint-clj: prep-lint-clj
 	clojure -M:lint
 
 node_modules:

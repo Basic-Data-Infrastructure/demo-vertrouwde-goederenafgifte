@@ -9,8 +9,8 @@
   (:require [clojure.data.json :as json]
             [clojure.string :as string]
             [dil-demo.i18n :as i18n :refer [t]]
-            [ring.util.response :as response]
-            [hiccup2.core :as hiccup])
+            [hiccup2.core :as hiccup]
+            [ring.util.response :as response])
   (:import (java.text SimpleDateFormat)
            (java.util UUID)))
 
@@ -62,44 +62,46 @@
      [:main]
      [:div.busy]]]])
 
-(defn template [site main & {:keys [app-name flash title site-name navigation html-class]
-                             :or   {navigation {:current :list
-                                                :paths   {:list   "."
-                                                          :pulses "pulses/"}}}
-                             :as   opts}]
-  (let [app-name (or app-name site)]
-    (base-template
-     site
-     [:div.app-container
-      [:nav.app
-       [:a.root
-        {:href "/"}
-        [:h1 site-name]
-        [:h2 site]]
-       (let [{:keys [current paths]} navigation]
-         [:ul
-          [:li.dashboard {:class (when (= :dashboard current) "current")}
-           (dummy-link (t "nav/dashboard"))]
-          [:li.list {:class (when (= :list current) "current")}
-           [:a {:href (:list paths)}
-            (t (str "nav/" app-name "/list"))]]
-          [:li.contacts {:class (when (= :contacts current) "current")}
-           (let [title (t (str "nav/" app-name "/contacts"))]
-             (if-let [path (:contacts paths)]
-               [:a {:href path} title]
-               (dummy-link title)))]
-          [:li.pulses {:class (when (= :pulses current) "current")}
-           [:a {:href (:pulses paths)}
-            (t "nav/pulses")]]])]
+(defn template [site-id
+                main &
+                {:keys [flash title site-name navigation html-class]
+                 :or   {navigation {:current :list
+                                    :paths   {:list   "."
+                                              :pulses "pulses/"}}}
+                 :as   opts}]
+  (base-template
+   site-id
+   [:div.app-container
+    [:nav.app
+     [:a.root
+      {:href "/"}
+      [:h1 site-name]
+      [:h2 site-id]]
+     (let [{:keys [current paths]} navigation
+           app-name            (string/replace site-id #"-.+$" "")]
+       [:ul
+        [:li.dashboard {:class (when (= :dashboard current) "current")}
+         (dummy-link (t "nav/dashboard"))]
+        [:li.list {:class (when (= :list current) "current")}
+         [:a {:href (:list paths)}
+          (t (str "nav/" app-name "/list"))]]
+        [:li.contacts {:class (when (= :contacts current) "current")}
+         (let [title (t (str "nav/" app-name "/contacts"))]
+           (if-let [path (:contacts paths)]
+             [:a {:href path} title]
+             (dummy-link title)))]
+        [:li.pulses {:class (when (= :pulses current) "current")}
+         [:a {:href (:pulses paths)}
+          (t "nav/pulses")]]])]
 
-      [:div.app
-       [:header.container {:class html-class}
-        [:h1 title]]
-       [:main.container {:class html-class}
-        (for [[type message] (select-keys flash [:error :success :warning])]
-          [:article.flash {:class (str "flash-" (name type))} message])
-        main]]]
-     opts)))
+    [:div.app
+     [:header.container {:class html-class}
+      [:h1 title]]
+     [:main.container {:class html-class}
+      (for [[type message] (select-keys flash [:error :success :warning])]
+        [:article.flash {:class (str "flash-" (name type))} message])
+      main]]]
+   opts))
 
 (defn qr-code [text]
   (let [id (str "qrcode-" (UUID/randomUUID))]

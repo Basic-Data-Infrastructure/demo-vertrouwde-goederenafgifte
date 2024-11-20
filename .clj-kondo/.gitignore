@@ -5,17 +5,5 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-/classes/
-/target/
-/credentials
-/doc/*.pdf
-/doc/*.tex
-/resources/test/pem/
-/.envrc
-/.lsp
-/.cpcache
-/.env
-/.nrepl-port
-/node_modules/
-/package-lock.json
-/tmp/
+.cache
+imports

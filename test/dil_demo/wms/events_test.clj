@@ -10,7 +10,6 @@
             [clojure.string :as string]
             [clojure.test :refer [deftest is testing]]
             [dil-demo.http-utils :as http-utils]
-            [dil-demo.store :as store]
             [dil-demo.wms.events :as sut]
             [nl.jomco.http-status-codes :as http-status]
             [ring.mock.request :refer [request]]))
@@ -31,10 +30,10 @@
 (defn do-request [method path]
   (-> (request method path)
       (assoc
-       ::store/store store
+       :store store
        :user-number 1
        :site-id :wms
-       :base-uri "/base/uri"
+       :context "/base/uri"
        :client-id *client-id*
        :eori eori)
       (sut/handler)))
@@ -77,7 +76,7 @@
         )
    #"\n" ""))
 
-(deftest make-handler
+(deftest make-api-handler
   (testing "availability of /connect/token endpoint"
     (let [priv-key    (slurp-pem-data "test/pem/client.key.pem")
           pub-key     (slurp-pem-data "test/pem/client.cert.pem")
@@ -86,8 +85,8 @@
                                :x5c                [pub-key]
                                :satellite-id       other-eori
                                :satellite-base-url "https://example.com"}
-          handler     (sut/make-handler {:eori        eori
-                                         :client-data client-data})]
+          handler     (sut/make-api-handler {:eori        eori
+                                             :client-data client-data})]
       (is (= http-status/method-not-allowed
              (:status (handler (request :get "/connect/token")))))
       (is (= http-status/bad-request

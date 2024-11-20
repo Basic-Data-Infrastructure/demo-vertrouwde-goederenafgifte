@@ -10,8 +10,6 @@
             [dil-demo.i18n :as i18n]
             [dil-demo.otm :as otm]
             [dil-demo.tms.web :as sut]
-            [dil-demo.store :as store]
-            [dil-demo.events :as events]
             [nl.jomco.http-status-codes :as http-status]
             [ring.mock.request :refer [request]]))
 
@@ -28,7 +26,7 @@
        (sut/make-handler)
        (i18n/wrap :throw-exceptions true))
    (assoc (request method path params)
-          ::store/store store
+          :store       store
           :user-number 1
           :master-data {:carriers            {}
                         :eori->name          {}
@@ -44,8 +42,8 @@
 
   (testing "DELETE /trip-31415"
     (let [{:keys          [status]
-           store-commands ::store/commands
-           event-commands ::events/commands} (do-request :delete "/trip-31415")]
+           store-commands :store/commands
+           event-commands :event/commands} (do-request :delete "/trip-31415")]
       (is (= http-status/see-other status))
       (is (= [[:delete! :trips "31415"]] store-commands))
       (is (= [[:unsubscribe! {:topic       "31415",
@@ -65,8 +63,8 @@
 
   (testing "POST /assign-31415"
     (let [{:keys          [status headers]
-           store-commands ::store/commands
-           event-commands ::events/commands}
+           store-commands :store/commands
+           event-commands :event/commands}
           (do-request :post "/assign-31415"
                       {:driver-id-digits "1234"
                        :license-plate    "AB-01-ABC"})]
@@ -87,8 +85,8 @@
 
   (testing "POST /outsource-31415"
     (let [{:keys          [status headers]
-           store-commands ::store/commands
-           event-commands ::events/commands}
+           store-commands :store/commands
+           event-commands :event/commands}
           (do-request :post "/outsource-31415"
                       {:carrier-eori "EU.EORI.OTHER"})]
       (is (= http-status/see-other status))

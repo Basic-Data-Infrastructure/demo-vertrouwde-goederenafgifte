@@ -9,17 +9,15 @@
   (:require [clojure.data.json :refer [json-str]]
             [clojure.string :as string]
             [compojure.core :refer [DELETE GET POST routes]]
-            [dil-demo.events :as events]
             [dil-demo.i18n :refer [t]]
             [dil-demo.otm :as otm]
-            [dil-demo.store :as store]
             [dil-demo.web-form :as f]
             [dil-demo.web-utils :as w]
-            [dil-demo.wms.verify :as wms.verify]
             [dil-demo.wms.events :as wms.events]
+            [dil-demo.wms.verify :as wms.verify]
             [ring.util.response :refer [redirect]])
-  (:import (java.util UUID)
-           (java.time Instant)))
+  (:import (java.time Instant)
+           (java.util UUID)))
 
 (defn list-transport-orders [transport-orders]
   [:main
@@ -204,21 +202,19 @@
                            :site-name site-name
                            :html-class html-class))]
     (routes
-     (GET "/" {:keys        [flash]
-               ::store/keys [store]}
+     (GET "/" {:keys [flash store]}
        (render (t "wms/title/list")
                (list-transport-orders (get-transport-orders store))
                flash
                :html-class "list"))
 
-     (DELETE "/transport-order-:id" {::store/keys [store]
-                                     {:keys [id]} :params}
+     (DELETE "/transport-order-:id" {:keys [store] {:keys [id]} :params}
        (when-let [transport-order (get-transport-order store id)]
          (-> "deleted"
              (redirect :see-other)
              (assoc :flash {:success         (t "wms/flash/delete-success")
                             :transport-order transport-order})
-             (assoc ::store/commands [[:delete! :transport-orders id]]))))
+             (assoc :store/commands [[:delete! :transport-orders id]]))))
 
      (GET "/deleted" {:keys [flash], {:keys [transport-order]} :flash}
        (render (t "erp/title/deleted")
@@ -226,8 +222,7 @@
                flash
                :html-class "delete"))
 
-     (GET "/verify-:id" {:keys        [flash]
-                         ::store/keys [store]
+     (GET "/verify-:id" {:keys        [flash store]
                          {:keys [id]} :params}
        (when-let [transport-order (get-transport-order store id)]
          (render (t "wms/title/verify")
@@ -235,7 +230,7 @@
                  flash
                  :html-class "verify")))
 
-     (POST "/verify-:id" {:keys                   [flash master-data ::store/store]
+     (POST "/verify-:id" {:keys                   [flash master-data store]
                           {:keys [id] :as params} :params}
        (when-let [transport-order (get-transport-order store id)]
          (let [params (update params :carrier-eoris string/split #",")
@@ -245,19 +240,19 @@
                          (accepted-transport-order transport-order params result master-data)
                          flash
                          :html-class "verify")
-                 (assoc ::store/commands [[:put! :transport-orders
-                                           (assoc transport-order :status otm/status-confirmed)]]))
+                 (assoc :store/commands [[:put! :transport-orders
+                                          (assoc transport-order :status otm/status-confirmed)]]))
              (render (t "wms/title/verification-rejected")
                      (rejected-transport-order transport-order params result master-data)
                      flash
                      :html-class "verify")))))
 
-     (POST "/send-gate-out-:id" {:keys        [master-data ::store/store user-number]
+     (POST "/send-gate-out-:id" {:keys        [master-data store user-number]
                                  {:keys [id]} :params
                                  :as          req}
        (when-let [{:keys [ref] :as transport-order} (get-transport-order store id)]
          (let [event-id  (str (UUID/randomUUID))
-               event-url (wms.events/url-for req event-id)
+               event-url (wms.events/url-for (assoc req :site-id site-id) event-id)
                targets   (wms.events/transport-order-gate-out-targets transport-order)
                tstamp    (Instant/now)
                body      (wms.events/transport-order-gate-out-body transport-order
@@ -267,18 +262,18 @@
            (-> (str "sent-gate-out-" id)
                (redirect :see-other)
                (assoc :flash {:success (t "wms/flash/send-gate-out-success" {:ref ref})}
-                      ::store/commands [[:put! :transport-orders
-                                         (assoc transport-order :status otm/status-in-transit)]
-                                        [:put! :events
-                                         {:id           event-id
-                                          :targets      targets
-                                          :content-type "application/json; charset=utf-8"
-                                          :body         (json-str body)}]]
-                      ::events/commands [[:send! (-> transport-order
-                                                     (transport-order->subscription user-number site-id)
-                                                     (assoc :message event-url))]])))))
+                      :store/commands [[:put! :transport-orders
+                                        (assoc transport-order :status otm/status-in-transit)]
+                                       [:put! :events
+                                        {:id           event-id
+                                         :targets      targets
+                                         :content-type "application/json; charset=utf-8"
+                                         :body         (json-str body)}]]
+                      :event/commands [[:send! (-> transport-order
+                                                   (transport-order->subscription user-number site-id)
+                                                   (assoc :message event-url))]])))))
 
-     (GET "/sent-gate-out-:id" {:keys        [flash ::store/store]
+     (GET "/sent-gate-out-:id" {:keys        [flash store]
                                 {:keys [id]} :params}
        (when-let [transport-order (get-transport-order store id)]
          (render (t "wms/title/sent-gate-out")

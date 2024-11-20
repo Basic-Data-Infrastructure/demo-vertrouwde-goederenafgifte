@@ -6,11 +6,11 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.i18n
-  (:require [clojure.java.io :as io]
+  (:require [clj-yaml.core :as yaml]
+            [clojure.java.io :as io]
             [clojure.set :as set]
             [clojure.string :as string]
-            [clojure.tools.logging :as log]
-            [clj-yaml.core :as yaml])
+            [clojure.tools.logging :as log])
   (:import (java.time ZonedDateTime)
            (java.time.temporal ChronoUnit)))
 
@@ -19,8 +19,7 @@
 (def ^:dynamic *throws-exception* false)
 
 (defn- check-translations
-  "Throw an exception when languages in `translations` (top level keys)
-  do not have the same keys."
+  "Throw an exception when languages in `translations` do not have the same keys."
   [translations]
   (let [langs (keys translations)
         all-keys (into #{} (->> translations

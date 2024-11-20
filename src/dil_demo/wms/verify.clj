@@ -29,16 +29,16 @@
                        (ishare-client/exec)
                        :ishare/result
                        :delegationEvidence)})
-          (update-in [:explanation] (fnil conj [])
-                     [title {:ishare-log @ishare-client/log-interceptor-atom}]))
+          (update :explanation (fnil conj [])
+                  [title {:ishare-log @ishare-client/log-interceptor-atom}]))
       (catch Throwable ex
         (-> req
             (update :delegation-evidences (fnil conj [])
                     {:issuer issuer
                      :target target})
-            (update-in [:explanation] (fnil into [])
-                       [[title {:ishare-log @ishare-client/log-interceptor-atom}
-                         [(t "wms/explanation/error" {:error (.getMessage ex)})]]]))))))
+            (update :explanation (fnil into [])
+                    [[title {:ishare-log @ishare-client/log-interceptor-atom}
+                      [(t "wms/explanation/error" {:error (.getMessage ex)})]]]))))))
 
 (defn rejection-reasons [{:keys [delegation-evidences]}]
   (seq (mapcat (fn [{:keys [delegation-evidence target]}]
@@ -55,9 +55,10 @@
 (defn permitted? [req]
   (not (rejection-reasons req)))
 
-(defn verify-owner!
-  "Ask AR of owner if carrier is allowed to pickup order. Return list of
-  rejection reasons or nil, if access is allowed."
+(defn owner-rejection-reasons
+  "Ask AR of owner if carrier is allowed to pickup order.
+
+  Return list of rejection reasons or nil, if access is allowed."
   [req transport-order {:keys [carrier-eoris]}]
   {:pre [(seq carrier-eoris)]}
 
@@ -73,10 +74,10 @@
                                      (t "wms/explanation/verify-erp")
                                      {:issuer issuer, :target target, :mask mask})))
 
-(defn verify-carriers!
-  "Ask AR of carriers if sourced to next or, if last, driver is allowed
-  to pickup order. Return list of rejection reasons or nil, if access
-  is allowed."
+(defn carriers-rejection-reasons
+  "Ask AR of carriers if sourced to next or, if last, driver is allowed to pickup order.
+
+  Return list of rejection reasons or nil, if access is allowed."
   [req transport-order {:keys [carrier-eoris driver-id-digits license-plate]}]
   {:pre [(seq carrier-eoris) driver-id-digits license-plate]}
 
@@ -110,5 +111,5 @@
 (defn verify!
   [client-data transport-order params]
   (-> {:client-data client-data}
-      (verify-owner! transport-order params)
-      (verify-carriers! transport-order params)))
+      (owner-rejection-reasons transport-order params)
+      (carriers-rejection-reasons transport-order params)))
