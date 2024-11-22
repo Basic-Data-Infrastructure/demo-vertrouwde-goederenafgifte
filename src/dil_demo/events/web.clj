@@ -14,7 +14,9 @@
             [dil-demo.i18n :refer [t]]
             [dil-demo.web-utils :as w]
             [nl.jomco.http-status-codes :as http-status]
-            [org.bdinetwork.ishare.client :as ishare-client]))
+            [org.bdinetwork.ishare.client :as ishare-client]
+            [org.bdinetwork.ishare.client.interceptors :refer [log-interceptor-atom]]
+            [org.bdinetwork.ishare.client.request :as request]))
 
 (defn fetch-event [url client-data]
   (let [req {:uri url, :method :get}
@@ -38,12 +40,11 @@
                (= "iSHARE" scope)
                server-eori
                server-path)
-        (binding [ishare-client/log-interceptor-atom (atom [])]
+        (binding [log-interceptor-atom (atom [])]
           (let [token (-> client-data
-                          (assoc :ishare/message-type :access-token
-                                 :ishare/base-url url
-                                 :ishare/server-id server-eori
-                                 :path server-path)
+                          (assoc :ishare/base-url url
+                                 :ishare/server-id server-eori)
+                          (request/access-token-request server-path)
                           (ishare-client/exec)
                           :ishare/result)
                 req   (assoc-in req [:headers "Authorization"]
@@ -57,7 +58,7 @@
                           (dissoc :request))]
             (-> res
                 (w/append-explanation [(t "explanation/fetch-token")
-                                       {:ishare-log @ishare-client/log-interceptor-atom}])
+                                       {:ishare-log @log-interceptor-atom}])
                 (w/append-explanation [(t "explanation/fetch-with-token")
                                        {:http-request  req
                                         :http-response res}]))))
