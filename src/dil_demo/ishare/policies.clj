@@ -6,8 +6,7 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.ishare.policies
-  (:require [dil-demo.i18n :refer [t]]
-            [org.bdinetwork.ishare.client :refer [ishare->http-request]])
+  (:require [dil-demo.i18n :refer [t]])
   (:import (java.time Instant LocalDate LocalDateTime ZoneId)
            java.time.format.DateTimeFormatter))
 
@@ -215,11 +214,6 @@
              :ishare/unsign-token "policy_token"
              :ishare/lens         [:body "policy_token"])))
 
-(defmethod ishare->http-request :ishare/policy ;; ishare AR specific
-  [{delegation-evidence :ishare/params :as request}]
-  {:pre [delegation-evidence]}
-  (ishare-policy-request request delegation-evidence))
-
 (defn poort8-policy-request
   [request params]
   (-> request
@@ -232,10 +226,6 @@
                                  :useCase "iSHARE")
              :ishare/lens [:body])))
 
-(defmethod ishare->http-request :poort8/policy ;; Poort8 AR specific
-  [{params :ishare/params :as request}]
-  (poort8-policy-request request params))
-
 (defn poort8-delete-policy-request
   [request policy-id]
   (-> request
@@ -245,7 +235,3 @@
              :path (str "../policies/" policy-id)
              :as :json
              :ishare/lens [:body])))
-
-(defmethod ishare->http-request :poort8/delete-policy ;; Poort8 AR specific
-  [{params :ishare/params :as request}]
-  (poort8-delete-policy-request request (:policyId params)))

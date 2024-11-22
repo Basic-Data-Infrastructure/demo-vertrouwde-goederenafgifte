@@ -13,11 +13,14 @@
             [dil-demo.erp.events :as erp]
             [dil-demo.events.web :as events.web]
             [dil-demo.i18n :refer [t]]
+            [dil-demo.ishare.policies :as policies]
             [dil-demo.store :as store]
             [dil-demo.tms.events :as tms]
             [dil-demo.web-utils :as w]
             [nl.jomco.resources :as resources]
-            [org.bdinetwork.ishare.client :as ishare-client])
+            [org.bdinetwork.ishare.client :as ishare-client]
+            [org.bdinetwork.ishare.client.interceptors :refer [log-interceptor-atom]]
+            [org.bdinetwork.ishare.client.request :as request])
   (:import (java.time Instant)
            (java.util Base64)))
 
@@ -47,14 +50,17 @@
     {{:keys [token-server-id]} :pulsar} :events}
    [owner-eori topic]
    read-eoris write-eoris]
-  (binding [ishare-client/log-interceptor-atom (atom [])]
+  {:pre [ ;; only owner can authorize access
+         (= owner-eori (:ishare/client-id client-data))]}
+
+  (binding [log-interceptor-atom (atom [])]
     [(try
        (let [read-eoris  (set read-eoris)
              write-eoris (set write-eoris)
              token       (-> client-data
                              (assoc :ishare/base-url     authorization-registry-base-url
-                                    :ishare/server-id    authorization-registry-id
-                                    :ishare/message-type :access-token)
+                                    :ishare/server-id    authorization-registry-id)
+                             (request/access-token-request)
                              ishare-client/exec
                              :ishare/result)
              now-secs    (unix-epoch-secs)]
@@ -84,15 +90,14 @@
               (-> client-data
                   (assoc :ishare/bearer-token token
                          :ishare/base-url     authorization-registry-base-url
-                         :ishare/server-id    authorization-registry-id
-                         :ishare/message-type :ishare/policy
-                         :ishare/params       {:delegationEvidence delegation-evidence})
+                         :ishare/server-id    authorization-registry-id)
+                  (policies/ishare-policy-request {:delegationEvidence delegation-evidence})
                   ishare-client/exec
                   :ishare/result)))))
        (catch Throwable ex
          (log/error ex)
          false))
-     @ishare-client/log-interceptor-atom]))
+     @log-interceptor-atom]))
 
 (defn retrying-call [f & {:keys [max-retries wait-msec]
                           :or {max-retries 5, wait-msec 2000}}]
@@ -113,9 +118,9 @@
   {:pre [client-data token-endpoint token-server-id]}
   (retrying-call
    #(-> client-data
-        (assoc :ishare/message-type :access-token
-               :ishare/base-url token-endpoint
+        (assoc :ishare/base-url token-endpoint
                :ishare/server-id token-server-id)
+        (request/access-token-request)
         ishare-client/exec
         :ishare/result)))
 

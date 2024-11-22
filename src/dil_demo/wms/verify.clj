@@ -8,13 +8,15 @@
 (ns dil-demo.wms.verify
   (:require [dil-demo.i18n :refer [t]]
             [dil-demo.ishare.policies :as policies]
-            [org.bdinetwork.ishare.client :as ishare-client]))
+            [org.bdinetwork.ishare.client :as ishare-client]
+            [org.bdinetwork.ishare.client.interceptors :refer [log-interceptor-atom]]
+            [org.bdinetwork.ishare.client.request :as request]))
 
 (defn ishare-get-delegation-evidence!
   [{:keys [client-data] :as req}
    title
    {:keys [issuer target mask]}]
-  (binding [ishare-client/log-interceptor-atom (atom [])]
+  (binding [log-interceptor-atom (atom [])]
     (try
       (-> req
           (update :delegation-evidences (fnil conj [])
@@ -23,21 +25,19 @@
 
                    :delegation-evidence
                    (-> client-data
-                       (assoc :ishare/policy-issuer issuer ;; ensures we target the right AR
-                              :ishare/message-type :delegation
-                              :ishare/params mask)
+                       (request/delegation-evidence-request mask)
                        (ishare-client/exec)
                        :ishare/result
                        :delegationEvidence)})
           (update :explanation (fnil conj [])
-                  [title {:ishare-log @ishare-client/log-interceptor-atom}]))
+                     [title {:ishare-log @log-interceptor-atom}]))
       (catch Throwable ex
         (-> req
             (update :delegation-evidences (fnil conj [])
                     {:issuer issuer
                      :target target})
             (update :explanation (fnil into [])
-                    [[title {:ishare-log @ishare-client/log-interceptor-atom}
+                    [[title {:ishare-log @log-interceptor-atom}
                       [(t "wms/explanation/error" {:error (.getMessage ex)})]]]))))))
 
 (defn rejection-reasons [{:keys [delegation-evidences]}]

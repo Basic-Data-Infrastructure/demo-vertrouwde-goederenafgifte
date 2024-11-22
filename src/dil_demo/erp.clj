@@ -11,7 +11,8 @@
             [dil-demo.i18n :refer [t]]
             [dil-demo.ishare.policies :as policies]
             [dil-demo.web-utils :as w]
-            [org.bdinetwork.ishare.client :as ishare-client]))
+            [org.bdinetwork.ishare.client :as ishare-client]
+            [org.bdinetwork.ishare.client.interceptors :refer [log-interceptor-atom]]))
 
 (defn- map->delegation-evidence
   [client-id effect {:keys [ref load] :as obj}]
@@ -23,25 +24,22 @@
     :date    (:date load)
     :effect  effect}))
 
-(defn- ->ishare-ar-policy-request [{:ishare/keys [client-id]
-                                    :as          client-data}
-                                   effect
-                                   obj]
-  (assoc client-data
-         :ishare/message-type :ishare/policy
-         :ishare/params (map->delegation-evidence client-id
-                                                  effect
-                                                  obj)))
+(defn- ->ishare-ar-policy-request
+  [{:ishare/keys [client-id] :as client-data} effect obj]
+  (policies/ishare-policy-request client-data
+                                  (map->delegation-evidence client-id
+                                                            effect
+                                                            obj)))
 
 (defn- ishare-ar-create-policy! [client-data effect obj]
-  (binding [ishare-client/log-interceptor-atom (atom [])]
+  (binding [log-interceptor-atom (atom [])]
     [(try (-> client-data
               (->ishare-ar-policy-request effect obj)
               (ishare-client/exec))
           (catch Throwable ex
             (log/error ex)
             false))
-     @ishare-client/log-interceptor-atom]))
+     @log-interceptor-atom]))
 
 (defn- wrap-policy-deletion
   "When a trip is deleted, retract existing policies in the AR."

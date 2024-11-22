@@ -17,7 +17,7 @@
         nl.jomco/with-resources                             {:mvn/version "0.1.2"}
         org.babashka/http-client                            {:mvn/version "0.4.19"}
         org.babashka/json                                   {:mvn/version "0.1.6"}
-        org.bdinetwork/bdi-stack                            {:git/url "https://github.com/Basic-Data-Infrastructure/bdi-stack" :git/sha "c7b468df775a61bc71ec0075371e90de56c34787"}
+        org.bdinetwork/clj-ring-middleware                  {:mvn/version "1.0.0"}
         org.clojure/data.json                               {:mvn/version "2.5.0"}
         org.clojure/tools.logging                           {:mvn/version "1.3.0"}
         ring-basic-authentication/ring-basic-authentication {:mvn/version "1.2.0"}
