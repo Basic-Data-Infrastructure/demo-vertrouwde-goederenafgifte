@@ -8,16 +8,13 @@
 @startuml
 rectangle "BDI Network" {
         rectangle "Assocation Registry" as asr
+        rectangle "WMS"
+        rectangle "TMS"
+        rectangle "ERP"
 }
 
 rectangle "Poort8 Network" {
         rectangle "Authorization Registry" as ar1
-}
-
-rectangle "Jomco Network" {
-        rectangle "WMS"
-        rectangle "TMS"
-        rectangle "ERP"
 }
 
 rectangle "iSHARE Network" {
@@ -30,6 +27,6 @@ WMS ---> ar2
 TMS ---> asr
 ERP ---> ar2
 TMS ---> ar1
-ar1 -> asr
-ar2 -> asr
+ar1 --> asr
+ar2 --> asr
 @enduml
