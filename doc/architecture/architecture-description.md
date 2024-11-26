@@ -8,10 +8,12 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 
 ---
-title: Architectuuromschrijving Vertrouwde Goederenuitgifte Demo
+title: DIL 20241126 Architectuuromschrijving Vertrouwde Goederenuitgifte Demo
 author: Joost Diepenmaat <joost@jomco.nl>
 language: nl
 ---
+
+Versie 2024-11-26: deployment diagram bijgewerkt tot huidige situatie.
 
 Dit document beschrijft de software architectuur van de "Vertrouwde
 Goederenuitgifte Demo". Functioneel toont deze demo een autorisatie

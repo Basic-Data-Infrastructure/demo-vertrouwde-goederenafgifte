@@ -120,7 +120,7 @@
       <path fill="none" d="M839.125 996.7018 C831.7455 1024.2764 600.5215 1024.2764 593.1421 996.7018" clip-path="url(#clipPath2)"/>
     </g>
     <g stroke-linecap="butt" font-size="20px" transform="matrix(1,0,0,1,-132,-394)" fill="white" text-rendering="geometricPrecision" font-family="sans-serif" shape-rendering="geometricPrecision" stroke="white" font-weight="bold" stroke-miterlimit="1.45">
-      <text x="640.3914" xml:space="preserve" y="1023.4631" clip-path="url(#clipPath2)" stroke="none">Authentication</text>
+      <text x="645.3523" xml:space="preserve" y="1023.4631" clip-path="url(#clipPath2)" stroke="none">Authorization</text>
       <text x="673.4431" xml:space="preserve" y="1047.0178" clip-path="url(#clipPath2)" stroke="none">Registry</text>
     </g>
     <g stroke-linecap="butt" transform="matrix(1,0,0,1,-132,-394)" fill="rgb(153,153,153)" text-rendering="geometricPrecision" shape-rendering="geometricPrecision" stroke-dasharray="12,4" stroke="rgb(153,153,153)" stroke-width="2" stroke-miterlimit="1.45">
