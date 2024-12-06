@@ -428,6 +428,10 @@ table.list.transport-orders :is(th, td):is(.ref, .goods, .load-date, .status) {
 td .actions-wrapper {
     display: flex;
 }
+td .actions-wrapper > :is(button, .button, .form-button) {
+    display: block;
+    flex: 1;
+}
 table.list :is(button, .button) {
     line-height: 1.5rem;
     border-radius: .25rem;
@@ -607,20 +611,20 @@ div.actions:last-child {
 button, .button, a.button {
     position: relative;
     display: inline-block;
-    margin: 0 .5rem 0 0;
+    margin: 0;
     padding: 0 1rem;
 
     color: var(--color-black);
     background: var(--color-white);
     outline: none;
-    text-decoration: none;
     box-sizing: border-box;
     user-select: none;
     border: solid 1px var(--color-button-border);
     border-radius: .5em;
     cursor: pointer;
 
-    text-align: center;
+    text-decoration: none;
+    text-align: left;
     text-wrap-mode: nowrap;
     font-size: .9rem;
     font-weight: 500;
@@ -641,7 +645,10 @@ button, .button, a.button {
     border-color: var(--color-button-danger-border);
     color: var(--color-button-danger-text);
 }
-button:last-child, .button:last-child {
+button, .button, a.button, .form-button {
+    margin-right: .5rem;
+}
+button:last-child, .button:last-child, .form-button:last-child {
     margin-right: 0;
 }
 

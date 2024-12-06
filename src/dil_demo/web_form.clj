@@ -87,7 +87,7 @@
 
 (defn delete-button
   [path & {:keys [label] :or {label (t "button/delete")} :as attrs}]
-  (form nil (merge {:method "POST", :action path, :class "delete-button"}
+  (form nil (merge {:method "POST", :action path, :class "form-button"}
                    (:form attrs))
     [:input {:type "hidden", :name "_method", :value "DELETE"}]
     [:button.delete.danger (merge {:onclick (confirm-js)}
@@ -97,7 +97,7 @@
 (defn post-button
   [path {:keys [label] :as attrs}]
   {:pre [path label]}
-  (form nil (merge {:method "POST", :action path}
+  (form nil (merge {:method "POST", :action path, :class "form-button"}
                    (:form attrs))
     [:button (:button attrs) label]))
 
