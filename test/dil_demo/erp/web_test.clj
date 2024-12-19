@@ -70,16 +70,10 @@
 
   (testing "DELETE /consignment-31415"
     (let [{:keys          [status]
-           store-commands :store/commands
-           event-commands :event/commands}
+           store-commands :store/commands}
           (do-request :delete "/consignment-31415")]
       (is (= http-status/see-other status))
-      (is (= [:delete! :consignments] (->> store-commands first (take 2))))
-      (is (= [[:unsubscribe! {:topic       "31415"
-                              :owner-eori  "EU.EORI.TEST"
-                              :user-number 1
-                              :site-id     :erp}]]
-             event-commands))))
+      (is (= [:delete! :consignments] (->> store-commands first (take 2))))))
 
   (testing "GET /publish-31415"
     (let [{:keys [status headers body]} (do-request :get "/publish-31415")]

@@ -353,6 +353,23 @@
                         [:put! :pulses (assoc pulse :id messageId)])
                 (f))))))))
 
+(defn wrap-auto-unsubscribe
+  "Automatically unsubscribe from topic when deleted."
+  [app resource ->subscription {:keys [site-id]}]
+  (fn auto-unsubscribe-wrapper [{:keys [store user-number] :as req}]
+    (let [res     (app req)
+          deleted (->> (:store/commands res)
+                       (filter #(= [:delete! resource] (take 2 %)))
+                       (map #(get-in store [resource (nth % 2)])))]
+      (cond-> res
+        (seq deleted)
+        (update :event/commands concat
+                (map #(vector :unsubscribe!
+                              (->subscription % user-number site-id))
+                     deleted))))))
+
+
+
 (defn make-site-handler
   [site-id config handler]
   (let [config (->site-config config site-id)]
@@ -360,6 +377,7 @@
           (when (= site-id (:site-id req))
             (handler req)))
         (wrap-fetch-and-store-event config)
+        (store/wrap-truncate :pulses config)
         (store/wrap config)
         (wrap-exec-commands config))))
 

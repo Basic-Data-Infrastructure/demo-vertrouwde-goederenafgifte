@@ -11,6 +11,7 @@
             [dil-demo.i18n :refer [t]]
             [dil-demo.master-data :as d]
             [dil-demo.otm :as otm]
+            [dil-demo.store :as store]
             [dil-demo.web-form :as f]
             [dil-demo.web-utils :as w]
             [ring.util.response :refer [redirect]]))
@@ -211,7 +212,7 @@
 
 
 (defn get-trips [store]
-  (->> store :trips vals (sort-by :ref) (reverse)))
+  (->> store :trips vals (store/sort-resources :trips)))
 
 (defn get-trip [store id]
   (get-in store [:trips id]))
@@ -278,17 +279,14 @@
                    :chauffeur true
                    :html-class "details"))))
 
-     (DELETE "/trip-:id" {:keys        [store user-number]
+     (DELETE "/trip-:id" {:keys        [store]
                           {:keys [id]} :params}
        (when-let [trip (get-trip store id)]
          (-> "deleted"
              (redirect :see-other)
              (assoc :flash {:success (t "tms/flash/delete-success")
                             :trip    trip}
-                    :store/commands [[:delete! :trips id]]
-                    :event/commands [[:unsubscribe! (trip->subscription trip
-                                                                        user-number
-                                                                        site-id)]]))))
+                    :store/commands [[:delete! :trips id]]))))
 
      (GET "/deleted" {:keys [flash], {:keys [trip]} :flash}
        (render (t "tms/title/deleted")

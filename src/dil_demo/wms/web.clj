@@ -11,6 +11,7 @@
             [compojure.core :refer [DELETE GET POST routes]]
             [dil-demo.i18n :refer [t]]
             [dil-demo.otm :as otm]
+            [dil-demo.store :as store]
             [dil-demo.web-form :as f]
             [dil-demo.web-utils :as w]
             [dil-demo.wms.events :as wms.events]
@@ -177,7 +178,7 @@
 
 
 (defn get-transport-orders [store]
-  (->> store :transport-orders vals (sort-by :ref) (reverse)))
+  (->> store :transport-orders vals (store/sort-resources :transport-orders)))
 
 (defn get-transport-order [store id]
   (get-in store [:transport-orders id]))

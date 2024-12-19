@@ -6,7 +6,9 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.wms
-  (:require [dil-demo.wms.web :as wms.web]))
+  (:require [dil-demo.store :as store]
+            [dil-demo.wms.web :as wms.web]))
 
 (defn make-web-handler [config]
-  (wms.web/make-handler config))
+  (-> (wms.web/make-handler config)
+      (store/wrap-truncate :transport-orders config)))

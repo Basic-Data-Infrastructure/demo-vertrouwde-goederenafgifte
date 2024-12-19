@@ -12,6 +12,7 @@
             [compojure.core :refer [GET routes routing]]
             [dil-demo.http-utils :as http-utils]
             [dil-demo.i18n :refer [t]]
+            [dil-demo.store :as store]
             [dil-demo.web-utils :as w]
             [nl.jomco.http-status-codes :as http-status]
             [org.bdinetwork.ishare.client :as ishare-client]
@@ -67,13 +68,17 @@
 
 
 
+(defmethod store/sort-resources :pulses
+  [_ coll]
+  (->> coll (sort-by :publishTime) (reverse)))
+
 (defn- list-pulses [pulses]
   [:main
    (when-not (seq pulses)
      [:article.empty
       [:p (t "empty")]])
    (for [{:keys [id publishTime payload subscription]}
-         (->> pulses vals (sort-by :publishTime) reverse)]
+         (->> pulses vals (store/sort-resources :pulses))]
      [:article
       [:header
        [:div.status publishTime]

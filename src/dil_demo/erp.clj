@@ -8,8 +8,10 @@
 (ns dil-demo.erp
   (:require [clojure.tools.logging :as log]
             [dil-demo.erp.web :as erp.web]
+            [dil-demo.events :as events]
             [dil-demo.i18n :refer [t]]
             [dil-demo.ishare.policies :as policies]
+            [dil-demo.store :as store]
             [dil-demo.web-utils :as w]
             [org.bdinetwork.ishare.client :as ishare-client]
             [org.bdinetwork.ishare.client.interceptors :refer [log-interceptor-atom]]))
@@ -48,6 +50,7 @@
     [{:keys [store] :as req}]
 
     (let [{:store/keys [commands] :as res} (app req)]
+      ;; TODO do not try to delete policies of draft consignments (they do not have them)
       (if-let [id (-> (filter #(= [:delete! :consignments] (take 2 %))
                               commands)
                       (first)
@@ -87,5 +90,9 @@
 
 (defn make-web-handler [config]
   (-> (erp.web/make-handler config)
+      (store/wrap-truncate :consignments config)
+      (events/wrap-auto-unsubscribe :consignments
+                                    erp.web/consignment->subscription
+                                    config)
       (wrap-policy-deletion config)
       (wrap-delegation config)))
