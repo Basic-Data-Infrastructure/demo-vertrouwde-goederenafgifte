@@ -57,9 +57,7 @@
               [result log]
               ;; kinda hackish way to delete a policy from a iSHARE AR
               (ishare-ar-create-policy! client-data "Deny" old-consignment)]
-          (cond->
-              (w/append-explanation res [(t "explanation/ishare/delete-policy") {:ishare-log log}])
-
+          (cond-> (w/append-explanation res [(t "explanation/ishare/delete-policy") {:ishare-log log}])
             (not result)
             (assoc-in [:flash :error] (t "error/delete-policy-failed"))))
 
@@ -85,7 +83,40 @@
             (assoc-in [:flash :error] (t "error/create-policy-failed"))))
         res))))
 
+;; TODO need auto authorized-and-subscribe too?
+(defn wrap-auto-unsubscribe
+  "Automatically unsubscribe from order topic when deleted."
+  [app {:keys [site-id]}]
+  (fn auto-unsubscribe-wrapper [{:keys [store user-number] :as req}]
+    (let [res                  (app req)
+          deleted-consignments (->> (:store/commands res)
+                                    (filter #(= [:delete! :consignments] (take 2 %)))
+                                    (map #(erp.web/get-consignment store (nth % 2))))]
+      (cond-> res
+        (seq deleted-consignments)
+        (update :event/commands concat
+                (map #(vector :unsubscribe!
+                              (erp.web/consignment->subscription % user-number site-id))
+                     deleted-consignments))))))
+
+(defn wrap-truncate-consignments
+  "Automatically delete consignments when number in store is about `max-orders`."
+  [app {:keys [max-orders]}]
+  (fn truncate-consignments-wrapper [req]
+    (let [consignments    (-> req :store :consignments)
+          delete-commands (when (> (count consignments) max-orders)
+                                (->> consignments
+                                     (sort-by :ref)
+                                     (reverse)
+                                     (drop max-orders)
+                                     (map #(vector :delete! :consignments (first %)))))]
+      (cond-> (app req)
+        (seq delete-commands)
+        (update :store/commands concat delete-commands)))))
+
 (defn make-web-handler [config]
   (-> (erp.web/make-handler config)
+      (wrap-truncate-consignments config)
+      (wrap-auto-unsubscribe config)
       (wrap-policy-deletion config)
       (wrap-delegation config)))

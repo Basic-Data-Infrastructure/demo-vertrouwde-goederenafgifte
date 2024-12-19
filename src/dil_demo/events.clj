@@ -223,7 +223,7 @@
   (when-let [websocket (get @websockets-atom subscription)]
     (try
       (let [ws @websocket]
-        (log/debug "Closing websocket" ws)
+        (log/info "Closing websocket" ws)
         (ws/close! ws))
       (catch Throwable e
         (log/debug "Close websocket for" subscription "failed;" e)))

@@ -54,11 +54,12 @@
    "PULSAR_TOKEN_ENDPOINT" ["PULSAR Token Base-Url" :str :in [:pulsar :token-endpoint]]
    "PULSAR_SERVER_ID"      ["PULSAR Token Server ID" :str :in [:pulsar :token-server-id]]
    "PULSAR_URL"            ["PULSAR websocker URL" :str :in [:pulsar :url]]
-   "PULSAR_DISABLED"       ["Disable events" :boolean :default false :in [:pulsar :disabled]]})
+   "PULSAR_DISABLED"       ["Disable events" :boolean :default false :in [:pulsar :disabled]]
+   "MAX_ORDERS"            ["Maximum number of orders to retain per demo" :int :default 7]})
 
 (defn- process-config
   [config]
-  (let [shared (select-keys config [:dataspace-id :satellite-id :satellite-base-url])]
+  (let [shared (select-keys config [:dataspace-id :satellite-id :satellite-base-url :max-orders])]
     (-> config
         (update :erp merge shared)
         (update :wms merge shared)

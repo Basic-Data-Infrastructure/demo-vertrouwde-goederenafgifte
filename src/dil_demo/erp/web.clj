@@ -223,7 +223,7 @@
    :user-number user-number
    :site-id     site-id})
 
-(defn make-handler [{:keys [eori site-id site-name]}]
+(defn make-handler [{:keys [eori site-id site-name max-orders]}]
   {:pre [(keyword? site-id) site-name]}
   (let [slug     (name site-id)
         render   (fn render [title main flash & {:keys [slug-postfix html-class]}]
@@ -240,7 +240,8 @@
     (routes
      (GET "/" {:keys [flash master-data store]}
        (render (t "erp/title/list")
-               (list-consignments (get-consignments store) master-data)
+               ;; take only max-orders because we may be overflowing at the moment
+               (list-consignments (take max-orders (get-consignments store)) master-data)
                flash
                :html-class "list"))
 
@@ -280,18 +281,14 @@
              (assoc :flash {:success (t "erp/flash/update-success" {:ref ref})})
              (assoc :store/commands [[:put! :consignments consignment]]))))
 
-     (DELETE "/consignment-:id" {:keys        [store user-number]
+     (DELETE "/consignment-:id" {:keys        [store]
                                  {:keys [id]} :params}
        (when-let [consignment (get-consignment store id)]
          (-> "deleted"
              (redirect :see-other)
              (assoc :flash {:success     (t "erp/flash/delete-success" consignment)
                             :consignment consignment}
-                    :store/commands [[:delete! :consignments id]]
-                    :event/commands [[:unsubscribe!
-                                      (consignment->subscription consignment
-                                                                 user-number
-                                                                 site-id)]]))))
+                    :store/commands [[:delete! :consignments id]]))))
 
      (GET "/deleted" {:keys [flash], {:keys [consignment]} :flash}
        (render (t "erp/title/deleted")
