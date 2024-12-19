@@ -7,8 +7,10 @@
 
 (ns dil-demo.tms
   (:require [clojure.tools.logging.readable :as log]
+            [dil-demo.events :as events]
             [dil-demo.i18n :refer [t]]
             [dil-demo.ishare.policies :as policies]
+            [dil-demo.store :as store]
             [dil-demo.tms.web :as tms.web]
             [dil-demo.web-utils :as w]
             [org.bdinetwork.ishare.client :as ishare-client]
@@ -147,4 +149,9 @@
 
 (defn make-web-handler [config]
   (-> (tms.web/make-handler config)
+      (store/wrap-truncate :trips config)
+      (events/wrap-auto-unsubscribe :trips
+                                    tms.web/trip->subscription
+                                    config)
+
       (wrap-delegation config)))

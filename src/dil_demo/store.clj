@@ -43,6 +43,8 @@
   [store user-number own-eori [_cmd table-key id]]
   (swap! store update-in [user-number own-eori table-key] dissoc id))
 
+
+
 (defn load-store [filename]
   (let [file (io/file filename)]
     (if (.exists file)
@@ -69,6 +71,34 @@
       (commit store user-number eori cmd)))
   res)
 
+
+
+(defmulti sort-resources (fn [resource _coll] resource))
+
+(defmethod sort-resources :default
+  [_ coll]
+  (->> coll (sort-by :ref) (reverse)))
+
+(defn wrap-truncate
+  "Automatically delete store items when number in store is above `max-orders`."
+  [app resource {:keys [max-orders]}]
+  (fn truncate-wrapper [{:keys [store] :as req}]
+    (let [ ;; truncate
+          req (update-in req [:store resource]
+                         #(->> %
+                               (sort-resources resource)
+                               (take max-orders)
+                               (into {})))
+
+          ;; issue delete commands for remaining
+          delete-commands (map #(vector :delete! resource (first %))
+                               (->> (get store resource)
+                                    (sort-resources resource)
+                                    (drop max-orders)))]
+      (cond-> (app req)
+        (seq delete-commands)
+        (update :store/commands concat delete-commands)))))
+
 (defn wrap
   "Ring middleware providing storage.
 
@@ -82,6 +112,8 @@
     (process-store req
                    (app (assoc-store req config))
                    config)))
+
+
 
 (defn make-store
   "Return store atom loaded from `file` (EDN format).

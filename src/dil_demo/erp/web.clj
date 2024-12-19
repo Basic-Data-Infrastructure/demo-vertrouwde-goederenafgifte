@@ -11,6 +11,7 @@
             [dil-demo.i18n :refer [t]]
             [dil-demo.master-data :as d]
             [dil-demo.otm :as otm]
+            [dil-demo.store :as store]
             [dil-demo.web-form :as f]
             [dil-demo.web-utils :as w]
             [ring.util.response :refer [redirect]])
@@ -180,7 +181,7 @@
 
 
 (defn get-consignments [store]
-  (->> store :consignments vals (sort-by :ref) (reverse)))
+  (->> store :consignments vals (store/sort-resources :consignments)))
 
 (defn get-consignment [store id]
   (get-in store [:consignments id]))
@@ -280,18 +281,14 @@
              (assoc :flash {:success (t "erp/flash/update-success" {:ref ref})})
              (assoc :store/commands [[:put! :consignments consignment]]))))
 
-     (DELETE "/consignment-:id" {:keys        [store user-number]
+     (DELETE "/consignment-:id" {:keys        [store]
                                  {:keys [id]} :params}
        (when-let [consignment (get-consignment store id)]
          (-> "deleted"
              (redirect :see-other)
              (assoc :flash {:success     (t "erp/flash/delete-success" consignment)
                             :consignment consignment}
-                    :store/commands [[:delete! :consignments id]]
-                    :event/commands [[:unsubscribe!
-                                      (consignment->subscription consignment
-                                                                 user-number
-                                                                 site-id)]]))))
+                    :store/commands [[:delete! :consignments id]]))))
 
      (GET "/deleted" {:keys [flash], {:keys [consignment]} :flash}
        (render (t "erp/title/deleted")

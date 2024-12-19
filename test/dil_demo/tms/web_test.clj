@@ -42,15 +42,9 @@
 
   (testing "DELETE /trip-31415"
     (let [{:keys          [status]
-           store-commands :store/commands
-           event-commands :event/commands} (do-request :delete "/trip-31415")]
+           store-commands :store/commands} (do-request :delete "/trip-31415")]
       (is (= http-status/see-other status))
-      (is (= [[:delete! :trips "31415"]] store-commands))
-      (is (= [[:unsubscribe! {:topic       "31415",
-                              :owner-eori  "EU.EORI.OWNER"
-                              :user-number 1
-                              :site-id     :tms}]]
-             event-commands))))
+      (is (= [[:delete! :trips "31415"]] store-commands))))
 
   (testing "GET /assign-not-found"
     (is (nil? (do-request :get "/assign-not-found"))))
