@@ -31,3 +31,6 @@
 
 (defn start! []
   (defresource system (core/run-system (config/->config env))))
+
+(System/setProperty "org.slf4j.simpleLogger.log.dil-demo" "debug")
+(System/setProperty "org.slf4j.simpleLogger.log.org.bdinetwork" "debug")

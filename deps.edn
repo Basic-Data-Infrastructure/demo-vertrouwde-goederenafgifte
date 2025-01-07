@@ -25,22 +25,24 @@
         ring/ring-defaults                                  {:mvn/version "0.5.0"}
         ring/ring-devel                                     {:mvn/version "1.13.0"}
         ring/ring-jetty-adapter                             {:mvn/version "1.13.0"}
-        ring/ring-json                                      {:mvn/version "0.5.1"}
+        ring/ring-json                                      {:mvn/version "0.5.1"}}
 
-        ;; for tests
-        org.clojure/core.async {:mvn/version "1.6.681"}
-        ring/ring-mock         {:mvn/version "0.4.0"}
-
-        ;; for uberjar
-        org.clojure/clojure {:mvn/version "1.11.3"}}
-
- :paths ["src" "resources" "dev" "classes" "test"]
+ :paths ["src" "resources" "classes"]
 
  :aliases
- {:test    {:extra-deps {lambdaisland/kaocha {:mvn/version "RELEASE"}}
-            :main-opts  ["-m" "kaocha.runner"]}
-  :lint    {:extra-deps {clj-kondo/clj-kondo {:mvn/version "RELEASE"}}
-            :main-opts  ["-m" "clj-kondo.main" "--lint" "src" "test"]}
-  :uberjar {:replace-deps  {uberdeps/uberdeps {:mvn/version "1.3.0"}}
+ {:dev {:extra-path ["dev"]}
+
+  :test {:extra-deps  {lambdaisland/kaocha    {:mvn/version "RELEASE"}
+                       org.clojure/core.async {:mvn/version "RELEASE"}
+                       ring/ring-mock         {:mvn/version "RELEASE"}}
+         :extra-paths ["test"]
+         :main-opts   ["-m" "kaocha.runner"]}
+
+  :lint {:extra-deps    {clj-kondo/clj-kondo {:mvn/version "RELEASE"}}
+         :replace-paths []
+         :main-opts     ["-m" "clj-kondo.main" "--lint" "src" "test"]}
+
+  :uberjar {:replace-deps  {uberdeps/uberdeps   {:mvn/version "RELEASE"}
+                            org.clojure/clojure {:mvn/version "RELEASE"}}
             :replace-paths []
             :main-opts     ["-m" "uberdeps.uberjar"]}}}
