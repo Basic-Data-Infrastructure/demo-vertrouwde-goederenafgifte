@@ -1,5 +1,5 @@
-# SPDX-FileCopyrightText: 2024 Jomco B.V.
-# SPDX-FileCopyrightText: 2024 Topsector Logistiek
+# SPDX-FileCopyrightText: 2024, 2025 Jomco B.V.
+# SPDX-FileCopyrightText: 2024, 2025 Topsector Logistiek
 # SPDX-FileContributor: Joost Diepenmaat <joost@jomco.nl>
 # SPDX-FileContributor: Remco van 't Veer <remco@jomco.nl>
 #
@@ -25,6 +25,8 @@ nl:
   nav/wms/contacts: "Contacten"
   nav/tms/contacts: "Chauffeurs"
   nav/pulses: "Notificaties"
+  nav/pms/list: "Aanvragen"
+  nav/pms/contacts: ".."
   dummy-link: "Niet geïmplementeerd"
 
   see-also: "Zie ook:"
@@ -38,6 +40,7 @@ nl:
   button/edit: "Aanpassen"
   button/list: "Terug naar overzicht"
   button/save: "Opslaan"
+  button/request: "Aanvragen"
 
   tooltip/edit: "Eigenschappen aanpassen"
 
@@ -55,13 +58,18 @@ nl:
   label/unload-location: "Afleveradres"
   label/unload-remarks: "Opmerkingen"
   label/goods: "Goederen"
+  label/container-nr: "Container nummer"
   label/carrier: "Vervoerder"
   label/carrier-eories: "Vervoerder EORI's"
   label/driver-id-digits: "Rijbewijs"
   label/license-plate: "Kenteken"
   label/carrier-data: "Vervoerder informatie"
+  label/equipment: "Container nummer"
+  label/location-short-name: "Terminal"
+  label/port-visit-reference: "Havenbezoek referentie"
 
   placeholder/remarks: "Heeft u opmerkingen?"
+  placeholder/container-nr: "Bijv. BICU123457"
 
   hint/goods: "Selecteer de goederen"
   hint/carrier: "Selecteer een vervoerder"
@@ -74,6 +82,9 @@ nl:
   status/cancelled: "Geannuleerd"
   status/assigned: "Toegewezen"
   status/outsourced: "Uitbesteed"
+  status/TODO-GTIN: "Gate In"
+  status/TODO-LOAD: "Geladen"
+  status/TODO-DEPA: "Vertrokken"
 
   erp/button/new: "Nieuwe order aanmaken"
   erp/button/publish: "Verzenden"
@@ -145,6 +156,16 @@ nl:
   wms/explanation/verify-tms-outsource: "Verifieer uitbesteding bij vervoerder"
   wms/explanation/error: "Technische fout opgetreden: %{error}"
 
+  pms/title/list: "Events aanvragen in portbase"
+  pms/list/description: "Verzoek een van de volgende events na te bootsen."
+  pms/title/equipment-gate-in: "Gate-in"
+  pms/title/equipment-loaded: "Geladen"
+  pms/title/transport-departed: "Vertrokken"
+  pms/title/event-requested: "Event aangevraagd"
+  pms/flash/equipment-gate-in-success: "Gate-in event aangevraagd"
+  pms/flash/equipment-loaded-success: "Geladen event aangevraagd"
+  pms/flash/transport-departed-success: "Vertrokken event aangevraagd"
+
   policy-rejection-reason/no-permit: "Geen toepasbare regels gevonden: %{rules}"
   policy-rejection-reason/not-before: "Mag niet voor %{tstamp}"
   policy-rejection-reason/not-on-or-after: "Mag niet op of na %{tstamp}"
@@ -178,6 +199,7 @@ nl:
   explanation/tms/outsource: "Stuur OTM Trip naar TMS van andere vervoerder"
   explanation/remove-policy-for-trip: "Verwijder policy voor trip"
   explanation/add-policy-for-trip: "Toevoegen policy voor trip"
+  explanation/request-portbase-event: "Aanvraag portbase event"
 
   error/create-policy-failed: "Aanmaken AR policy mislukt"
   error/delete-policy-failed: "Verwijderen AR policy mislukt"
@@ -204,6 +226,8 @@ en:
   nav/wms/contacts: "Contacts"
   nav/tms/contacts: "Drivers"
   nav/pulses: "Notifications"
+  nav/pms/list: "Request"
+  nav/pms/contacts: ".."
   dummy-link: "Not implemented"
 
   see-also: "See also:"
@@ -217,6 +241,7 @@ en:
   button/edit: "Edit"
   button/list: "Back to overview"
   button/save: "Save"
+  button/request: "Request"
 
   tooltip/edit: "Adjust properties"
 
@@ -234,13 +259,18 @@ en:
   label/unload-location: "Delivery address"
   label/unload-remarks: "Remarks"
   label/goods: "Goods"
+  label/container-nr: "Container number"
   label/carrier: "Carrier"
   label/carrier-eories: "Carrier EORI's"
   label/driver-id-digits: "Driver ID digits"
   label/license-plate: "Vehicle License Plate"
   label/carrier-data: "Carrier information"
+  label/equipment: "Container number"
+  label/location-short-name: "Terminal"
+  label/port-visit-reference: "Port visit reference"
 
   placeholder/remarks: "Do you have any remarks?"
+  placeholder/container-nr: "Ex. BICU123457"
 
   hint/goods: "Select goods"
   hint/carrier: "Select a carrier"
@@ -253,6 +283,9 @@ en:
   status/cancelled: "Cancelled"
   status/assigned: "Assigned"
   status/outsourced: "Outsourced"
+  status/TODO-GTIN: "Gate In"
+  status/TODO-LOAD: "Loaded"
+  status/TODO-DEPA: "Departed"
 
   erp/button/new: "Create new order"
   erp/button/publish: "Submit"
@@ -324,6 +357,16 @@ en:
   wms/explanation/verify-tms-outsource: "Verify outsourcing with carrier"
   wms/explanation/error: "Technical error occurred: %{error}"
 
+  pms/title/list: "Request events in portbase"
+  pms/list/description: "Request one of the following events to be simulated."
+  pms/title/equipment-gate-in: "Gate-in"
+  pms/title/equipment-loaded: "Loaded"
+  pms/title/transport-departed: "Departed"
+  pms/title/event-requested: "Event requested"
+  pms/flash/equipment-gate-in-success: "Gate-in event requested"
+  pms/flash/equipment-loaded-success: "Geladen event requested"
+  pms/flash/transport-departed-success: "Vertrokken event requested"
+
   policy-rejection-reason/no-permit: "No applicable rules found: %{rules}"
   policy-rejection-reason/not-before: "Not allowed before %{tstamp}"
   policy-rejection-reason/not-on-or-after: "Not allowed on or after %{tstamp}"
@@ -357,6 +400,7 @@ en:
   explanation/tms/outsource: "Send OTM Trip to other carrier's TMS"
   explanation/remove-policy-for-trip: "Remove policy for trip"
   explanation/add-policy-for-trip: "Add policy for trip"
+  explanation/request-portbase-event: "Request portbase event"
 
   error/create-policy-failed: "Failed to create AR policy"
   error/delete-policy-failed: "Failed to delete AR policy"

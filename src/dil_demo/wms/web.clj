@@ -192,7 +192,7 @@
    :user-number user-number
    :site-id     site-id})
 
-(defn make-handler [{:keys [site-id site-name client-data]}]
+(defn make-handler [{:keys [site-id site-name client-data base-url]}]
   (let [slug   (name site-id)
         render (fn render [title main flash & {:keys [slug-postfix html-class]}]
                  (w/render (str slug slug-postfix)
@@ -252,7 +252,10 @@
                                  :as          req}
        (when-let [{:keys [ref] :as transport-order} (get-transport-order store id)]
          (let [event-id  (str (UUID/randomUUID))
-               event-url (wms.events/url-for (assoc req :site-id site-id) event-id)
+               event-url (wms.events/url-for (assoc req
+                                                    :site-id site-id
+                                                    :base-url base-url)
+                                             event-id)
                targets   (wms.events/transport-order-gate-out-targets transport-order)
                tstamp    (Instant/now)
                body      (wms.events/transport-order-gate-out-body transport-order

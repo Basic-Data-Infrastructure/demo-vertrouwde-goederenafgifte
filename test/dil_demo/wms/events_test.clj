@@ -28,15 +28,14 @@
 (def ^:dynamic *client-id* nil)
 
 (defn do-request [method path]
-  (-> (request method path)
-      (assoc
-       :store store
-       :user-number 1
-       :site-id :wms
-       :context "/base/uri"
-       :client-id *client-id*
-       :eori eori)
-      (sut/handler)))
+  ((sut/make-route eori)
+   (-> (request method path)
+       (assoc
+        :store store
+        :user-number 1
+        :site-id :wms
+        :context "/base/uri"
+        :client-id *client-id*))))
 
 (deftest handler
   (testing "GET /"

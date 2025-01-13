@@ -53,7 +53,7 @@
                 res   (-> req
                           (assoc :throw false)
                           (http/request)
-                          ;; get flash/explaination from earlier request
+                          ;; get flash/explanation from earlier request
                           (assoc :flash (get res :flash))
                           ;; remove request added by http client
                           (dissoc :request))]

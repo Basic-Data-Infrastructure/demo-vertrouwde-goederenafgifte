@@ -103,7 +103,12 @@
 
      [:fieldset.secondary
       [:legend (t "label/goods")]
-      (f/text :goods {:label (t "hint/goods"), :list d/goods, :required true})]
+      (f/text :goods {:label (t "hint/goods"), :list d/goods, :required true})
+
+      ;; TODO implement https://en.wikipedia.org/wiki/ISO_6346
+      (f/text :container-nr {:label       (t "label/container-nr")
+                             :placeholder (t "placeholder/container-nr")})]
+
      [:fieldset.secondary
       [:legend (t "label/carrier")]
       (f/select [:carrier :eori]
@@ -236,7 +241,7 @@
                              :site-name site-name))
         params-> (fn params-> [params]
                    (-> params
-                       (select-keys [:id :status :ref :load :unload :goods :carrier])
+                       (select-keys [:id :status :ref :load :unload :goods :container-nr :carrier])
                        (assoc-in [:owner :eori] eori)))]
     (routes
      (GET "/" {:keys [flash master-data store]}
@@ -257,12 +262,15 @@
                :html-class "details"))
 
      (POST "/consignment-new" {:keys [params]}
-       (let [{:keys [ref] :as consignment}
+       (let [{:keys [ref container-nr] :as consignment}
              (-> params
                  (params->)
                  (assoc :id (str (UUID/randomUUID))))]
          (-> "."
              (redirect :see-other)
+             (cond-> container-nr
+               (update :connector/container-nr-order-refs (fnil conj [])
+                       [ref container-nr]))
              (assoc :flash {:success (t "erp/flash/create-success" {:ref ref})})
              (assoc :store/commands [[:put! :consignments consignment]]))))
 
@@ -275,9 +283,13 @@
                  :html-class "details")))
 
      (POST "/consignment-:id" {:keys [params]}
-       (let [{:keys [ref] :as consignment} (params-> params)]
+       (let [{:keys [ref container-nr] :as consignment} (params-> params)]
          (-> "."
              (redirect :see-other)
+             (cond-> container-nr
+               (update :connector/container-nr-order-refs (fnil conj [])
+                       [ref container-nr]))
+
              (assoc :flash {:success (t "erp/flash/update-success" {:ref ref})})
              (assoc :store/commands [[:put! :consignments consignment]]))))
 

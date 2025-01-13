@@ -1,5 +1,5 @@
-;;; SPDX-FileCopyrightText: 2024 Jomco B.V.
-;;; SPDX-FileCopyrightText: 2024 Topsector Logistiek
+;;; SPDX-FileCopyrightText: 2024, 2025 Jomco B.V.
+;;; SPDX-FileCopyrightText: 2024, 2025 Topsector Logistiek
 ;;; SPDX-FileContributor: Joost Diepenmaat <joost@jomco.nl>
 ;;; SPDX-FileContributor: Remco van 't Veer <remco@jomco.nl>
 ;;;
@@ -7,7 +7,9 @@
 
 (ns dil-demo.core
   (:gen-class)
-  (:require [dil-demo.config :refer [->config]]
+  (:require [clojure.core.match :refer [match]]
+            [dil-demo.config :as config]
+            [dil-demo.erp :as erp]
             [dil-demo.events :as events]
             [dil-demo.store :as store]
             [dil-demo.web :as web]
@@ -28,6 +30,13 @@
                                    :events events))
        _webserver (run-jetty webapp (-> config :jetty (assoc :join? false)))]))
 
-(defn -main []
-  (run-system (->config env))
-  (resources/wait-until-interrupted))
+(defn -main [& args]
+  (let [config (config/->config env)]
+    (match [args]
+      [(["erp" & r] :seq)]
+      (apply erp/cli (config/->site-config config :erp) r)
+
+      :else
+      (do
+        (run-system config)
+        (resources/wait-until-interrupted)))))

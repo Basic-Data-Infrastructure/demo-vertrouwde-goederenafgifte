@@ -6,11 +6,14 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.erp
-  (:require [clojure.tools.logging :as log]
+  (:require [clojure.core.match :refer [match]]
+            [clojure.tools.logging :as log]
+            [dil-demo.connector :as connector]
             [dil-demo.erp.web :as erp.web]
             [dil-demo.events :as events]
             [dil-demo.i18n :refer [t]]
             [dil-demo.ishare.policies :as policies]
+            [dil-demo.portbase :as portbase]
             [dil-demo.store :as store]
             [dil-demo.web-utils :as w]
             [org.bdinetwork.ishare.client :as ishare-client]
@@ -90,9 +93,68 @@
 
 (defn make-web-handler [config]
   (-> (erp.web/make-handler config)
+
       (store/wrap-truncate :consignments config)
       (events/wrap-auto-unsubscribe :consignments
                                     erp.web/consignment->subscription
                                     config)
+
       (wrap-policy-deletion config)
-      (wrap-delegation config)))
+      (wrap-delegation config)
+
+      (events/wrap-web config)
+      (store/wrap config)))
+
+(defn- get-consigment [store ref]
+  (as-> store $
+    (get $ :consignments)
+    (map val $)
+    (filter #(= ref (:ref %)) $)
+    (first $)))
+
+(defmulti handle-connector-event
+  (fn [_res _store [_order-ref event]]
+    (connector/event-type event)))
+
+(defmethod handle-connector-event  ["EQUIPMENT" "GTIN"]
+  [res store [order-ref _event]]
+  (if-let [consignment (get-consigment store order-ref)]
+    (update res :store/commands (fnil conj [])
+            [:put! :consignments (assoc consignment :status "TODO-GTIN")])
+    res))
+
+(defmethod handle-connector-event  ["EQUIPMENT" "LOAD"]
+  [res store [order-ref _event]]
+  (if-let [consignment (get-consigment store order-ref)]
+    (update res :store/commands (fnil conj [])
+            [:put! :consignments (assoc consignment :status "TODO-LOAD")])
+    res))
+
+(defmethod handle-connector-event  ["TRANSPORT" "DEPA"]
+  [res store [order-ref _event]]
+  (if-let [consignment (get-consigment store order-ref)]
+    (update res :store/commands (fnil conj [])
+            [:put! :consignments (assoc consignment :status "TODO-DEPA")])
+    res))
+
+(defn wrap-incoming-portbase-event [app]
+  (fn incoming-portbase-event-wrapper [{:keys [store] :as req}]
+    (let [{:keys [connector/events] :as res} (app req)]
+      (reduce (fn [res event]
+                (handle-connector-event res store event))
+              res
+              events))))
+
+
+
+(defn cli [{:keys [base-url portbase]} & args]
+  (match [args]
+    [(["portbase-subscribe" user-number] :seq)]
+    (prn (portbase/subscribe! (assoc portbase
+                                     :base-url base-url) user-number))
+
+    [(["portbase-unsubscribe" subscription-id] :seq)]
+    (prn (portbase/unsubscribe! portbase subscription-id))
+
+    [(["portbase-subscriptions"] :seq)]
+    (prn (portbase/get-subscriptions portbase))))

@@ -30,7 +30,11 @@
 
     ;; custom
     status-assigned
-    status-outsourced})
+    status-outsourced
+
+    "TODO-GTIN"
+    "TODO-LOAD"
+    "TODO-DEPA"})
 
 (def role-owner "owner")
 (def role-carrier "carrier")
@@ -51,14 +55,7 @@
 
 ;; internal representation specs
 
-(s/def ::status #{status-draft
-                  status-requested
-                  status-confirmed
-                  status-in-transit
-                  status-completed
-                  status-cancelled
-                  status-assigned
-                  status-outsourced})
+(s/def ::status statuses)
 
 (s/def ::eori
   #(re-matches #"..\.EORI\..*" %))

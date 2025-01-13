@@ -1,6 +1,6 @@
 <!--
-SPDX-FileCopyrightText: 2024 Jomco B.V.
-SPDX-FileCopyrightText: 2024 Topsector Logistiek
+SPDX-FileCopyrightText: 2024, 2025 Jomco B.V.
+SPDX-FileCopyrightText: 2024, 2025 Topsector Logistiek
 SPDX-FileContributor: Joost Diepenmaat <joost@jomco.nl>
 SPDX-FileContributor: Remco van 't Veer <remco@jomco.nl>
 
@@ -60,6 +60,7 @@ ERP:
 - `ERP_CHAIN_FILE`: the file to read the ERP certificate chain from
 - `ERP_AR_ID`: EORI of the ERP authorization register
 - `ERP_AR_ENDPOINT`: URL to the ERP authorization register
+- `ERP_PORTBASE_WEBHOOK_SECRET`: Portbase webhook secret part of URL (which is `BASE_URL + "/" + DEMO_NR + "/erp/event/" + ERP_PORTBASE_WEBHOOK_SECRET`)
 
 WMS:
 
@@ -85,6 +86,26 @@ TMS 2:
 - `TMS2_AR_ENDPOINT`: URL to the authorization register
 - `TMS1_AR_TYPE`: type of authorization register (ishare or poort8)
 
+PMS:
+
+- `PORTBASE_API_BASE_URL`: base URL to portbase event API
+- `PORTBASE_API_KEY`: API key for portbase event API
+
+### Register portbase webhook
+
+To register a webhook at portbase to handle incoming events for demo environment 1, run the following:
+
+```sh
+clojure -M -m dil-demo.core erp portbase-subscribe 1
+```
+
+Copy and store the returned `subscription-id` somewhere to unsubscribe later.
+
+Note: the web server should be accessible from the internet to make
+this work.
+
+### Run web server
+
 Run the web server with the following:
 
 ```sh
@@ -93,6 +114,17 @@ clojure -M -m dil-demo.core
 
 Point a web browser to [http://localhost:8080](http://localhost:8080)
 and login with user `demo1` with password `31415`.
+
+### Unregister portbase webhook
+
+To unregister a webhook at portbase, run the following (replace
+`SUBSCRIPTION-ID` with the ID recorded when registering the webhook:
+
+```sh
+clojure -M -m dil-demo.core erp portbase-unsubscribe SUBSCRIPTION-ID
+```
+
+Note: there's no need to keep registering and deregistering the webhook when the web server remains accessible at the same location and the webhook secret (`PORTBASE_WEBHOOK_SECRET`) is not changed.
 
 ## Deploy
 
@@ -133,8 +165,8 @@ Documentation on the architecture of this demo can be found at
 
 ## Copying
 
-Copyright (C) 2024 Jomco B.V.
+Copyright (C) 2024, 2025 Jomco B.V.
 
-Copyright (C) 2024 Topsector Logistiek
+Copyright (C) 2024, 2025 Topsector Logistiek
 
 [AGPL-3.0-or-later](LICENSES/AGPL-3.0-or-later.txt)

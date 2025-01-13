@@ -154,4 +154,7 @@
                                     tms.web/trip->subscription
                                     config)
 
-      (wrap-delegation config)))
+      (wrap-delegation config)
+
+      (events/wrap-web config)
+      (store/wrap config)))

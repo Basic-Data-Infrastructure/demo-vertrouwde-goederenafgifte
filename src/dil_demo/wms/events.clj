@@ -6,8 +6,9 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.wms.events
-  (:require [compojure.core :refer [GET]]
+  (:require [compojure.core :refer [routes GET]]
             [dil-demo.i18n :refer [t]]
+            [dil-demo.store :as store]
             [nl.jomco.http-status-codes :as http-status]
             [org.bdinetwork.ishare.jwt :as jwt]
             [org.bdinetwork.ring.authentication :as authentication]
@@ -16,25 +17,26 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.util.response :as response]))
 
-(def handler
-  (GET "/event/:id" {:keys [context client-id eori store]
-                     {:keys [id]} :params}
-    (if client-id
-      (if-let [{:keys [body content-type targets]} (get-in store [:events id])]
-        (if (contains? targets client-id)
-          (-> (response/response body)
-              (response/content-type content-type))
-          (response/status http-status/forbidden))
-        (response/not-found (t "events/no-found")))
-      (let [token-endpoint (str context "/connect/token")]
-        (-> "unauthorized"
-            (response/response)
-            (response/status http-status/unauthorized)
-            (response/header "WWW-Authenticate"
-                             (str "Bearer"
-                                  " scope=\"iSHARE\""
-                                  " server_eori=\"" eori "\""
-                                  " server_token_endpoint=\"" token-endpoint "\"")))))))
+(defn make-route [eori]
+  (routes
+   (GET "/event/:id" {:keys [context client-id store]
+                      {:keys [id]} :params}
+     (if client-id
+       (if-let [{:keys [body content-type targets]} (get-in store [:events id])]
+         (if (contains? targets client-id)
+           (-> (response/response body)
+               (response/content-type content-type))
+           (response/status http-status/forbidden))
+         (response/not-found (t "events/no-found")))
+       (let [token-endpoint (str context "/connect/token")]
+         (-> "unauthorized"
+             (response/response)
+             (response/status http-status/unauthorized)
+             (response/header "WWW-Authenticate"
+                              (str "Bearer"
+                                   " scope=\"iSHARE\""
+                                   " server_eori=\"" eori "\""
+                                   " server_token_endpoint=\"" token-endpoint "\""))))))))
 
 (defn url-for
   "URL to event in M2M part of this site."
@@ -62,10 +64,12 @@
     (fn association-wrapper [req]
       (app (assoc req :association association)))))
 
-(defn make-api-handler [{:keys                            [eori client-data]
-                         {:ishare/keys [private-key x5c]} :client-data}]
+(defn make-api-handler
+  [{:keys                            [eori client-data]
+    {:ishare/keys [private-key x5c]} :client-data
+    :as config}]
   (let [public-key (jwt/x5c->first-public-key x5c)]
-    (-> handler
+    (-> (make-route eori)
         (authentication/wrap-authentication {:server-id                eori
                                              :public-key               public-key
                                              :private-key              private-key
@@ -74,4 +78,6 @@
         ;; following middleware needed to maken wrap-authenication work
         (wrap-association client-data)
         (wrap-params)
-        (wrap-json-response))))
+        (wrap-json-response)
+
+        (store/wrap config))))

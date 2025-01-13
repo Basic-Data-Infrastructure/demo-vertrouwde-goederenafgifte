@@ -1,0 +1,40 @@
+{
+	"metadata": {
+		"eventID": "84db923d-2a19-4eb0-beb5-446c1ec57d34",
+		"eventCreatedDateTime": "2024-11-04T06:31:00+02:00",
+		"publisher": {
+			"partyName": "ECT EUROMAX TERMINAL (EMX)",
+			"partyCode": "NLRTMEMX",
+			"partyCodeListProvider": "SMDG"
+		},
+		"publisherRole": "TR",
+		"eventType": "EQUIPMENT"
+	},
+	"payload": {
+		"eventClassifierCode": "ACT",
+		"eventDateTime": "2024-11-04T07:41:00+08:30",
+		"equipmentEventTypeCode": "LOAD",
+		"equipmentReference": "APZU4812090",
+		"equipmentType": "CN",
+		"ISOEquipmentCode": "22GP",
+		"emptyIndicatorCode": "LADEN",
+		"transportCall": {
+			"location": {
+				"locationName": "ECT EUROMAX TERMINAL (EMX)",
+				"locationType": "FACI",
+				"UNLocationCode": "NLRTM",
+				"facilityCode": "EMX",
+				"facilityCodeListProvider": "SMDG"
+			},
+			"facilityTypeCode": "POTE",
+			"modeOfTransport": "VESSEL",
+			"portVisitReference": "NLRTM24000001",
+			"vessel": {
+				"vesselIMONumber": "9321483",
+				"name": "King of the Seas",
+				"flag": "NL",
+				"callSign": "NCVV"
+			}
+		}
+	}
+}

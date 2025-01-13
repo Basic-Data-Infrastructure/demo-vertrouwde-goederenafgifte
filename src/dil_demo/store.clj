@@ -29,6 +29,10 @@
 
 (defmulti commit (fn [_store _user-number _own-eori [cmd & _args]] cmd))
 
+(defmethod commit :assoc!
+  [store user-number own-eori [_cmd k v]]
+  (swap! store assoc-in [user-number own-eori k] v))
+
 (defmethod commit :put! ;; put data in own database
   [store user-number own-eori [_cmd table-key {:keys [id] :as value}]]
   (check! table-key value)
@@ -69,7 +73,7 @@
     (doseq [cmd commands]
       (log/debug "committing" cmd)
       (commit store user-number eori cmd)))
-  res)
+  (dissoc res :store/commands))
 
 
 

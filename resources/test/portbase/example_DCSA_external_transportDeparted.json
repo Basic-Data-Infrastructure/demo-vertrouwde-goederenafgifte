@@ -1,0 +1,35 @@
+{
+	"metadata": {
+		"eventID": "84db923d-2a19-4eb0-beb5-446c1ec57d34",
+		"eventCreatedDateTime": "2024-11-04T06:31:00+02:00",
+		"publisher": {
+			"partyName": "Havenbedrijf Rotterdam N.V."
+		},
+		"publisherRole": "ATH",
+		"eventType": "TRANSPORT"
+	},
+	"payload": {
+		"eventClassifierCode": "ACT",
+		"eventDateTime": "2024-11-04T07:41:00+08:30",
+		"transportEventTypeCode": "DEPA",
+		"transportCall": {
+			"location": {
+				"locationName": "Port of Rotterdam",
+				"locationType": "UNLO",
+				"UNLocationCode": "NLRTM"
+			},
+			"facilityTypeCode": "WAYP",
+			"modeOfTransport": "VESSEL",
+			"portVisitReference": "NLRTM24000001",
+			"carrierExportVoyageNumber": "VOY23456",
+			"vessel": {
+				"vesselIMONumber": "9321483",
+				"name": "King of the Seas",
+				"flag": "NL",
+				"callSign": "NCVV",
+				"operatorCarrierCode": "EIM",
+				"operatorCarrierCodeListProvider": "Eimskip"
+			}
+		}
+	}
+}

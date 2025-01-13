@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-.PHONY: all lint lint-license prep-lint-clj lint-clj lint-js test check clean test-certs
+.PHONY: all lint lint-license prep-lint-clj lint-clj lint-js test check clean test-certs jar
 
 all: clean check target/dil-demo.jar
 
@@ -25,6 +25,8 @@ classes/dil_demo/core.class: src/dil_demo/core.clj
 
 target/dil-demo.jar: classes/dil_demo/core.class
 	clojure -M:uberjar --main-class dil-demo.core --target $@
+
+jar: target/dil-demo.jar
 
 resources/test/pem/ca.cert.pem:
 	mkdir -p resources/test/pem
