@@ -29,9 +29,12 @@
 
 (defn not-found-handler [_]
   (-> (w/render-body "dil"
-                     [:main
-                      [:p (t "not-found")]
-                      [:a.button {:href "/"} (t "button/start-screen")]]
+                     [:div.app-container
+                      [:nav.app]
+                      [:div.app
+                       [:main.container
+                        [:p (t "not-found")]
+                        [:a.button {:href "/"} (t "button/start-screen")]]]]
                      :title (t "not-found/title")
                      :site-name "DIL-Demo"
                      :template-fn w/base-template)
