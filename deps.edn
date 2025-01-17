@@ -30,7 +30,7 @@
  :paths ["src" "resources" "classes"]
 
  :aliases
- {:dev {:extra-path ["dev"]}
+ {:dev {:extra-paths ["dev"]}
 
   :test {:extra-deps  {lambdaisland/kaocha    {:mvn/version "RELEASE"}
                        org.clojure/core.async {:mvn/version "RELEASE"}
