@@ -104,26 +104,30 @@
            ar-id ar-base-url ar-type
            satellite-id satellite-base-url]
     :as _site-config}]
-  (when eori
-    {:ishare/client-id                       eori
-     :ishare/dataspace-id                    dataspace-id
-     :ishare/satellite-id                    satellite-id
-     :ishare/satellite-base-url              satellite-base-url
-     :ishare/authorization-registry-id       ar-id
-     :ishare/authorization-registry-base-url ar-base-url
-     :ishare/authorization-registry-type     (keyword ar-type)
-     :ishare/private-key                     (ishare-client/private-key key-file)
-     :ishare/x5c                             (ishare-client/x5c chain-file)}))
+  {:pre [eori dataspace-id key-file chain-file
+         satellite-id satellite-base-url]}
+  {:ishare/client-id                       eori
+   :ishare/dataspace-id                    dataspace-id
+   :ishare/satellite-id                    satellite-id
+   :ishare/satellite-base-url              satellite-base-url
+   :ishare/authorization-registry-id       ar-id
+   :ishare/authorization-registry-base-url ar-base-url
+   :ishare/authorization-registry-type     (keyword ar-type)
+   :ishare/private-key                     (ishare-client/private-key key-file)
+   :ishare/x5c                             (ishare-client/x5c chain-file)})
 
 (defn ->site-config
   "Transform configuration site configuration."
   [{:keys [events pulsar store base-url portbase] :as config} site-id]
-  (let [site-config (get config site-id)]
-    (assoc site-config
-           :base-url     base-url
-           :site-id      site-id
-           :client-data  (->client-data site-config)
-           :pulsar       pulsar ;; in events context
-           :events       events ;; in web context
-           :store        store
-           :portbase     portbase)))
+  (let [{:keys [eori] :as site-config} (get config site-id)]
+    (cond-> site-config
+      eori ;; sites without eori have no ishare presence (ex. pms)
+      (assoc :client-data (->client-data site-config))
+
+      :always
+      (assoc :base-url     base-url
+             :site-id      site-id
+             :pulsar       pulsar ;; in events context
+             :events       events ;; in web context
+             :store        store
+             :portbase     portbase))))
