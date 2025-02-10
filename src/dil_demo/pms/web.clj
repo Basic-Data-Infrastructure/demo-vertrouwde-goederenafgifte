@@ -12,15 +12,15 @@
             [dil-demo.web-utils :as w]
             [ring.util.response :refer [redirect]]))
 
-(defmacro event-form [action & body]
-  `(f/form nil {:method    "POST"
-                :action    ~action
-                :fx-dialog "#modal-dialog"}
-     [:fieldset.primary ~@body]
-     [:section.actions
-      (f/cancel-button)
-      (f/submit-button {:class "request"
-                        :label (t "button/request")})]))
+(defn event-form [action & body]
+  (f/form nil {:method    "POST"
+               :action    action
+               :fx-dialog "#modal-dialog"}
+    (into [:fieldset.primary] body)
+    [:section.actions
+     (f/cancel-button)
+     (f/submit-button {:class "request"
+                       :label (t "button/request")})]))
 
 (def location-short-names
   {"APMRTM"   "APM"
@@ -41,23 +41,26 @@
 
 (defn- input-port-visit []
   (f/input :port-visit-reference
-             {:label    (t "label/port-visit-reference")
-              :required true}))
+           {:label    (t "label/port-visit-reference")
+            :required true}))
 
 (defn equipment-gate-in-form []
-  (event-form "equipment-gate-in"
-      (input-equipment)
-      (select-location)))
+  (event-form
+   "equipment-gate-in"
+   (input-equipment)
+   (select-location)))
 
 (defn equipment-loaded-form []
-  (event-form "equipment-loaded"
-    (input-equipment)
-    (select-location)
-    (input-port-visit)))
+  (event-form
+   "equipment-loaded"
+   (input-equipment)
+   (select-location)
+   (input-port-visit)))
 
 (defn transport-departed-form []
-  (event-form "transport-departed"
-    (input-port-visit)))
+  (event-form
+   "transport-departed"
+   (input-port-visit)))
 
 (defn list-forms []
   [:main
