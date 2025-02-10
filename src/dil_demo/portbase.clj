@@ -7,62 +7,57 @@
 
 (ns dil-demo.portbase
   (:require [babashka.http-client :as http]
-            [cheshire.core :as json]
+            [clojure.data.json :as json]
             [clojure.tools.logging :as log]
             [dil-demo.i18n :refer [t]]
             [dil-demo.web-utils :as w]))
 
-(defn- api-request!
-  [{:keys [method path body]}
-   {:keys [api-base-url api-key]}]
-  (let [req (cond-> {:method  method
-                     :uri     (str api-base-url path)
-                     :headers (cond-> {"X-API-Key" api-key
-                                       "Accept"    "application/json"}
-                                body (assoc :content-type "application/json"))}
-              body (assoc :body (json/encode body)))
-        _   (log/debug "Sending request" req)
-
-        res (http/request req)
-        _   (log/debug "Got response" res)]
-    res))
+(defn- api-request
+  [{:keys [api-base-url api-key]}
+   {:keys [method path body]}]
+  (cond-> {:method  method
+           :uri     (str api-base-url path)
+           :headers (cond-> {"X-API-Key" api-key
+                             "Accept"    "application/json"}
+                      body (assoc :content-type "application/json"))}
+    body (assoc :body (json/write-str body))))
 
 
 
-(defmulti request-event! :type)
+(defmulti request-event :type)
 
-(defmethod request-event! :equipment-gate-in
+(defmethod request-event :equipment-gate-in
   [{:keys [equipment-reference
            location-short-name]}
    config]
   {:pre [equipment-reference location-short-name]}
-  (api-request! {:method :put
-                 :path   "/test-events/equipment-gate-in"
-                 :body {:equipmentReference equipment-reference
-                        :locationShortName  location-short-name}}
-                config))
+  (api-request config
+               {:method :put
+                :path   "/test-events/equipment-gate-in"
+                :body {:equipmentReference equipment-reference
+                       :locationShortName  location-short-name}}))
 
-(defmethod request-event! :equipment-loaded
+(defmethod request-event :equipment-loaded
   [{:keys [equipment-reference
            location-short-name
            port-visit-reference]}
    config]
   {:pre [equipment-reference location-short-name port-visit-reference]}
-  (api-request! {:method :put
-                 :path "/test-events/equipment-loaded"
-                 :body {:equipmentReference equipment-reference
-                        :locationShortName  location-short-name
-                        :portVisitReference port-visit-reference}}
-                config))
+  (api-request config
+               {:method :put
+                :path "/test-events/equipment-loaded"
+                :body {:equipmentReference equipment-reference
+                       :locationShortName  location-short-name
+                       :portVisitReference port-visit-reference}}))
 
-(defmethod request-event! :transport-departed
+(defmethod request-event :transport-departed
   [{:keys [port-visit-reference]}
    config]
   {:pre [port-visit-reference]}
-  (api-request! {:method :put
-                 :path "/test-events/transport-departed"
-                 :body {:portVisitReference port-visit-reference}}
-                config))
+  (api-request config
+               {:method :put
+                :path "/test-events/transport-departed"
+                :body {:portVisitReference port-visit-reference}}))
 
 (defn wrap-request-event
   [app config]
@@ -70,7 +65,9 @@
     (let [{:request-portbase/keys [events] :as res} (app req)]
       (reduce (fn [res event]
                 (log/debug "Requesting portbase event" event)
-                (let [r (request-event! event config)]
+                (let [r (-> event
+                            (request-event config)
+                            (http/request))]
                   (w/append-explanation res
                                         [(t "explanation/request-portbase-event")
                                          {:http-request  (-> r
@@ -88,39 +85,31 @@
                    user-number]
   (str base-url "/" user-number "/erp/event/" webhook-secret))
 
-(defn subscribe!
+(defn subscribe
+  "Returns a subscribe request for webhook on `user-number`."
   [config user-number]
-  (let [webhook-url     (webhook-url config user-number)
-        subscription-id (-> {:method :put
-                             :path   "/v3/event-subscriptions"
-                             :body   {:callbackURL webhook-url}}
-                            (api-request! config)
-                            :body
-                            (json/parse-string)
-                            (get "subscriptionId"))]
-    (log/info "Registered webhook" {:webhook-url     webhook-url
-                                    :subscription-id subscription-id})
-    subscription-id))
+  (api-request config
+               {:method :put
+                :path   "/v3/event-subscriptions"
+                :body   {:callbackURL (webhook-url config user-number)}}))
 
 (defn get-subscription
+  "Return request to get info about `subscription-id` webhook."
   [config subscription-id]
-  (let [res (-> {:method :get
-                 :path   (str "/v3/event-subscriptions/" subscription-id)}
-                (api-request! config))]
-    (log/debug "Got subscription" res)
-    (-> res :body (json/parse-string))))
+  (api-request config
+               {:method :get
+                :path   (str "/v3/event-subscriptions/" subscription-id)}))
 
 (defn get-subscriptions
+  "Return request to get all live webhook subscriptions."
   [config]
-  (let [res (-> {:method :get
-                 :path   (str "/v3/event-subscriptions")}
-                (api-request! config))]
-    (-> res :body (json/parse-string))))
+  (api-request config
+               {:method :get
+                :path   "/v3/event-subscriptions"}))
 
-(defn unsubscribe!
+(defn unsubscribe
+  "Return request to unsubscribe `subscription-id` webhook."
   [config subscription-id]
-  (let [res (-> {:method :delete
-                 :path   (str "/v3/event-subscriptions/" subscription-id)}
-                (api-request! config))]
-    (log/debug "Unsubscribed" res)
-    (-> res :body (json/parse-string))))
+  (api-request config
+               {:method :delete
+                :path   (str "/v3/event-subscriptions/" subscription-id)}))

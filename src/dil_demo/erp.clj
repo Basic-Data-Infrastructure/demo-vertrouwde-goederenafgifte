@@ -6,7 +6,8 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.erp
-  (:require [clojure.core.match :refer [match]]
+  (:require [babashka.http-client :as http]
+            [clojure.core.match :refer [match]]
             [clojure.tools.logging :as log]
             [dil-demo.dcsa-events-connector :as dcsa-events-connector]
             [dil-demo.erp.web :as erp.web]
@@ -148,13 +149,17 @@
 
 
 (defn cli [{:keys [base-url portbase]} & args]
-  (match [args]
-    [(["portbase-subscribe" user-number] :seq)]
-    (prn (portbase/subscribe! (assoc portbase
-                                     :base-url base-url) user-number))
+  (-> (match [args]
+        [(["portbase-subscribe" user-number] :seq)]
+        (portbase/subscribe (assoc portbase
+                                   :base-url base-url) user-number)
 
-    [(["portbase-unsubscribe" subscription-id] :seq)]
-    (prn (portbase/unsubscribe! portbase subscription-id))
+        [(["portbase-unsubscribe" subscription-id] :seq)]
+        (portbase/unsubscribe portbase subscription-id)
 
-    [(["portbase-subscriptions"] :seq)]
-    (prn (portbase/get-subscriptions portbase))))
+        [(["portbase-subscriptions"] :seq)]
+        (portbase/get-subscriptions portbase))
+
+      (http/request)
+      :body
+      (println)))
