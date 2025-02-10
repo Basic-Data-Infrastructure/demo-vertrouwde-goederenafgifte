@@ -60,7 +60,7 @@
 (def example-port-visit-ref ;; as defined in example files
   "NLRTM24000001")
 
-(deftest update-state
+(deftest apply-event
   (let [test-container-nr "BICU123457"
 
         state (-> {}
@@ -74,22 +74,22 @@
 
     (is (= state
            (-> state
-               (sut/update-state example-equipment-gate-in)))
+               (sut/apply-event example-equipment-gate-in)))
         "gate-in has no effect on state")
 
     (is (= {example-port-visit-ref #{example-container-nr}}
            (-> state
-               (sut/update-state example-equipment-gate-in)
-               (sut/update-state example-equipment-loaded)
+               (sut/apply-event example-equipment-gate-in)
+               (sut/apply-event example-equipment-loaded)
                :port-visit-ref-container-nrs))
         "loaded couples container with port visit of transport")
 
     (is (= {:port-visit-ref-container-nrs {}
             :container-nr-order-refs            {test-container-nr #{"first"}}}
            (-> state
-               (sut/update-state example-equipment-gate-in)
-               (sut/update-state example-equipment-loaded)
-               (sut/update-state example-transport-departed)))
+               (sut/apply-event example-equipment-gate-in)
+               (sut/apply-event example-equipment-loaded)
+               (sut/apply-event example-transport-departed)))
         "departed forgets all about container in example files")))
 
 (deftest dispatch-event
@@ -169,19 +169,19 @@
       (is (= #{["first" example-equipment-gate-in]
                ["second" example-equipment-gate-in]}
              (:dcsa-events-connector/events (sut/dispatch-event nil @state-atom example-equipment-gate-in))))
-      (swap! state-atom sut/update-state example-equipment-gate-in))
+      (swap! state-atom sut/apply-event example-equipment-gate-in))
 
     (testing "loaded"
       (is (= #{["first" example-equipment-loaded]
                ["second" example-equipment-loaded]}
              (:dcsa-events-connector/events (sut/dispatch-event nil @state-atom example-equipment-loaded))))
-      (swap! state-atom sut/update-state example-equipment-loaded))
+      (swap! state-atom sut/apply-event example-equipment-loaded))
 
     (testing "departed"
       (is (= #{["first" example-transport-departed]
                ["second" example-transport-departed]}
              (:dcsa-events-connector/events (sut/dispatch-event nil @state-atom example-transport-departed))))
-      (swap! state-atom sut/update-state example-transport-departed))))
+      (swap! state-atom sut/apply-event example-transport-departed))))
 
 (deftest wrap-container-register
   (let [handler (sut/wrap-container-register identity)]

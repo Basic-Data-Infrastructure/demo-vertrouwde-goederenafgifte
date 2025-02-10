@@ -40,11 +40,11 @@
   [event-type (or equipment-event-type-code
                   transport-event-type-code)])
 
-(defmulti update-state
+(defmulti apply-event
   "Record state changes due to incoming events."
   (fn [_state event] (event-type event)))
 
-(defmethod update-state ["EQUIPMENT" "LOAD"]
+(defmethod apply-event ["EQUIPMENT" "LOAD"]
   [state {{equipment-reference "equipmentReference"
            {port-visit-ref "portVisitReference"} "transportCall"} "payload"}]
   ;; record port visit ref for container
@@ -52,7 +52,7 @@
              [:port-visit-ref-container-nrs port-visit-ref]
              (fnil conj #{}) equipment-reference))
 
-(defmethod update-state ["TRANSPORT" "DEPA"]
+(defmethod apply-event ["TRANSPORT" "DEPA"]
   [state {{{port-visit-ref "portVisitReference"} "transportCall"} "payload"}]
   (-> state
       ;; port-visit-ref no long in use
@@ -63,7 +63,7 @@
                       (get-in state [:port-visit-ref-container-nrs
                                      port-visit-ref])))))
 
-(defmethod update-state :default
+(defmethod apply-event :default
   [state _event]
   state)
 
@@ -164,4 +164,4 @@
         (-> (dispatch-event dcsa-events-connector event)
             (update :store/commands (fnil conj [])
                     [:assoc! :dcsa-events-connector
-                     (update-state dcsa-events-connector event)]))))))
+                     (apply-event dcsa-events-connector event)]))))))
