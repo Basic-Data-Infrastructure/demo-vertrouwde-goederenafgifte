@@ -8,7 +8,7 @@
 (ns dil-demo.erp
   (:require [clojure.core.match :refer [match]]
             [clojure.tools.logging :as log]
-            [dil-demo.connector :as connector]
+            [dil-demo.dcsa-events-connector :as dcsa-events-connector]
             [dil-demo.erp.web :as erp.web]
             [dil-demo.events :as events]
             [dil-demo.i18n :refer [t]]
@@ -112,25 +112,25 @@
     (filter #(= ref (:ref %)) $)
     (first $)))
 
-(defmulti handle-connector-event
+(defmulti handle-dcsa-event
   (fn [_res _store [_order-ref event]]
-    (connector/event-type event)))
+    (dcsa-events-connector/event-type event)))
 
-(defmethod handle-connector-event  ["EQUIPMENT" "GTIN"]
+(defmethod handle-dcsa-event  ["EQUIPMENT" "GTIN"]
   [res store [order-ref _event]]
   (if-let [consignment (get-consigment store order-ref)]
     (update res :store/commands (fnil conj [])
             [:put! :consignments (assoc consignment :status "TODO-GTIN")])
     res))
 
-(defmethod handle-connector-event  ["EQUIPMENT" "LOAD"]
+(defmethod handle-dcsa-event  ["EQUIPMENT" "LOAD"]
   [res store [order-ref _event]]
   (if-let [consignment (get-consigment store order-ref)]
     (update res :store/commands (fnil conj [])
             [:put! :consignments (assoc consignment :status "TODO-LOAD")])
     res))
 
-(defmethod handle-connector-event  ["TRANSPORT" "DEPA"]
+(defmethod handle-dcsa-event  ["TRANSPORT" "DEPA"]
   [res store [order-ref _event]]
   (if-let [consignment (get-consigment store order-ref)]
     (update res :store/commands (fnil conj [])
@@ -139,9 +139,9 @@
 
 (defn wrap-incoming-portbase-event [app]
   (fn incoming-portbase-event-wrapper [{:keys [store] :as req}]
-    (let [{:keys [connector/events] :as res} (app req)]
+    (let [{:keys [dcsa-events-connector/events] :as res} (app req)]
       (reduce (fn [res event]
-                (handle-connector-event res store event))
+                (handle-dcsa-event res store event))
               res
               events))))
 

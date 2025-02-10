@@ -11,7 +11,7 @@
             [compojure.core :refer [context GET routes]]
             [compojure.route :refer [resources]]
             [dil-demo.config :refer [->site-config]]
-            [dil-demo.connector :as connector]
+            [dil-demo.dcsa-events-connector :as dcsa-events-connector]
             [dil-demo.erp :as erp]
             [dil-demo.i18n :as i18n :refer [t]]
             [dil-demo.master-data :as master-data]
@@ -138,8 +138,8 @@
         ;; to break
         erp-h2m   (-> (erp/make-web-handler (->site-config config :erp))
 
-                      ;; hook up connector container registration
-                      (connector/wrap-container-register)
+                      ;; hook up dcsa-events-connector container registration
+                      (dcsa-events-connector/wrap-container-register)
                       (store/wrap (->site-config config :erp))
 
                       (wrap-h2m config))
@@ -166,8 +166,8 @@
 
          (context ["/:user-number/erp/event" :user-number #"\d+"] [user-number]
            (let [site-config (->site-config config :erp)]
-             (-> (connector/make-handler site-config)
-                 (connector/wrap-event-handler)
+             (-> (dcsa-events-connector/make-handler site-config)
+                 (dcsa-events-connector/wrap-event-handler)
                  (erp/wrap-incoming-portbase-event)
                  (store/wrap site-config)
                  (wrap-m2m user-number))))

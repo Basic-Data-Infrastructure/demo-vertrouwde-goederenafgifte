@@ -229,6 +229,15 @@
    :user-number user-number
    :site-id     site-id})
 
+(defn- update-consignment [res {:keys [container-nr ref] :as consignment}]
+  (cond-> res
+    container-nr
+    (update :dcsa-events-connector/container-nr-order-refs (fnil conj [])
+            [ref container-nr])
+
+    :always
+    (assoc :store/commands [[:put! :consignments consignment]])))
+
 (defn make-handler [{:keys [eori site-id site-name]}]
   {:pre [(keyword? site-id) site-name]}
   (let [slug     (name site-id)
@@ -262,17 +271,14 @@
                :html-class "details"))
 
      (POST "/consignment-new" {:keys [params]}
-       (let [{:keys [ref container-nr] :as consignment}
+       (let [{:keys [ref] :as consignment}
              (-> params
                  (params->)
                  (assoc :id (str (UUID/randomUUID))))]
          (-> "."
              (redirect :see-other)
-             (cond-> container-nr
-               (update :connector/container-nr-order-refs (fnil conj [])
-                       [ref container-nr]))
-             (assoc :flash {:success (t "erp/flash/create-success" {:ref ref})})
-             (assoc :store/commands [[:put! :consignments consignment]]))))
+             (update-consignment consignment)
+             (assoc :flash {:success (t "erp/flash/create-success" {:ref ref})}))))
 
      (GET "/consignment-:id" {:keys        [flash master-data store]
                               {:keys [id]} :params}
@@ -283,15 +289,11 @@
                  :html-class "details")))
 
      (POST "/consignment-:id" {:keys [params]}
-       (let [{:keys [ref container-nr] :as consignment} (params-> params)]
+       (let [{:keys [ref] :as consignment} (params-> params)]
          (-> "."
              (redirect :see-other)
-             (cond-> container-nr
-               (update :connector/container-nr-order-refs (fnil conj [])
-                       [ref container-nr]))
-
-             (assoc :flash {:success (t "erp/flash/update-success" {:ref ref})})
-             (assoc :store/commands [[:put! :consignments consignment]]))))
+             (update-consignment consignment)
+             (assoc :flash {:success (t "erp/flash/update-success" {:ref ref})}))))
 
      (DELETE "/consignment-:id" {:keys        [store]
                                  {:keys [id]} :params}

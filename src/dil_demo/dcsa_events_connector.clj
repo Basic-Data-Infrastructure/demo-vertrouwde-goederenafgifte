@@ -5,7 +5,7 @@
 ;;;
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
-(ns dil-demo.connector
+(ns dil-demo.dcsa-events-connector
   (:require [clojure.core.match :refer [match]]
             [clojure.core.match.regex :refer []]
             [clojure.data.json :as json]
@@ -77,7 +77,7 @@
 
 (defn assoc-events [res order-refs event]
   (reduce (fn [res order-ref]
-            (update res :connector/events (fnil conj #{})
+            (update res :dcsa-events-connector/events (fnil conj #{})
                     [order-ref event]))
           res
           order-refs))
@@ -94,8 +94,8 @@
     :as event}]
   ;; send event to all order-ref related to that container-nr
   (assoc-events res
-                         (get container-nr-order-refs container-nr)
-                         event))
+                (get container-nr-order-refs container-nr)
+                event))
 
 (defmethod dispatch-event ["EQUIPMENT" "LOAD"]
   [res
@@ -105,8 +105,8 @@
     :as event}]
   ;; send event to all order-ref related to that container-nr
   (assoc-events res
-                         (get container-nr-order-refs container-nr)
-                         event))
+                (get container-nr-order-refs container-nr)
+                event))
 
 (defmethod dispatch-event ["TRANSPORT" "DEPA"]
   [res
@@ -118,8 +118,8 @@
   ;; send event for all recorded containers on this transport
   (reduce (fn [res c-nr]
             (assoc-events res
-                                   (get container-nr-order-refs c-nr)
-                                   event))
+                          (get container-nr-order-refs c-nr)
+                          event))
           res
           (get port-visit-ref-container-nrs port-visit-ref)))
 
@@ -133,19 +133,19 @@
 (defn wrap-container-register
   "Allow adding container-nr with order-ref to container register.
 
-  This middleware handles `:connector/container-nr-order-refs` which is
+  This middleware handles `:dcsa-events-connector/container-nr-order-refs` which is
   expected to be a sequence of entries containing a `connection-nr`
   and `order-ref`."
   [f]
-  (fn container-register-wrapper [{{:keys [connector]} :store
+  (fn container-register-wrapper [{{:keys [dcsa-events-connector]} :store
                                    :as                 req}]
-    (let [{:keys [connector/container-nr-order-refs] :as res} (f req)]
+    (let [{:keys [dcsa-events-connector/container-nr-order-refs] :as res} (f req)]
       (cond-> res
         container-nr-order-refs
         (update :store/commands (fnil conj [])
-                [:assoc! :connector
+                [:assoc! :dcsa-events-connector
                  (reduce (fn [m r-c] (add-container-ref m r-c))
-                         connector
+                         dcsa-events-connector
                          container-nr-order-refs)])))))
 
 (defn wrap-event-handler
@@ -153,15 +153,15 @@
 
   This middleware handles events added by the webhook handler in this
   namespace (through `::event`) by updating tracking information (in
-  store `connector` to link events to order-refs) and adds events with
+  store `dcsa-events-connector` to link events to order-refs) and adds events with
   order-refs on `:portbase-events` like: `[[order-ref event] .. ]`."
   [f]
-  (fn event-handler-wrapper [{{:keys [connector]} :store
+  (fn event-handler-wrapper [{{:keys [dcsa-events-connector]} :store
                               :as req}]
     (let [{::keys [event] :as res} (f req)]
       (cond-> res
         event
-        (-> (dispatch-event connector event)
+        (-> (dispatch-event dcsa-events-connector event)
             (update :store/commands (fnil conj [])
-                    [:assoc! :connector
-                     (update-state connector event)]))))))
+                    [:assoc! :dcsa-events-connector
+                     (update-state dcsa-events-connector event)]))))))
