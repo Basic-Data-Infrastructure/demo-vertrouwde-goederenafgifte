@@ -12,13 +12,15 @@
             [dil-demo.i18n :refer [t]]
             [dil-demo.web-utils :as w]))
 
+(def x-api-key-header "X-API-Key")
+
 (defn- api-request
   [{:keys [api-base-url api-key]}
    {:keys [method path body]}]
   (cond-> {:method  method
            :uri     (str api-base-url path)
-           :headers (cond-> {"X-API-Key" api-key
-                             "Accept"    "application/json"}
+           :headers (cond-> {x-api-key-header api-key
+                             "Accept" "application/json"}
                       body (assoc :content-type "application/json"))}
     body (assoc :body (json/write-str body))))
 
@@ -72,7 +74,7 @@
                                         [(t "explanation/request-portbase-event")
                                          {:http-request  (-> r
                                                              :request
-                                                             (update :headers assoc "X-API-Key" "[REDACTED]"))
+                                                             (update :headers assoc x-api-key-header "[REDACTED]"))
                                           :http-response (-> r
                                                              (dissoc :request))}])))
               res
