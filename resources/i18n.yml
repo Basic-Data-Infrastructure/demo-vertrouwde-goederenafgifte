@@ -104,6 +104,7 @@ nl:
   erp/title/new: "Details"
   erp/title/publish: "Verzenden"
   erp/title/published: "Order %{ref} verstuurd"
+  erp/title/dcsa-events: "DCSA events"
   warning/already-published: "Let op!  Deze opdracht is al verzonden!"
 
   tms/button/assign: "Toewijzen"
@@ -175,6 +176,14 @@ nl:
   events/title/event: "Notificatie"
   events/no-found: "Unknown event"
 
+  dcsa-event/type/EQUIPMENT/GTIN: "Gate-in"
+  dcsa-event/type/EQUIPMENT/LOAD: "Geladen"
+  dcsa-event/type/TRANSPORT/DEPA: "Vertrokken"
+  dcsa-event/date-time: "Tijdstip"
+  dcsa-event/equipment-reference: "Container nr."
+  dcsa-event/port-visit-ref: "Havenbezoek ref."
+  dcsa-event/button/raw: "Event data"
+  
   explanation: "Uitleg"
   explanation/event: "Bekijk event"
   explanation/events/access-policy: "Toevoegen policy toegang event broker"
@@ -305,6 +314,7 @@ en:
   erp/title/new: "Details"
   erp/title/publish: "Submit"
   erp/title/published: "Order %{ref} submitted"
+  erp/title/dcsa-events: "DCSA events"
   warning/already-published: "Attention! This order has already been sent!"
 
   tms/button/assign: "Assign"
@@ -375,6 +385,15 @@ en:
   events/title/list: "Notifications"
   events/title/event: "Notification"
   events/no-found: "Unknown event"
+
+  dcsa-event/type/EQUIPMENT/GTIN: "Gate-in"
+  dcsa-event/type/EQUIPMENT/LOAD: "Loaded"
+  dcsa-event/type/TRANSPORT/DEPA: "Departed"
+  dcsa-event/date-time: "Time"
+  dcsa-event/equipment-reference: "Container nr."
+  dcsa-event/port-visit-ref: "Port visit ref."
+  dcsa-event/button/raw: "Event data"
+
 
   explanation: "Explanation"
   explanation/event: "View event"

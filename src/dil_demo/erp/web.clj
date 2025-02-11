@@ -41,7 +41,7 @@
       (when-not (seq consignments)
         [:tr.empty [:td {:colspan 999} (t "empty")]])
 
-      (for [{:keys [id ref goods load unload carrier status]} consignments]
+      (for [{:keys [id ref goods load unload carrier status dcsa-events]} consignments]
         [:tr.fx-clickable
          [:td.ref
           [:a {:href          (str "consignment-" id)
@@ -54,7 +54,11 @@
          [:td.load-date [:span (:date load)]]
          [:td.unload-location [:span (-> unload :location-name)]]
          [:td.unload-date [:span (:date unload)]]
-         [:td.status (w/status-span status)]
+         [:td.status
+          (w/status-span status)
+          (when (seq dcsa-events)
+            [:a.info {:href      (str "consignment-dcsa-events-" id)
+                      :fx-dialog "#modal-dialog"} "i"])]
          [:td.publish
           (if (= otm/status-draft status)
             [:a.button.primary.publish
@@ -63,6 +67,11 @@
               :fx-dialog "#modal-dialog"}
              (t "erp/button/publish")]
             [:span.carrier (-> carrier :eori eori->name)])]])]]]])
+
+(defn consignment-dcsa-events [{:keys [dcsa-events]}]
+  [:ol.consignment-dcsa-events
+   (for [event dcsa-events]
+     [:li (w/render-dcsa-event event)])])
 
 (defn editable? [{:keys [status]}]
   (or (nil? status)
@@ -278,7 +287,16 @@
          (-> "."
              (redirect :see-other)
              (update-consignment consignment)
+
              (assoc :flash {:success (t "erp/flash/create-success" {:ref ref})}))))
+
+     (GET "/consignment-dcsa-events-:id" {:keys        [flash store]
+                                          {:keys [id]} :params}
+       (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
+         (render (t "erp/title/dcsa-events" {:ref ref})
+                 (consignment-dcsa-events consignment)
+                 flash
+                 :html-class "details")))
 
      (GET "/consignment-:id" {:keys        [flash master-data store]
                               {:keys [id]} :params}

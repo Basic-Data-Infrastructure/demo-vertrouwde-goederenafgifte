@@ -8,10 +8,13 @@
 (ns dil-demo.web-utils
   (:require [clojure.data.json :as json]
             [clojure.string :as string]
+            [dil-demo.dcsa-events-connector :as dcsa-events-connector]
             [dil-demo.i18n :as i18n :refer [t]]
             [hiccup2.core :as hiccup]
             [ring.util.response :as response])
   (:import (java.text SimpleDateFormat)
+           (java.time Instant)
+           (java.time.format DateTimeFormatter)
            (java.util UUID)))
 
 (defn dummy-link [title]
@@ -117,6 +120,13 @@
 (defn format-date [date]
   (.format (SimpleDateFormat. "yyyy-MM-dd") date))
 
+(def tstamp-formatter
+  (.withZone (java.time.format.DateTimeFormatter/ofPattern "yyyy-MM-dd HH:mm:ss")
+             (java.time.ZoneId/systemDefault)))
+
+(defn format-tstamp [tstamp]
+  (.format tstamp-formatter tstamp))
+
 (defn or-em-dash [val]
   (if (string/blank? val)
     "—"
@@ -181,6 +191,35 @@
 
        :else
        (json/write-str val :escape-slash false)))))
+
+(defn dcsa-event-tstamp [{{date-time "eventDateTime"} "payload"}]
+  (Instant/from (.parse DateTimeFormatter/ISO_INSTANT date-time)))
+
+(defn render-dcsa-event
+  [{{equipment-reference                   "equipmentReference"
+     {port-visit-ref "portVisitReference"} "transportCall"} "payload"
+    :as                                                     event}]
+  [:div.dcsa-event
+   {:class (string/join "-" (concat ["dcsa-event"]
+                                    (dcsa-events-connector/event-type event)))}
+   [:h3 (t (string/join "/" (concat ["dcsa-event/type"]
+                                    (dcsa-events-connector/event-type event))))]
+   [:dl.meta
+    [:div
+     [:dt (t "dcsa-event/date-time")]
+     [:dd (-> event (dcsa-event-tstamp) (format-tstamp))]]
+    (when equipment-reference
+      [:div
+       [:dt (t "dcsa-event/equipment-reference")]
+       [:dd [:code equipment-reference]]])
+    (when port-visit-ref
+      [:div
+       [:dt (t "dcsa-event/port-visit-ref")]
+       [:dd [:code port-visit-ref]]])]
+
+   [:details
+    [:summary (t "dcsa-event/button/raw")]
+    [:pre.payload (to-json event)]]])
 
 (defn otm-to-json [val]
   (to-json val :key-fn (comp camelize name)))

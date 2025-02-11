@@ -933,7 +933,6 @@ dialog#drawer-dialog {
     max-height: unset;
     margin: unset;
 }
-
 dialog#drawer-dialog main.container {
     box-sizing: border-box;
     height: calc(100% - var(--header-height));
@@ -990,6 +989,18 @@ dialog .dialog-close {
   }
   100% {
       transform: rotate(-360deg);
+  }
+}
+
+@keyframes pulsate {
+  0% {
+      box-shadow: var(--color-orange) 0 0 0;
+  }
+  50% {
+      box-shadow: var(--color-orange) 0 0 1em;
+  }
+  100% {
+      box-shadow: var(--color-orange) 0 0 0;
   }
 }
 

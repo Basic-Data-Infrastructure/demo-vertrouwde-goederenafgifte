@@ -9,7 +9,6 @@
   (:require [babashka.http-client :as http]
             [clojure.core.match :refer [match]]
             [clojure.tools.logging :as log]
-            [dil-demo.dcsa-events-connector :as dcsa-events-connector]
             [dil-demo.erp.web :as erp.web]
             [dil-demo.events :as events]
             [dil-demo.i18n :refer [t]]
@@ -113,29 +112,12 @@
     (filter #(= ref (:ref %)) $)
     (first $)))
 
-(defmulti handle-dcsa-event
-  (fn [_res _store [_order-ref event]]
-    (dcsa-events-connector/event-type event)))
-
-(defmethod handle-dcsa-event  ["EQUIPMENT" "GTIN"]
-  [res store [order-ref _event]]
+(defn handle-dcsa-event
+  [res store [order-ref event]]
   (if-let [consignment (get-consigment store order-ref)]
     (update res :store/commands (fnil conj [])
-            [:put! :consignments (assoc consignment :status "TODO-GTIN")])
-    res))
-
-(defmethod handle-dcsa-event  ["EQUIPMENT" "LOAD"]
-  [res store [order-ref _event]]
-  (if-let [consignment (get-consigment store order-ref)]
-    (update res :store/commands (fnil conj [])
-            [:put! :consignments (assoc consignment :status "TODO-LOAD")])
-    res))
-
-(defmethod handle-dcsa-event  ["TRANSPORT" "DEPA"]
-  [res store [order-ref _event]]
-  (if-let [consignment (get-consigment store order-ref)]
-    (update res :store/commands (fnil conj [])
-            [:put! :consignments (assoc consignment :status "TODO-DEPA")])
+            [:put! :consignments (update consignment :dcsa-events (fnil conj [])
+                                         event)])
     res))
 
 (defn wrap-incoming-portbase-event [app]
