@@ -9,15 +9,20 @@
   (:require [babashka.http-client :as http]
             [clojure.core.match :refer [match]]
             [clojure.tools.logging :as log]
+            [dil-demo.dcsa-events-connector :as dcsa-events-connector]
+            [dil-demo.erp.api :as erp.api]
             [dil-demo.erp.web :as erp.web]
-            [dil-demo.events :as events]
+            [dil-demo.events.pulsar :as events.pulsar]
+            [dil-demo.events.web :as events.web]
             [dil-demo.i18n :refer [t]]
             [dil-demo.ishare.policies :as policies]
             [dil-demo.portbase :as portbase]
             [dil-demo.store :as store]
             [dil-demo.web-utils :as w]
             [org.bdinetwork.ishare.client :as ishare-client]
-            [org.bdinetwork.ishare.client.interceptors :refer [log-interceptor-atom]]))
+            [org.bdinetwork.ishare.client.interceptors :refer [log-interceptor-atom]]
+            [ring.middleware.json :refer [wrap-json-response]]
+            [ring.middleware.params :refer [wrap-params]]))
 
 (defn- map->delegation-evidence
   [client-id effect {:keys [ref load] :as obj}]
@@ -95,46 +100,29 @@
   (-> (erp.web/make-handler config)
 
       (store/wrap-truncate :consignments config)
-      (events/wrap-auto-unsubscribe :consignments
-                                    erp.web/consignment->subscription
-                                    config)
+      (events.pulsar/wrap-auto-unsubscribe :consignments config)
 
       (wrap-policy-deletion config)
       (wrap-delegation config)
 
-      (events/wrap-web config)
+      (events.web/wrap config)
+      (events.pulsar/wrap-exec-commands config)
+
       (store/wrap config)))
 
-(defn- get-consigment [store ref]
-  (as-> store $
-    (get $ :consignments)
-    (map val $)
-    (filter #(= ref (:ref %)) $)
-    (first $)))
+(defn make-api-handler [config]
+  (-> (erp.api/make-handler config)
+      (wrap-params)
+      (wrap-json-response)
+      (store/wrap config)))
 
-(defn handle-dcsa-event
-  [res store [order-ref event]]
-  (if-let [consignment (get-consigment store order-ref)]
-    (update res :store/commands (fnil conj [])
-            [:put! :consignments (update consignment :dcsa-events (fnil conj [])
-                                         event)])
-    res))
-
-(defn wrap-incoming-portbase-event [app]
-  (fn incoming-portbase-event-wrapper [{:keys [store] :as req}]
-    (let [{:keys [dcsa-events-connector/events] :as res} (app req)]
-      (reduce (fn [res event]
-                (handle-dcsa-event res store event))
-              res
-              events))))
-
-
-
-(defn cli [{:keys [base-url portbase]} & args]
+(defn cli [{:keys [base-url portbase portbase-webhook-secret]} & args]
   (-> (match [args]
         [(["portbase-subscribe" user-number] :seq)]
         (portbase/subscribe (assoc portbase
-                                   :base-url base-url) user-number)
+                                   :webhook-secret portbase-webhook-secret)
+                            user-number
+                            base-url (str "erp/" dcsa-events-connector/webhook-path))
 
         [(["portbase-unsubscribe" subscription-id] :seq)]
         (portbase/unsubscribe portbase subscription-id)

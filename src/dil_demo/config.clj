@@ -40,7 +40,7 @@
    "ERP_AR_ENDPOINT"             ["ERP AR URL" :str :in [:erp :ar-base-url]]
    "ERP_KEY_FILE"                ["ERP Key file" :file :in [:erp :key-file]]
    "ERP_CHAIN_FILE"              ["ERP Certificate chain file" :file :in [:erp :chain-file]]
-   "ERP_PORTBASE_WEBHOOK_SECRET" ["ERP portbase webhook secret part" :str :default "xxx" :in [:erp :portbase :webhook-secret]]
+   "ERP_PORTBASE_WEBHOOK_SECRET" ["ERP portbase webhook secret part" :str :default "xxx" :in [:erp :portbase-webhook-secret]]
 
    "WMS_EORI"       ["EORI of WMS system" :str :in [:wms :eori]]
    "WMS_NAME"       ["WMS Name" :str :default "Secure Storage Warehousing" :in [:wms :site-name]]
@@ -118,16 +118,21 @@
 
 (defn ->site-config
   "Transform configuration site configuration."
-  [{:keys [events pulsar store base-url portbase] :as config} site-id]
+  [{:keys [base-url
+           portbase
+           pulsar
+           resources] :as config}
+   site-id]
   (let [{:keys [eori] :as site-config} (get config site-id)]
     (cond-> site-config
       eori ;; sites without eori have no ishare presence (ex. pms)
       (assoc :client-data (->client-data site-config))
 
       :always
-      (assoc :base-url     base-url
-             :site-id      site-id
-             :pulsar       pulsar ;; in events context
-             :events       events ;; in web context
-             :store        store
-             :portbase     portbase))))
+      (assoc :base-url base-url
+             :portbase portbase
+             :pulsar   pulsar
+             :site-id  site-id
+
+             ;; resources needed
+             :resources resources))))

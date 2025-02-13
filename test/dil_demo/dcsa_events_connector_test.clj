@@ -14,7 +14,7 @@
   (:import java.io.StringReader))
 
 (deftest make-handler
-  (let [config  {:portbase {:webhook-secret "test"}}
+  (let [config  {:portbase-webhook-secret "test"}
         handler (sut/make-handler config)
         req     {:headers        {"content-type" "application/json"}
                  :path-info      "/test"

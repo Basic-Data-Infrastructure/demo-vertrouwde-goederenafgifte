@@ -82,18 +82,19 @@
 
 
 
-(defn webhook-url [{:keys [base-url]
-                    {:keys [webhook-secret]} :portbase}
-                   user-number]
-  (str base-url "/" user-number "/erp/event/" webhook-secret))
-
 (defn subscribe
   "Returns a subscribe request for webhook on `user-number`."
-  [config user-number]
+  [{:keys [webhook-secret] :as config}
+   user-number
+   base-url
+   path]
   (api-request config
                {:method :put
                 :path   "/v3/event-subscriptions"
-                :body   {:callbackURL (webhook-url config user-number)}}))
+                :body   {:callbackURL (str base-url "/"
+                                           user-number "/"
+                                           path "/"
+                                           webhook-secret)}}))
 
 (defn get-subscription
   "Return request to get info about `subscription-id` webhook."

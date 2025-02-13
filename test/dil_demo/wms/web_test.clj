@@ -73,7 +73,7 @@
                          :owner-eori  "EU.EORI.OWNER"
                          :user-number 1
                          :site-id     :wms}]]))
-        (is (re-matches #"http://example.com/1/wms/event/[0-9a-z-]+"
+        (is (re-matches #"http://example.com/1/wms/epcis-event/[0-9a-z-]+"
                         (get-in event-commands [0 1 :message]))))
 
       (testing "event payload stored"

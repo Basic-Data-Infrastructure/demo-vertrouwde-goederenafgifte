@@ -6,7 +6,8 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.tms.events
-  (:require [dil-demo.otm :as otm]
+  (:require [dil-demo.events.pulsar :as events.pulsar]
+            [dil-demo.otm :as otm]
             [dil-demo.tms.web :as web]))
 
 (defn handler
@@ -20,13 +21,14 @@
             (update :store/commands conj
                     [:put! :trips (assoc trip :status otm/status-in-transit)])
             (update :event/commands conj
-                    [:unsubscribe! (web/trip->subscription trip
-                                                           user-number
-                                                           site-id)]))))))
+                    [:unsubscribe! (events.pulsar/->subscription trip
+                                                                 user-number
+                                                                 site-id)]))))))
 
 (defn resubscribe-commands
   "Collect event subscribe commands for still pending trips."
-  [{:keys                      [site-id store]
+  [{:keys                      [site-id]
+    {:keys [store]}            :resources
     {:ishare/keys [client-id]} :client-data}]
   (->> @store
        (mapcat (fn [[user-number user-store]]

@@ -8,6 +8,7 @@
 (ns dil-demo.erp.web
   (:require [clojure.string :as string]
             [compojure.core :refer [DELETE GET POST routes]]
+            [dil-demo.events.pulsar :as events.pulsar]
             [dil-demo.i18n :refer [t]]
             [dil-demo.master-data :as d]
             [dil-demo.otm :as otm]
@@ -230,14 +231,6 @@
 
 
 
-(defn consignment->subscription [{:keys [ref], {:keys [eori]} :owner}
-                                 user-number
-                                 site-id]
-  {:topic       ref
-   :owner-eori  eori
-   :user-number user-number
-   :site-id     site-id})
-
 (defn- update-consignment [res {:keys [container-nr ref] :as consignment}]
   (cond-> res
     container-nr
@@ -368,9 +361,9 @@
                                          :read-eoris  [eori carrier-eori]
                                          :write-eoris [warehouse-eori]}]
                                        [:subscribe!
-                                        (consignment->subscription consignment
-                                                                   user-number
-                                                                   site-id)]])))))
+                                        (events.pulsar/->subscription consignment
+                                                                      user-number
+                                                                      site-id)]])))))
 
      (GET "/published-:id" {:keys        [flash master-data store]
                             {:keys [id]} :params}

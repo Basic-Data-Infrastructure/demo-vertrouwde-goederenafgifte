@@ -7,7 +7,8 @@
 
 (ns dil-demo.tms
   (:require [clojure.tools.logging.readable :as log]
-            [dil-demo.events :as events]
+            [dil-demo.events.pulsar :as events.pulsar]
+            [dil-demo.events.web :as events.web]
             [dil-demo.i18n :refer [t]]
             [dil-demo.ishare.policies :as policies]
             [dil-demo.store :as store]
@@ -150,11 +151,11 @@
 (defn make-web-handler [config]
   (-> (tms.web/make-handler config)
       (store/wrap-truncate :trips config)
-      (events/wrap-auto-unsubscribe :trips
-                                    tms.web/trip->subscription
-                                    config)
+      (events.pulsar/wrap-auto-unsubscribe :trips config)
 
       (wrap-delegation config)
 
-      (events/wrap-web config)
+      (events.web/wrap config)
+      (events.pulsar/wrap-exec-commands config)
+
       (store/wrap config)))

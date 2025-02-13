@@ -8,7 +8,7 @@
 (ns dil-demo.web-utils
   (:require [clojure.data.json :as json]
             [clojure.string :as string]
-            [dil-demo.dcsa-events-connector :as dcsa-events-connector]
+            [dil-demo.dcsa :as dcsa]
             [dil-demo.i18n :as i18n :refer [t]]
             [hiccup2.core :as hiccup]
             [ring.util.response :as response])
@@ -201,9 +201,9 @@
     :as                                                     event}]
   [:div.dcsa-event
    {:class (string/join "-" (concat ["dcsa-event"]
-                                    (dcsa-events-connector/event-type event)))}
+                                    (dcsa/event-type event)))}
    [:h3 (t (string/join "/" (concat ["dcsa-event/type"]
-                                    (dcsa-events-connector/event-type event))))]
+                                    (dcsa/event-type event))))]
    [:dl.meta
     [:div
      [:dt (t "dcsa-event/date-time")]

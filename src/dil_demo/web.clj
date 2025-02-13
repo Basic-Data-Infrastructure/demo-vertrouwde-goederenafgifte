@@ -21,7 +21,6 @@
             [dil-demo.tms :as tms]
             [dil-demo.web-utils :as w]
             [dil-demo.wms :as wms]
-            [dil-demo.wms.events :as wms.events]
             [nl.jomco.ring-session-ttl-memory :refer [ttl-memory-store]]
             [ring.middleware.basic-authentication :refer [wrap-basic-authentication]]
             [ring.middleware.defaults :refer [api-defaults site-defaults wrap-defaults]]
@@ -160,17 +159,14 @@
          ;;
          ;; machine to machine routes
          ;;
-         (context ["/:user-number/wms" :user-number #"\d+"] [user-number]
-           (wrap-m2m (wms.events/make-api-handler (->site-config config :wms))
-                     user-number))
+         (context ["/:user-number" :user-number #"\d+"] [user-number]
+           (context "/wms" []
+             (wrap-m2m (wms/make-api-handler (->site-config config :wms))
+                       user-number))
 
-         (context ["/:user-number/erp/event" :user-number #"\d+"] [user-number]
-           (let [site-config (->site-config config :erp)]
-             (-> (dcsa-events-connector/make-handler site-config)
-                 (dcsa-events-connector/wrap-event-handler)
-                 (erp/wrap-incoming-portbase-event)
-                 (store/wrap site-config)
-                 (wrap-m2m user-number))))
+           (context "/erp" []
+             (wrap-m2m (erp/make-api-handler (->site-config config :erp))
+                       user-number)))
 
          ;;
          ;; fallback

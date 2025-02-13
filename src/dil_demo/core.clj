@@ -24,10 +24,11 @@
 (defn run-system [config]
   (resources/mk-system
       [store  (store/make-store (-> config :store))
-       events (events/make-resource (assoc config :store store))
+       events (events/make-resource (assoc config
+                                           :resources {:store store}))
        webapp (web/make-app (assoc config
-                                   :store store
-                                   :events events))
+                                   :resources {:store store
+                                               :events events}))
        _webserver (run-jetty webapp (-> config :jetty (assoc :join? false)))]))
 
 (defn -main [& args]

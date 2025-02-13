@@ -7,6 +7,7 @@
 
 (ns dil-demo.erp.events
   (:require [dil-demo.erp.web :as web]
+            [dil-demo.events.pulsar :as events.pulsar]
             [dil-demo.otm :as otm]))
 
 (defn handler
@@ -20,13 +21,14 @@
             (update :store/commands conj
                     [:put! :consignments (assoc consignment :status otm/status-in-transit)])
             (update :event/commands conj
-                    [:unsubscribe! (web/consignment->subscription consignment
-                                                                  user-number
-                                                                  site-id)]))))))
+                    [:unsubscribe! (events.pulsar/->subscription consignment
+                                                                 user-number
+                                                                 site-id)]))))))
 
 (defn resubscribe-commands
   "Collect event subscribe commands for still pending consignments."
-  [{:keys                      [site-id store]
+  [{:keys                      [site-id]
+    {:keys [store]}            :resources
     {:ishare/keys [client-id]} :client-data}]
   (->> @store
        (mapcat (fn [[user-number user-store]]

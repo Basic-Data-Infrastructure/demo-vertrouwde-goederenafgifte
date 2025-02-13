@@ -8,6 +8,7 @@
 (ns dil-demo.tms.web
   (:require [clojure.string :as string]
             [compojure.core :refer [DELETE GET POST routes]]
+            [dil-demo.events.pulsar :as events.pulsar]
             [dil-demo.i18n :refer [t]]
             [dil-demo.master-data :as d]
             [dil-demo.otm :as otm]
@@ -228,12 +229,6 @@
 
 (def ^:dynamic *slug* nil)
 
-(defn trip->subscription [{:keys [ref], {:keys [eori]} :owner} user-number site-id]
-  {:topic       ref
-   :owner-eori  eori
-   :user-number user-number
-   :site-id     site-id})
-
 (defn make-handler [{:keys [site-id site-name], own-eori :eori}]
   (let [slug   (name site-id)
         render (fn render [title main flash & {:keys [chauffeur html-class]}]
@@ -315,9 +310,9 @@
                (redirect :see-other)
                (assoc :flash {:success (t "tms/flash/assigned-success" trip)}
                       :store/commands [[:put! :trips trip]]
-                      :event/commands [[:subscribe! (trip->subscription trip
-                                                                        user-number
-                                                                        site-id)]])))))
+                      :event/commands [[:subscribe! (events.pulsar/->subscription trip
+                                                                                  user-number
+                                                                                  site-id)]])))))
 
      (GET "/assigned-:id" {:keys        [flash store]
                            {:keys [id]} :params}
@@ -350,9 +345,9 @@
 
                       :store/commands [[:put! :trips (assoc trip :status otm/status-outsourced)]
                                        [:publish! :trips (:eori carrier) trip]]
-                      :event/commands [[:subscribe! (trip->subscription trip
-                                                                        user-number
-                                                                        site-id)]])))))
+                      :event/commands [[:subscribe! (events.pulsar/->subscription trip
+                                                                                  user-number
+                                                                                  site-id)]])))))
 
      (GET "/outsourced-:id" {:keys        [flash master-data store]
                              {:keys [id]} :params}

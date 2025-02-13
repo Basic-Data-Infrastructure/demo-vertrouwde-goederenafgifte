@@ -11,13 +11,16 @@
             [clojure.data.json :as json]
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
+            [dil-demo.dcsa :as dcsa]
             [nl.jomco.http-status-codes :as http-status]))
+
+(def webhook-path "dcsa-webhook")
 
 (defn make-handler
   "Create a webhook handler.
   This does the translation of portbase events to local events."
-  [{{:keys [webhook-secret]} :portbase}]
-  (let [path-info (str "/" webhook-secret)]
+  [{:keys [portbase-webhook-secret]}]
+  (let [path-info (str "/" portbase-webhook-secret)]
     (fn handler [req]
       (match [req]
         [{:request-method :post
@@ -33,16 +36,9 @@
 
 
 
-(defn event-type
-  [{{event-type "eventType"} "metadata"
-    {equipment-event-type-code "equipmentEventTypeCode"
-     transport-event-type-code "transportEventTypeCode"} "payload"}]
-  [event-type (or equipment-event-type-code
-                  transport-event-type-code)])
-
 (defmulti apply-event
   "Record state changes due to incoming events."
-  (fn [_state event] (event-type event)))
+  (fn [_state event] (dcsa/event-type event)))
 
 (defmethod apply-event ["EQUIPMENT" "LOAD"]
   [state {{equipment-reference "equipmentReference"
@@ -84,7 +80,7 @@
 
 (defmulti dispatch-event
   "Dispatch event to related \"local\" order-refs."
-  (fn [_res _state event] (event-type event)))
+  (fn [_res _state event] (dcsa/event-type event)))
 
 (defmethod dispatch-event ["EQUIPMENT" "GTIN"]
   [res
