@@ -7,9 +7,7 @@
 
 (ns dil-demo.core
   (:gen-class)
-  (:require [clojure.core.match :refer [match]]
-            [dil-demo.config :as config]
-            [dil-demo.erp :as erp]
+  (:require [dil-demo.config :as config]
             [dil-demo.events :as events]
             [dil-demo.store :as store]
             [dil-demo.web :as web]
@@ -31,13 +29,7 @@
                                                :events events}))
        _webserver (run-jetty webapp (-> config :jetty (assoc :join? false)))]))
 
-(defn -main [& args]
+(defn -main []
   (let [config (config/->config env)]
-    (match [args]
-      [(["erp" & r] :seq)]
-      (apply erp/cli (config/->site-config config :erp) r)
-
-      :else
-      (do
-        (run-system config)
-        (resources/wait-until-interrupted)))))
+    (run-system config)
+    (resources/wait-until-interrupted)))

@@ -58,7 +58,8 @@
 
   (testing "POST /transport-departed"
     (let [{:keys [status headers] :as res} (do-request :post "/transport-departed"
-                                                       {:port-visit-reference "p1"})]
+                                                       {:port-visit-reference "p1"
+                                                        :vessel-imo-number    "i1"})]
       (is (= http-status/see-other status))
       (is (= "event-requested" (get headers "Location")))
       (is (= :transport-departed (get-in res [:request-portbase/events 0 :type]))))))

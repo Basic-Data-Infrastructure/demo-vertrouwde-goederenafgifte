@@ -44,6 +44,11 @@
            {:label    (t "label/port-visit-reference")
             :required true}))
 
+(defn- input-vessel-imo []
+  (f/input :vessel-imo-number
+           {:label    (t "label/vessel-imo-number")
+            :required true}))
+
 (defn equipment-gate-in-form []
   (event-form
    "equipment-gate-in"
@@ -60,7 +65,8 @@
 (defn transport-departed-form []
   (event-form
    "transport-departed"
-   (input-port-visit)))
+   (input-port-visit)
+   (input-vessel-imo)))
 
 (defn list-forms []
   [:main

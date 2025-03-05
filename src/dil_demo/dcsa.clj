@@ -29,3 +29,15 @@
 (defn tstamp
   [{{tstamp "eventDateTime"} "payload"}]
   tstamp)
+
+(defn equipment-reference
+  [event]
+  (get-in event ["payload" "equipmentReference"]))
+
+(defn port-visit-reference
+  [event]
+  (get-in event ["payload" "transportCall" "portVisitReference"]))
+
+(defn vessel-imo-number
+  [event]
+  (get-in event ["payload" "transportCall" "vessel" "vesselIMONumber"]))

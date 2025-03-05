@@ -10,6 +10,7 @@
             [clojure.core.match.regex :refer []]
             [clojure.data.json :as json]
             [clojure.java.io :as io]
+            [clojure.string :as string]
             [clojure.tools.logging :as log]
             [dil-demo.dcsa :as dcsa]
             [nl.jomco.http-status-codes :as http-status]))
@@ -79,7 +80,9 @@
           order-refs))
 
 (defmulti dispatch-event
-  "Dispatch event to related \"local\" order-refs."
+  "Dispatch event to related \"local\" order-refs.
+   Returns new result with `:dcsa-events-connector/events` having set
+  of `[order-ref event]` tuples."
   (fn [_res _state event] (dcsa/event-type event)))
 
 (defmethod dispatch-event ["EQUIPMENT" "GTIN"]
@@ -131,10 +134,12 @@
 
   This middleware handles `:dcsa-events-connector/container-nr-order-refs` which is
   expected to be a sequence of entries containing a `connection-nr`
-  and `order-ref`."
+  and `order-ref`.
+
+  Scope: UI"
   [f]
   (fn container-register-wrapper [{{:keys [dcsa-events-connector]} :store
-                                   :as                 req}]
+                                   :as                             req}]
     (let [{:keys [dcsa-events-connector/container-nr-order-refs] :as res} (f req)]
       (cond-> res
         container-nr-order-refs
@@ -149,8 +154,10 @@
 
   This middleware handles events added by the webhook handler in this
   namespace (through `::event`) by updating tracking information (in
-  store `dcsa-events-connector` to link events to order-refs) and adds events with
-  order-refs on `:portbase-events` like: `[[order-ref event] .. ]`."
+  store `dcsa-events-connector` to link events to order-refs).  Tuples
+  are added to the store as like `[order-ref event]`.
+
+  Scope: webhook"
   [f]
   (fn event-handler-wrapper [{{:keys [dcsa-events-connector]} :store
                               :as req}]
@@ -161,3 +168,39 @@
             (update :store/commands (fnil conj [])
                     [:assoc! :dcsa-events-connector
                      (apply-event dcsa-events-connector event)]))))))
+
+(defn wrap-webhook-subscription-handler
+  "Follow appropriate topics according to state by putting portbase commands on response.
+
+  On equipment-loaded:
+  - subscribe to vessel events
+  - unsubscribe equipment events
+
+  On transport departed:
+  - unsubscribe vessel events
+
+  Scope: webhook"
+  [f {:keys [base-url portbase-webhook-secret site-id] :as _config}]
+  {:pre [base-url portbase-webhook-secret site-id]}
+  (let [callback-url (fn callback-url [user-number]
+                       (string/join "/"
+                                    [base-url
+                                     user-number
+                                     (name site-id)
+                                     webhook-path
+                                     portbase-webhook-secret]))]
+
+    (fn webhook-subscription-handler-wrapper [{:keys [user-number] :as req}]
+      {:pre [user-number]}
+      (let [{::keys [event] :as res} (f req)]
+        (cond-> res
+          (dcsa/equipment-loaded? event)
+          (update :portbase/commands (fnil into [])
+                  [[:subscribe!
+                    {:callback-url (callback-url user-number)
+                     :vessel-imo-number (dcsa/vessel-imo-number event)}]
+                   [:unsubscribe! {:equipment-reference (dcsa/equipment-reference event)}]])
+
+          (dcsa/transport-departed? event)
+          (update :portbase/commands (fnil conj [])
+                  [:unsubscribe! {:vessel-imo-number (dcsa/vessel-imo-number event)}]))))))

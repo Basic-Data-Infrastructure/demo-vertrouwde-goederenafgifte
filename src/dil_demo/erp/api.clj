@@ -8,7 +8,8 @@
 (ns dil-demo.erp.api
   (:require [compojure.core :refer [context routes]]
             [dil-demo.dcsa-events-connector :as dcsa-events-connector]
-            [dil-demo.events.api :as events.api]))
+            [dil-demo.events.api :as events.api]
+            [dil-demo.portbase :as portbase]))
 
 (defn- get-consigment [store ref]
   (as-> store $
@@ -18,6 +19,7 @@
     (first $)))
 
 (defn- handle-dcsa-event
+  "Put incoming DCSA event in associated consignments."
   [res store [order-ref event]]
   (if-let [consignment (get-consigment store order-ref)]
     (update res :store/commands (fnil conj [])
@@ -25,7 +27,9 @@
                                          event)])
     res))
 
-(defn- wrap-incoming-portbase-event [app]
+(defn- wrap-incoming-portbase-event
+  "Put incoming DCSA events in associated consignments."
+  [app]
   (fn incoming-portbase-event-wrapper [{:keys [store] :as req}]
     (let [{:keys [dcsa-events-connector/events] :as res} (app req)]
       (reduce (fn [res event]
@@ -45,4 +49,6 @@
    (context (str "/" dcsa-events-connector/webhook-path) []
      (-> (dcsa-events-connector/make-handler config)
          (dcsa-events-connector/wrap-event-handler)
+         (dcsa-events-connector/wrap-webhook-subscription-handler config)
+         (portbase/wrap-subscription-execution (:portbase config))
          (wrap-incoming-portbase-event)))))

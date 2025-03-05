@@ -196,9 +196,7 @@
   (Instant/from (.parse DateTimeFormatter/ISO_INSTANT date-time)))
 
 (defn render-dcsa-event
-  [{{equipment-reference                   "equipmentReference"
-     {port-visit-ref "portVisitReference"} "transportCall"} "payload"
-    :as                                                     event}]
+  [event]
   [:div.dcsa-event
    {:class (string/join "-" (concat ["dcsa-event"]
                                     (dcsa/event-type event)))}
@@ -208,14 +206,18 @@
     [:div
      [:dt (t "dcsa-event/date-time")]
      [:dd (-> event (dcsa-event-tstamp) (format-tstamp))]]
-    (when equipment-reference
+    (when-let [equipment-reference (dcsa/equipment-reference event)]
       [:div
        [:dt (t "dcsa-event/equipment-reference")]
        [:dd [:code equipment-reference]]])
-    (when port-visit-ref
+    (when-let [port-visit-ref (dcsa/port-visit-reference event)]
       [:div
-       [:dt (t "dcsa-event/port-visit-ref")]
-       [:dd [:code port-visit-ref]]])]
+       [:dt (t "dcsa-event/port-visit-reference")]
+       [:dd [:code port-visit-ref]]])
+    (when-let [vessel-imo (dcsa/vessel-imo-number event)]
+      [:div
+       [:dt (t "dcsa-event/vessel-imo-number")]
+       [:dd [:code vessel-imo]]])]
 
    [:details
     [:summary (t "dcsa-event/button/raw")]
@@ -295,16 +297,19 @@
             [:pre (otm-to-json otm-object)]])
          (when ishare-log
            (ishare-log-intercept-to-hiccup ishare-log))
-         (when http-request
-           [:div.request
-            [:p (t "explanation/http-request")]
-            [:pre (to-json http-request)]])
-         (when http-response
-           [:div.response
-            [:p (t "explanation/http-response")]
-            [:pre (-> http-response
-                      (dissoc :flash)
-                      (to-json))]])
+         (when (or http-request http-response)
+           [:details
+            [:summary (t "explanation/http-interaction")]
+            (when http-request
+              [:div.request
+               [:p (t "explanation/http-request")]
+               [:pre (to-json http-request)]])
+            (when http-response
+              [:div.response
+               [:p (t "explanation/http-response")]
+               [:pre (-> http-response
+                         (dissoc :flash)
+                         (to-json))]])])
          (when event
            [:details
             [:summary (t "explanation/event")]

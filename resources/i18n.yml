@@ -67,6 +67,7 @@ nl:
   label/equipment: "Container nummer"
   label/location-short-name: "Terminal"
   label/port-visit-reference: "Havenbezoek referentie"
+  label/vessel-imo-number: "Schip IMO-nummer"
 
   placeholder/remarks: "Heeft u opmerkingen?"
   placeholder/container-nr: "Bijv. BICU123457"
@@ -181,7 +182,8 @@ nl:
   dcsa-event/type/TRANSPORT/DEPA: "Vertrokken"
   dcsa-event/date-time: "Tijdstip"
   dcsa-event/equipment-reference: "Container nr."
-  dcsa-event/port-visit-ref: "Havenbezoek ref."
+  dcsa-event/port-visit-reference: "Havenbezoek ref."
+  dcsa-event/vessel-imo-number: "Schip IMO-nummer"
   dcsa-event/button/raw: "Event data"
   
   explanation: "Uitleg"
@@ -199,6 +201,7 @@ nl:
   explanation/ishare/party: "Partij %{eori} opvragen van satelliet %{satellite}"
   explanation/ishare/policy: "Policy aanmaken in iSHARE Authorisatie Register op %{party}"
   explanation/otm-object: "Bekijk OTM object"
+  explanation/http-interaction: "Bekijk HTTP interactie"
   explanation/poort8/create-policy: "Policy aanmaken in Poort8 Authorisatie Register op %{party}"
   explanation/poort8/delete-policy: "Policy verwijderen in Poort8 Authorisatie Register op %{party}"
   explanation/unknown: "Oeps.."
@@ -208,7 +211,10 @@ nl:
   explanation/tms/outsource: "Stuur OTM Trip naar TMS van andere vervoerder"
   explanation/remove-policy-for-trip: "Verwijder policy voor trip"
   explanation/add-policy-for-trip: "Toevoegen policy voor trip"
+
   explanation/request-portbase-event: "Aanvraag portbase event"
+  explanation/portbase-subscribe: "Abonneer portbase events"
+  explanation/portbase-unsubscribe: "Afmelden portbase events"
 
   error/create-policy-failed: "Aanmaken AR policy mislukt"
   error/delete-policy-failed: "Verwijderen AR policy mislukt"
@@ -277,6 +283,7 @@ en:
   label/equipment: "Container number"
   label/location-short-name: "Terminal"
   label/port-visit-reference: "Port visit reference"
+  label/vessel-imo-number: "Vessel IMO-number"
 
   placeholder/remarks: "Do you have any remarks?"
   placeholder/container-nr: "Ex. BICU123457"
@@ -391,9 +398,9 @@ en:
   dcsa-event/type/TRANSPORT/DEPA: "Departed"
   dcsa-event/date-time: "Time"
   dcsa-event/equipment-reference: "Container nr."
-  dcsa-event/port-visit-ref: "Port visit ref."
+  dcsa-event/port-visit-reference: "Port visit ref."
+  dcsa-event/vessel-imo-number: "Vessel IMO-number"
   dcsa-event/button/raw: "Event data"
-
 
   explanation: "Explanation"
   explanation/event: "View event"
@@ -410,6 +417,7 @@ en:
   explanation/ishare/party: "Retrieve party %{eori} from satellite %{satellite}"
   explanation/ishare/policy: "Create policy in iSHARE Authorization Register on %{party}"
   explanation/otm-object: "View OTM object"
+  explanation/http-interaction: "View HTTP interaction"
   explanation/poort8/create-policy: "Create policy in Poort8 Authorization Register on %{party}"
   explanation/poort8/delete-policy: "Delete policy in Poort8 Authorization Register on %{party}"
   explanation/unknown: "Oops.."
@@ -419,7 +427,10 @@ en:
   explanation/tms/outsource: "Send OTM Trip to other carrier's TMS"
   explanation/remove-policy-for-trip: "Remove policy for trip"
   explanation/add-policy-for-trip: "Add policy for trip"
+
   explanation/request-portbase-event: "Request portbase event"
+  explanation/portbase-subscribe: "Subscribe portbase events"
+  explanation/portbase-unsubscribe: "Unsubscribe portbase events"
 
   error/create-policy-failed: "Failed to create AR policy"
   error/delete-policy-failed: "Failed to delete AR policy"

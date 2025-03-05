@@ -6,10 +6,7 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.erp
-  (:require [babashka.http-client :as http]
-            [clojure.core.match :refer [match]]
-            [clojure.tools.logging :as log]
-            [dil-demo.dcsa-events-connector :as dcsa-events-connector]
+  (:require [clojure.tools.logging :as log]
             [dil-demo.erp.api :as erp.api]
             [dil-demo.erp.web :as erp.web]
             [dil-demo.events.pulsar :as events.pulsar]
@@ -108,6 +105,8 @@
       (events.web/wrap config)
       (events.pulsar/wrap-exec-commands config)
 
+      (portbase/wrap-subscription-execution (:portbase config))
+
       (store/wrap config)))
 
 (defn make-api-handler [config]
@@ -115,21 +114,3 @@
       (wrap-params)
       (wrap-json-response)
       (store/wrap config)))
-
-(defn cli [{:keys [base-url portbase portbase-webhook-secret]} & args]
-  (-> (match [args]
-        [(["portbase-subscribe" user-number] :seq)]
-        (portbase/subscribe (assoc portbase
-                                   :webhook-secret portbase-webhook-secret)
-                            user-number
-                            base-url (str "erp/" dcsa-events-connector/webhook-path))
-
-        [(["portbase-unsubscribe" subscription-id] :seq)]
-        (portbase/unsubscribe portbase subscription-id)
-
-        [(["portbase-subscriptions"] :seq)]
-        (portbase/get-subscriptions portbase))
-
-      (http/request)
-      :body
-      (println)))

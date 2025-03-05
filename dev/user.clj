@@ -5,6 +5,9 @@
 ;;;
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
+(System/setProperty "org.slf4j.simpleLogger.log.dil-demo" "debug")
+(System/setProperty "org.slf4j.simpleLogger.log.org.bdinetwork" "debug")
+
 (in-ns 'clojure.core)
 
 (defn pk
@@ -18,8 +21,11 @@
   ([v k] (prn k v) v))
 
 (ns user
-  (:require [dil-demo.config :as config]
+  (:require [babashka.http-client :as http]
+            [clojure.data.json :as json]
+            [dil-demo.config :as config]
             [dil-demo.core :as core]
+            [dil-demo.portbase :as portbase]
             [environ.core :refer [env]]
             [nl.jomco.resources :refer [close defresource]]))
 
@@ -29,11 +35,22 @@
   (when system
     (close system)))
 
-(defn config []
-  (config/->config env))
+(defn config [& ks]
+  (get-in (config/->config env) ks))
 
 (defn start! []
   (defresource system (core/run-system (config/->config env))))
 
-(System/setProperty "org.slf4j.simpleLogger.log.dil-demo" "debug")
-(System/setProperty "org.slf4j.simpleLogger.log.org.bdinetwork" "debug")
+(defn portbase-subscriptions []
+  (->> (portbase/get-subscriptions (config :portbase))
+       (http/request)
+       :body
+       (json/read-str)
+       (map #(get % "subscriptionId"))))
+
+(defn portbase-unsubscribe [id]
+  (->> id (portbase/unsubscribe (config :portbase)) (http/request)))
+
+(defn portbase-unsubscribe-all []
+  (doseq [id (portbase-subscriptions)]
+    (portbase-unsubscribe id)))

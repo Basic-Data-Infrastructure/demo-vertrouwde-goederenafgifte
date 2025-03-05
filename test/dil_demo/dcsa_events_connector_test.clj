@@ -9,6 +9,7 @@
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
             [clojure.test :refer [deftest is testing]]
+            [dil-demo.dcsa :as dcsa]
             [dil-demo.dcsa-events-connector :as sut]
             [nl.jomco.http-status-codes :as http-status])
   (:import java.io.StringReader))
@@ -259,3 +260,40 @@
                    (handler)
                    :store/commands))
             "drop container for record")))))
+
+(deftest wrap-webhook-subscription-handler
+  (let [config  {:site-id                 :test
+                 :base-url                "https://example.com"
+                 :portbase-webhook-secret "xxx"}
+        handler (sut/wrap-webhook-subscription-handler identity config)
+        req     {:user-number 1}]
+    (is (= req (handler req))
+        "no event, nothing to do")
+
+    (testing "equipment-gate-in"
+      (is (nil? (-> req
+                    (assoc ::sut/event example-equipment-gate-in)
+                    (handler)
+                    :portbase/commands))
+          "nothing to do"))
+
+    (testing "equipment-loaded"
+      (let [event example-equipment-loaded]
+        (is (= [[:subscribe!
+                 {:callback-url      "https://example.com/1/test/dcsa-webhook/xxx"
+                  :vessel-imo-number (dcsa/vessel-imo-number event)}]
+                [:unsubscribe! {:equipment-reference (dcsa/equipment-reference event)}]]
+               (-> req
+                   (assoc ::sut/event event)
+                   (handler)
+                   :portbase/commands))
+            "unsubscribe from equipment events, subscribe to transport events")))
+
+    (testing "transport-departed"
+      (let [event example-transport-departed]
+        (is (= [[:unsubscribe! {:vessel-imo-number (dcsa/vessel-imo-number event)}]]
+               (-> req
+                   (assoc ::sut/event event)
+                   (handler)
+                   :portbase/commands))
+            "unsubscribe from transport events")))))

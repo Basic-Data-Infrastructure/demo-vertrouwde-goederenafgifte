@@ -8,6 +8,7 @@
 (ns dil-demo.erp.web
   (:require [clojure.string :as string]
             [compojure.core :refer [DELETE GET POST routes]]
+            [dil-demo.dcsa-events-connector :as dcsa-events-connector]
             [dil-demo.events.pulsar :as events.pulsar]
             [dil-demo.i18n :refer [t]]
             [dil-demo.master-data :as d]
@@ -240,8 +241,8 @@
     :always
     (assoc :store/commands [[:put! :consignments consignment]])))
 
-(defn make-handler [{:keys [eori site-id site-name]}]
-  {:pre [(keyword? site-id) site-name]}
+(defn make-handler [{:keys [eori site-id site-name base-url portbase-webhook-secret]}]
+  {:pre [eori (keyword? site-id) site-name base-url portbase-webhook-secret]}
   (let [slug     (name site-id)
         render   (fn render [title main flash & {:keys [slug-postfix html-class]}]
                    (w/render (str slug slug-postfix)
@@ -253,7 +254,15 @@
         params-> (fn params-> [params]
                    (-> params
                        (select-keys [:id :status :ref :load :unload :goods :container-nr :carrier])
-                       (assoc-in [:owner :eori] eori)))]
+                       (assoc-in [:owner :eori] eori)))
+
+        portbase-webhook-url (fn portbase-webhook-url [user-number]
+                               (string/join "/"
+                                            [base-url
+                                             user-number
+                                             slug
+                                             dcsa-events-connector/webhook-path
+                                             portbase-webhook-secret]))]
     (routes
      (GET "/" {:keys [flash master-data store]}
        (render (t "erp/title/list")
@@ -332,9 +341,8 @@
      (POST "/publish-:id" {:keys        [master-data store
                                          user-number]
                            {:keys [id]} :params}
-       (when-let [consignment (get-consignment store id)]
+       (when-let [{:keys [container-nr ref] :as consignment} (get-consignment store id)]
          (let [consignment     (assoc consignment :status otm/status-requested)
-               ref             (:ref consignment)
                transport-order (otm/consignment->transport-order consignment)
                trip            (otm/consignment->trip consignment)
                warehouse-eori  (-> consignment :load :location-eori)
@@ -363,7 +371,12 @@
                                        [:subscribe!
                                         (events.pulsar/->subscription consignment
                                                                       user-number
-                                                                      site-id)]])))))
+                                                                      site-id)]]
+
+                      :portbase/commands (when container-nr
+                                           [[:subscribe!
+                                             {:callback-url        (portbase-webhook-url user-number)
+                                              :equipment-reference container-nr}]]))))))
 
      (GET "/published-:id" {:keys        [flash master-data store]
                             {:keys [id]} :params}
