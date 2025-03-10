@@ -15,7 +15,7 @@
 
 (defn apply-epcis-departing-event
   "Add store and event commands to reflect the occurrence of a gate out."
-  [res config request {:keys [load] :as transport-order}]
+  [res config req {:keys [load] :as transport-order}]
   (let [targets #{(-> transport-order :owner :eori)
                   (-> transport-order :carrier :eori)}
         event   (epcis/->departing {:id       (.toString (UUID/randomUUID))
@@ -23,7 +23,7 @@
                                     :location (:location-name load)})]
     (-> res
         (events.api/apply-epcis-event config
-                                      request
+                                      req
                                       {:order   transport-order
                                        :event   event
                                        :targets targets})

@@ -367,7 +367,7 @@
                                         {:topic       ref
                                          :owner-eori  eori
                                          :read-eoris  [eori carrier-eori]
-                                         :write-eoris [warehouse-eori]}]
+                                         :write-eoris [eori warehouse-eori]}]
                                        [:subscribe!
                                         (events.pulsar/->subscription consignment
                                                                       user-number

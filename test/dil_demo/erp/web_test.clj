@@ -98,7 +98,7 @@
              [[:authorize! {:topic       "31415"
                             :owner-eori  "EU.EORI.TEST"
                             :read-eoris  ["EU.EORI.TEST" "EU.EORI.CARRIER"]
-                            :write-eoris [ "EU.EORI.WAREHOUSE"]}]
+                            :write-eoris ["EU.EORI.TEST" "EU.EORI.WAREHOUSE"]}]
               [:subscribe! {:topic       "31415"
                             :owner-eori  "EU.EORI.TEST"
                             :user-number 1

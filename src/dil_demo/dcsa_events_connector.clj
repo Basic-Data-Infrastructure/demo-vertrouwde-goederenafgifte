@@ -13,6 +13,7 @@
             [clojure.string :as string]
             [clojure.tools.logging :as log]
             [dil-demo.dcsa :as dcsa]
+            [dil-demo.epcis :as epcis]
             [nl.jomco.http-status-codes :as http-status]))
 
 (def webhook-path "dcsa-webhook")
@@ -204,3 +205,24 @@
           (dcsa/transport-departed? event)
           (update :portbase/commands (fnil conj [])
                   [:unsubscribe! {:vessel-imo-number (dcsa/vessel-imo-number event)}]))))))
+
+
+
+(defmulti ->epcis dcsa/event-type)
+
+(defn- base->map [event]
+  {:id       (dcsa/event-id event)
+   :tstamp   (dcsa/tstamp event)
+   :location (dcsa/location event)})
+
+(defmethod ->epcis dcsa/equipment-gate-in-type
+  [event]
+  (epcis/->arriving (base->map event)))
+
+(defmethod ->epcis dcsa/equipment-loaded-type
+  [event]
+  (epcis/->loading (base->map event)))
+
+(defmethod ->epcis dcsa/transport-departed-type
+  [event]
+  (epcis/->departing (base->map event)))

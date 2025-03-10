@@ -6,20 +6,25 @@
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
 (ns dil-demo.tms.events
-  (:require [dil-demo.events.pulsar :as events.pulsar]
+  (:require [dil-demo.epcis :as epcis]
+            [dil-demo.events.pulsar :as events.pulsar]
             [dil-demo.otm :as otm]
             [dil-demo.tms.web :as web]))
 
 (defn handler
-  [{:keys                         [store subscription] :as event
-    {:keys [bizStep disposition]} :event-data}]
+  [{:keys [store subscription event-data] :as event}]
   (let [[_ ref user-number site-id] subscription]
     (when-let [trip (web/get-trip-by-ref store ref)]
-      (when (and (= bizStep "departing")
-                 (= disposition "in_transit"))
+      (cond
+        (epcis/departing? event-data)
         (-> event
             (update :store/commands conj
-                    [:put! :trips (assoc trip :status otm/status-in-transit)])
+                    [:put! :trips (assoc trip :status otm/status-in-transit)]))
+
+        (epcis/arriving? event-data)
+        (-> event
+            (update :store/commands conj
+                    [:put! :trips (assoc trip :status otm/status-completed)])
             (update :event/commands conj
                     [:unsubscribe! (events.pulsar/->subscription trip
                                                                  user-number

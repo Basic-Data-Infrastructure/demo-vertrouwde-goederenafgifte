@@ -36,3 +36,18 @@
   [{:strs [disposition bizStep]}]
   (and (= disposition "in_transit")
        (= bizStep "arriving")))
+
+(defn ->loading
+  [{:keys [id tstamp location]}]
+  {"type"        "ObjectEvent"
+   "eventTime"   tstamp
+   "eventId"     id
+   "action"      "OBSERVE"
+   "disposition" "in_transit"
+   "bizStep"     "loading"
+   "bizLocation" location})
+
+(defn loading?
+  [{:strs [disposition bizStep]}]
+  (and (= disposition "in_transit")
+       (= bizStep "loading")))

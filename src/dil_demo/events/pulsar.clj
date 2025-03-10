@@ -342,7 +342,7 @@
                     (assoc :event-data
                            (-> event-res
                                :body
-                               (json/read-str :key-fn keyword)
+                               (json/read-str)
                                (assoc :subscription subscription)))
                     (update :store/commands conj
                             [:put! :pulses (assoc pulse :id messageId)])

@@ -14,30 +14,33 @@
   [event-type (or equipment-event-type-code
                   transport-event-type-code)])
 
-(defn equipment-gate-in?
-  [event]
-  (= ["EQUIPMENT" "GTIN"] (event-type event)))
+(def equipment-gate-in-type ["EQUIPMENT" "GTIN"])
+(def equipment-loaded-type ["EQUIPMENT" "LOAD"])
+(def transport-departed-type ["TRANSPORT" "DEPA"])
 
-(defn equipment-loaded?
-  [event]
-  (= ["EQUIPMENT" "LOAD"] (event-type event)))
+(defn equipment-gate-in? [event]
+  (= equipment-gate-in-type (event-type event)))
 
-(defn transport-departed?
-  [event]
-  (= ["TRANSPORT" "DEPA"] (event-type event)))
+(defn equipment-loaded? [event]
+  (= equipment-loaded-type (event-type event)))
 
-(defn tstamp
-  [{{tstamp "eventDateTime"} "payload"}]
-  tstamp)
+(defn transport-departed? [event]
+  (= transport-departed-type (event-type event)))
 
-(defn equipment-reference
-  [event]
+(defn event-id [event]
+  (get-in event ["metadata" "eventID"]))
+
+(defn tstamp [event]
+  (get-in event ["payload" "eventDateTime"]))
+
+(defn location [event]
+  (get-in event ["payload" "transportCall" "location" "locationName"]))
+
+(defn equipment-reference [event]
   (get-in event ["payload" "equipmentReference"]))
 
-(defn port-visit-reference
-  [event]
+(defn port-visit-reference [event]
   (get-in event ["payload" "transportCall" "portVisitReference"]))
 
-(defn vessel-imo-number
-  [event]
+(defn vessel-imo-number [event]
   (get-in event ["payload" "transportCall" "vessel" "vesselIMONumber"]))
