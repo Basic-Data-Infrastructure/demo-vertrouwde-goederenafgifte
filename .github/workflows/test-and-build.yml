@@ -56,7 +56,7 @@ jobs:
           password: ${{ secrets.ACR_PASSWORD }}
 
       - name: Build and Push to ACR
-        uses: docker/build-push-action@v6.9.0
+        uses: docker/build-push-action@v6.15.0
         with:
           push: true
           tags: |
