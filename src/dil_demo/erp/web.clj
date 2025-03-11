@@ -234,7 +234,7 @@
 
 (defn- update-consignment [res {:keys [container-nr ref] :as consignment}]
   (cond-> res
-    container-nr
+    (not (string/blank? container-nr))
     (update :dcsa-events-connector/container-nr-order-refs (fnil conj [])
             [ref container-nr])
 
@@ -373,7 +373,7 @@
                                                                       user-number
                                                                       site-id)]]
 
-                      :portbase/commands (when container-nr
+                      :portbase/commands (when (not (string/blank? container-nr))
                                            [[:subscribe!
                                              {:callback-url        (portbase-webhook-url user-number)
                                               :equipment-reference container-nr}]]))))))
