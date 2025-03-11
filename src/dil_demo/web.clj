@@ -119,6 +119,7 @@
       (wrap-user-number)
       (wrap-basic-authentication (->authenticate (config :auth)))
 
+      (i18n/wrap)
       (wrap-defaults (-> site-defaults
                          (assoc-in [:session :store] (ttl-memory-store))
                          (assoc-in [:static :resources] false)))))
@@ -174,7 +175,6 @@
          (make-root-handler config))
 
         (master-data/wrap config)
-        (i18n/wrap)
 
         (wrap-stacktrace)
         (wrap-log))))
