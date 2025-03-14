@@ -1,0 +1,38 @@
+{
+	"metadata": {
+		"eventID": "84db923d-2a19-4eb0-beb5-446c1ec57d34",
+		"eventCreatedDateTime": "2024-11-04T06:31:00+02:00",
+		"publisher": {
+			"partyName": "ECT EUROMAX TERMINAL (EMX)",
+			"partyCode": "NLRTMEMX",
+			"partyCodeListProvider": "SMDG"
+		},
+		"publisherRole": "TR",
+		"eventType": "EQUIPMENT"
+	},
+	"payload": {
+		"eventClassifierCode": "ACT",
+		"eventDateTime": "2024-11-04T07:41:00+08:30",
+		"equipmentEventTypeCode": "GTIN",
+		"equipmentReference": "APZU4812090",
+		"equipmentType": "CN",
+		"ISOEquipmentCode": "22GP",
+		"emptyIndicatorCode": "LADEN",
+		"eventLocation": {
+			"location": {
+				"locationName": "ECT EUROMAX TERMINAL (EMX)",
+				"locationType": "FACI",
+				"UNLocationCode": "NLRTM",
+				"facilityCode": "EMX",
+				"facilityCodeListProvider": "SMDG"
+			},
+			"facilityTypeCode": "POTE"
+		},
+		"relatedDocumentReferences": [
+			{
+			  "type": "BKG",
+			  "value": "BOOK1309001"
+			}
+		]
+	}
+}

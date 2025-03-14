@@ -8,6 +8,8 @@
 (ns dil-demo.erp.web
   (:require [clojure.string :as string]
             [compojure.core :refer [DELETE GET POST routes]]
+            [dil-demo.dcsa-events-connector :as dcsa-events-connector]
+            [dil-demo.events.pulsar :as events.pulsar]
             [dil-demo.i18n :refer [t]]
             [dil-demo.master-data :as d]
             [dil-demo.otm :as otm]
@@ -41,7 +43,7 @@
       (when-not (seq consignments)
         [:tr.empty [:td {:colspan 999} (t "empty")]])
 
-      (for [{:keys [id ref goods load unload carrier status]} consignments]
+      (for [{:keys [id ref goods load unload carrier status dcsa-events]} consignments]
         [:tr.fx-clickable
          [:td.ref
           [:a {:href          (str "consignment-" id)
@@ -54,7 +56,11 @@
          [:td.load-date [:span (:date load)]]
          [:td.unload-location [:span (-> unload :location-name)]]
          [:td.unload-date [:span (:date unload)]]
-         [:td.status (w/status-span status)]
+         [:td.status
+          (w/status-span status)
+          (when (seq dcsa-events)
+            [:a.info {:href      (str "consignment-dcsa-events-" id)
+                      :fx-dialog "#modal-dialog"} "i"])]
          [:td.publish
           (if (= otm/status-draft status)
             [:a.button.primary.publish
@@ -63,6 +69,11 @@
               :fx-dialog "#modal-dialog"}
              (t "erp/button/publish")]
             [:span.carrier (-> carrier :eori eori->name)])]])]]]])
+
+(defn consignment-dcsa-events [{:keys [dcsa-events]}]
+  [:ol.consignment-dcsa-events
+   (for [event dcsa-events]
+     [:li (w/render-dcsa-event event)])])
 
 (defn editable? [{:keys [status]}]
   (or (nil? status)
@@ -103,7 +114,12 @@
 
      [:fieldset.secondary
       [:legend (t "label/goods")]
-      (f/text :goods {:label (t "hint/goods"), :list d/goods, :required true})]
+      (f/text :goods {:label (t "hint/goods"), :list d/goods, :required true})
+
+      ;; TODO implement https://en.wikipedia.org/wiki/ISO_6346
+      (f/text :container-nr {:label       (t "label/container-nr")
+                             :placeholder (t "placeholder/container-nr")})]
+
      [:fieldset.secondary
       [:legend (t "label/carrier")]
       (f/select [:carrier :eori]
@@ -216,16 +232,17 @@
 
 
 
-(defn consignment->subscription [{:keys [ref], {:keys [eori]} :owner}
-                                 user-number
-                                 site-id]
-  {:topic       ref
-   :owner-eori  eori
-   :user-number user-number
-   :site-id     site-id})
+(defn- update-consignment [res {:keys [container-nr ref] :as consignment}]
+  (cond-> res
+    (not (string/blank? container-nr))
+    (update :dcsa-events-connector/container-nr-order-refs (fnil conj [])
+            [ref container-nr])
 
-(defn make-handler [{:keys [eori site-id site-name]}]
-  {:pre [(keyword? site-id) site-name]}
+    :always
+    (assoc :store/commands [[:put! :consignments consignment]])))
+
+(defn make-handler [{:keys [eori site-id site-name base-url portbase-webhook-secret]}]
+  {:pre [eori (keyword? site-id) site-name base-url portbase-webhook-secret]}
   (let [slug     (name site-id)
         render   (fn render [title main flash & {:keys [slug-postfix html-class]}]
                    (w/render (str slug slug-postfix)
@@ -236,8 +253,16 @@
                              :site-name site-name))
         params-> (fn params-> [params]
                    (-> params
-                       (select-keys [:id :status :ref :load :unload :goods :carrier])
-                       (assoc-in [:owner :eori] eori)))]
+                       (select-keys [:id :status :ref :load :unload :goods :container-nr :carrier])
+                       (assoc-in [:owner :eori] eori)))
+
+        portbase-webhook-url (fn portbase-webhook-url [user-number]
+                               (string/join "/"
+                                            [base-url
+                                             user-number
+                                             slug
+                                             dcsa-events-connector/webhook-path
+                                             portbase-webhook-secret]))]
     (routes
      (GET "/" {:keys [flash master-data store]}
        (render (t "erp/title/list")
@@ -263,8 +288,17 @@
                  (assoc :id (str (UUID/randomUUID))))]
          (-> "."
              (redirect :see-other)
-             (assoc :flash {:success (t "erp/flash/create-success" {:ref ref})})
-             (assoc :store/commands [[:put! :consignments consignment]]))))
+             (update-consignment consignment)
+
+             (assoc :flash {:success (t "erp/flash/create-success" {:ref ref})}))))
+
+     (GET "/consignment-dcsa-events-:id" {:keys        [flash store]
+                                          {:keys [id]} :params}
+       (when-let [{:keys [ref] :as consignment} (get-consignment store id)]
+         (render (t "erp/title/dcsa-events" {:ref ref})
+                 (consignment-dcsa-events consignment)
+                 flash
+                 :html-class "details")))
 
      (GET "/consignment-:id" {:keys        [flash master-data store]
                               {:keys [id]} :params}
@@ -278,8 +312,8 @@
        (let [{:keys [ref] :as consignment} (params-> params)]
          (-> "."
              (redirect :see-other)
-             (assoc :flash {:success (t "erp/flash/update-success" {:ref ref})})
-             (assoc :store/commands [[:put! :consignments consignment]]))))
+             (update-consignment consignment)
+             (assoc :flash {:success (t "erp/flash/update-success" {:ref ref})}))))
 
      (DELETE "/consignment-:id" {:keys        [store]
                                  {:keys [id]} :params}
@@ -307,9 +341,8 @@
      (POST "/publish-:id" {:keys        [master-data store
                                          user-number]
                            {:keys [id]} :params}
-       (when-let [consignment (get-consignment store id)]
+       (when-let [{:keys [container-nr ref] :as consignment} (get-consignment store id)]
          (let [consignment     (assoc consignment :status otm/status-requested)
-               ref             (:ref consignment)
                transport-order (otm/consignment->transport-order consignment)
                trip            (otm/consignment->trip consignment)
                warehouse-eori  (-> consignment :load :location-eori)
@@ -334,11 +367,16 @@
                                         {:topic       ref
                                          :owner-eori  eori
                                          :read-eoris  [eori carrier-eori]
-                                         :write-eoris [warehouse-eori]}]
+                                         :write-eoris [eori warehouse-eori]}]
                                        [:subscribe!
-                                        (consignment->subscription consignment
-                                                                   user-number
-                                                                   site-id)]])))))
+                                        (events.pulsar/->subscription consignment
+                                                                      user-number
+                                                                      site-id)]]
+
+                      :portbase/commands (when (not (string/blank? container-nr))
+                                           [[:subscribe!
+                                             {:callback-url        (portbase-webhook-url user-number)
+                                              :equipment-reference container-nr}]]))))))
 
      (GET "/published-:id" {:keys        [flash master-data store]
                             {:keys [id]} :params}

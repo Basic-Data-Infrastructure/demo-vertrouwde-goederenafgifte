@@ -1,0 +1,76 @@
+' SPDX-FileCopyrightText: 2024 Jomco B.V.
+' SPDX-FileCopyrightText: 2024 Topsector Logistiek
+' SPDX-FileContributor: Joost Diepenmaat <joost@jomco.nl>
+' SPDX-FileContributor: Remco van 't Veer <remco@jomco.nl>
+'
+' SPDX-License-Identifier: AGPL-3.0-or-later
+
+@startuml
+box "ERP"
+        participant Shipper
+        participant BDIEventConnector
+end box
+
+participant EventBroker
+
+box "TMS"
+        participant Transporter
+end box
+
+box "WMS"
+        participant DistributionCenter
+end box
+
+box "PCS"
+        participant Portbase
+        participant Terminal
+end box
+
+Shipper --> EventBroker: Subscribe
+Activate Shipper
+        Shipper --> Transporter: Send trip
+        Activate Transporter
+                Transporter --> EventBroker: Subscribe
+
+                Shipper --> DistributionCenter: Send pick up order
+                Activate DistributionCenter
+                        Shipper --> Terminal: Send drop off order
+                        Activate Terminal
+
+                                Transporter -> DistributionCenter: Pickup goods
+                                Transporter -> Terminal: Deliver goods
+
+                                DistributionCenter --> EventBroker: Gate Out event
+                        Deactivate DistributionCenter
+
+                        EventBroker --> Transporter: Gate Out event
+                        EventBroker --> Shipper: Gate Out event
+
+                        Terminal -> Terminal: Drop Off event triggered (manually)
+                        Terminal --> Portbase: Drop Off event
+                        Portbase --> BDIEventConnector: Drop Off event
+                        BDIEventConnector --> EventBroker: Drop Off event
+                        EventBroker --> Shipper: Drop Off event
+
+                        EventBroker --> Transporter: Drop Off event
+                        Transporter -> Transporter: Trip status completed
+                        Transporter --> EventBroker: Unsubscribe
+
+                Deactivate Transporter
+
+                Terminal -> Terminal: Ship Loaded event triggered (manually)
+                Terminal --> Portbase: Ship Loaded event
+
+                Portbase --> BDIEventConnector: Ship Loaded event
+                BDIEventConnector --> EventBroker: Ship Loaded event
+                EventBroker --> Shipper: Ship Loaded event
+                Shipper -> Shipper: Order status change (TBD)
+
+                Terminal -> Terminal: Ship Sailed event triggered (manually)
+                Terminal --> Portbase: Ship Sailed event
+                Portbase --> BDIEventConnector: Ship Sailed event
+                BDIEventConnector --> EventBroker: Ship Sailed event
+        Deactivate Terminal
+        EventBroker --> Shipper: Ship Sailed event
+        Shipper -> Shipper: Order status change (TBD)
+@enduml

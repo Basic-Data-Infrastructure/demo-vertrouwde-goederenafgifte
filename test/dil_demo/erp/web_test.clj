@@ -18,15 +18,20 @@
 (def store
   {:consignments
    {"31415"
-    {:id      "31415"
-     :ref     "31415"
-     :status  otm/status-draft
-     :load    {:location-eori "EU.EORI.WAREHOUSE"}
-     :carrier {:eori "EU.EORI.CARRIER"}
-     :owner   {:eori eori}}}})
+    {:id           "31415"
+     :ref          "31415"
+     :status       otm/status-draft
+     :load         {:location-eori "EU.EORI.WAREHOUSE"}
+     :carrier      {:eori "EU.EORI.CARRIER"}
+     :owner        {:eori eori}
+     :container-nr "c1"}}})
 
 (defn do-request [method path & [params]]
-  ((-> {:site-id :erp, :site-name "ERP", :eori eori}
+  ((-> {:site-id                 :erp
+        :site-name               "ERP"
+        :eori                    eori
+        :base-url                "https://example.com"
+        :portbase-webhook-secret "xxx"}
        (sut/make-handler)
        (i18n/wrap :throw-exceptions true))
    (assoc (request method path params)
@@ -82,21 +87,26 @@
       (is (re-find #"\b31415\b" body))))
 
   (testing "POST /publish-31415"
-    (let [{:keys          [status]
-           store-commands :store/commands
-           event-commands :event/commands}
+    (let [{:keys             [status]
+           store-commands    :store/commands
+           event-commands    :event/commands
+           portbase-commands :portbase/commands}
           (do-request :post "/publish-31415")]
       (is (= http-status/see-other status))
       (is (= #{:put! :publish!} (->> store-commands (map first) set)))
       (is (= event-commands
              [[:authorize! {:topic       "31415"
-                            :owner-eori "EU.EORI.TEST"
+                            :owner-eori  "EU.EORI.TEST"
                             :read-eoris  ["EU.EORI.TEST" "EU.EORI.CARRIER"]
-                            :write-eoris [ "EU.EORI.WAREHOUSE"]}]
+                            :write-eoris ["EU.EORI.TEST" "EU.EORI.WAREHOUSE"]}]
               [:subscribe! {:topic       "31415"
                             :owner-eori  "EU.EORI.TEST"
                             :user-number 1
-                            :site-id     :erp}]]))))
+                            :site-id     :erp}]]))
+      (is (= portbase-commands
+             [[:subscribe!
+              {:equipment-reference "c1",
+               :callback-url "https://example.com/1/erp/dcsa-webhook/xxx"}]]))))
 
   (testing "GET /published-31415"
     (let [{:keys [status headers body]} (do-request :get "/publish-31415")]

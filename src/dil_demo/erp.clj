@@ -7,14 +7,19 @@
 
 (ns dil-demo.erp
   (:require [clojure.tools.logging :as log]
+            [dil-demo.erp.api :as erp.api]
             [dil-demo.erp.web :as erp.web]
-            [dil-demo.events :as events]
+            [dil-demo.events.pulsar :as events.pulsar]
+            [dil-demo.events.web :as events.web]
             [dil-demo.i18n :refer [t]]
             [dil-demo.ishare.policies :as policies]
+            [dil-demo.portbase :as portbase]
             [dil-demo.store :as store]
             [dil-demo.web-utils :as w]
             [org.bdinetwork.ishare.client :as ishare-client]
-            [org.bdinetwork.ishare.client.interceptors :refer [log-interceptor-atom]]))
+            [org.bdinetwork.ishare.client.interceptors :refer [log-interceptor-atom]]
+            [ring.middleware.json :refer [wrap-json-response]]
+            [ring.middleware.params :refer [wrap-params]]))
 
 (defn- map->delegation-evidence
   [client-id effect {:keys [ref load] :as obj}]
@@ -90,9 +95,22 @@
 
 (defn make-web-handler [config]
   (-> (erp.web/make-handler config)
+
       (store/wrap-truncate :consignments config)
-      (events/wrap-auto-unsubscribe :consignments
-                                    erp.web/consignment->subscription
-                                    config)
+      (events.pulsar/wrap-auto-unsubscribe :consignments config)
+
       (wrap-policy-deletion config)
-      (wrap-delegation config)))
+      (wrap-delegation config)
+
+      (events.web/wrap config)
+      (events.pulsar/wrap-exec-commands config)
+
+      (portbase/wrap-subscription-execution (:portbase config))
+
+      (store/wrap config)))
+
+(defn make-api-handler [config]
+  (-> (erp.api/make-handler config)
+      (wrap-params)
+      (wrap-json-response)
+      (store/wrap config)))

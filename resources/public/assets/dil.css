@@ -1,6 +1,6 @@
 /*
- * SPDX-FileCopyrightText: 2024 Jomco B.V.
- * SPDX-FileCopyrightText: 2024 Topsector Logistiek
+ * SPDX-FileCopyrightText: 2024, 2025 Jomco B.V.
+ * SPDX-FileCopyrightText: 2024, 2025 Topsector Logistiek
  * SPDX-FileContributor: Joost Diepenmaat <joost@jomco.nl>
  * SPDX-FileContributor: Remco van 't Veer <remco@jomco.nl>
  *
@@ -72,6 +72,9 @@
 }
 .list-apps ul li.tms-2 {
     background: linear-gradient(.45turn, white, color-mix(in srgb, var(--tms-2-color) 5%, white 95%));
+}
+.list-apps ul li.pms {
+    background: linear-gradient(.45turn, white, color-mix(in srgb, var(--pms-color) 5%, white 95%));
 }
 .list-apps ul li span.site-title:after {
     content: '→';

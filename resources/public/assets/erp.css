@@ -11,3 +11,74 @@
     --site-color: var(--erp-color);
     --site-other-color: var(--erp-other-color);
 }
+
+dialog ol.consignment-dcsa-events {
+    padding: 1rem 2rem 1rem 3rem;
+}
+ol.consignment-dcsa-events {
+    display: flex;
+    flex-direction: column-reverse;
+}
+ol.consignment-dcsa-events li {
+    flex: 0 0 auto;
+    margin-bottom: 2rem;
+}
+ol.consignment-dcsa-events dl {
+    margin-bottom: 1rem;
+}
+
+table.list :is(th, td):is(.status) {
+    width: 9rem;
+}
+
+.dcsa-event {
+    position: relative;
+}
+.dcsa-event:before {
+    font-family: 'icons';
+    font-size: 2.5rem;
+    display: inline-block;
+    width: 3rem;
+    height: 3rem;
+    line-height: 3rem;
+    position: absolute;
+    top: 1rem;
+    right: 0;
+    background: var(--color-tinted-bg);
+    border-radius: 1rem;
+    padding: .5rem;
+    box-size: border-box;
+    text-align: center;
+}
+
+.dcsa-event-EQUIPMENT-GTIN:before {
+    content: var(--icon-input)
+}
+
+.dcsa-event-EQUIPMENT-LOAD:before {
+    content: var(--icon-stacks)
+}
+
+.dcsa-event-TRANSPORT-DEPA:before {
+    content: var(--icon-directions_boat)
+}
+
+a.info {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    line-height: 1.5rem;
+    border-radius: 1.5rem;
+    margin: 0 .5rem;
+
+    font-family: serif;
+    font-style: italic;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+
+    background: var(--color-blue);
+    color: var(--color-white);
+
+    animation: pulsate 2s linear infinite;
+}

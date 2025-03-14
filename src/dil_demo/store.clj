@@ -29,6 +29,10 @@
 
 (defmulti commit (fn [_store _user-number _own-eori [cmd & _args]] cmd))
 
+(defmethod commit :assoc!
+  [store user-number own-eori [_cmd k v]]
+  (swap! store assoc-in [user-number own-eori k] v))
+
 (defmethod commit :put! ;; put data in own database
   [store user-number own-eori [_cmd table-key {:keys [id] :as value}]]
   (check! table-key value)
@@ -57,19 +61,19 @@
   (spit (io/file filename) (pr-str store)))
 
 (defn assoc-store [{:keys [user-number] :as req}
-                   {:keys [store eori] :as _config}]
+                   {:keys [eori] {:keys [store]} :resources :as _config}]
   (if (and eori store user-number)
     (assoc req :store (get-in @store [user-number eori]))
     req))
 
 (defn process-store [{:keys [user-number] :as _req}
                      {:store/keys [commands] :as res}
-                     {:keys [eori store] :as _config}]
+                     {:keys [eori] {:keys [store]} :resources :as _config}]
   (when (and eori store user-number)
     (doseq [cmd commands]
       (log/debug "committing" cmd)
       (commit store user-number eori cmd)))
-  res)
+  (dissoc res :store/commands))
 
 
 

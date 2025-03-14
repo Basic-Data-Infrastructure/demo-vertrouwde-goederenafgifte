@@ -1,6 +1,6 @@
 /*
- * SPDX-FileCopyrightText: 2024 Jomco B.V.
- * SPDX-FileCopyrightText: 2024 Topsector Logistiek
+ * SPDX-FileCopyrightText: 2024, 2025 Jomco B.V.
+ * SPDX-FileCopyrightText: 2024, 2025 Topsector Logistiek
  * SPDX-FileContributor: Joost Diepenmaat <joost@jomco.nl>
  * SPDX-FileContributor: Remco van 't Veer <remco@jomco.nl>
  *
@@ -16,6 +16,8 @@
     --tms-1-other-color: #FF9500;
     --tms-2-color: #FFBF00;
     --tms-2-other-color: #A5D601;
+    --pms-color: #000000;
+    --pms-other-color: #666666;
 
     --status-assigned-bg: #fac3f8;
     --status-assigned: #692567;
@@ -124,6 +126,14 @@ ul.select-lang a {
 ul.select-lang a.current {
     text-decoration-style: double;
     color: var(--color-link-visited);
+}
+
+
+
+main ul {
+    margin: 2em 0;
+    padding: 0;
+    list-style-position: inside;
 }
 
 
@@ -693,6 +703,10 @@ form.delete {
     content: var(--icon-local_shipping);
     padding: 0 .5rem 0 0;
 }
+:is(button, .button):is(.request):before {
+    content: var(--icon-schedule_send);
+    padding: 0 .5rem 0 0;
+}
 :is(button, .button).create {
     background: none;
     border-width: 2px;
@@ -795,8 +809,8 @@ section.trip fieldset p {
     margin: .5rem 0 0 0;
     line-height: 1.5;
 }
-section.actions {
-    padding-top: 0 !important;
+dialog main.container section + section.actions {
+    padding-top: 0;
 }
 
 
@@ -919,7 +933,6 @@ dialog#drawer-dialog {
     max-height: unset;
     margin: unset;
 }
-
 dialog#drawer-dialog main.container {
     box-sizing: border-box;
     height: calc(100% - var(--header-height));
@@ -976,6 +989,18 @@ dialog .dialog-close {
   }
   100% {
       transform: rotate(-360deg);
+  }
+}
+
+@keyframes pulsate {
+  0% {
+      box-shadow: var(--color-orange) 0 0 0;
+  }
+  50% {
+      box-shadow: var(--color-orange) 0 0 1em;
+  }
+  100% {
+      box-shadow: var(--color-orange) 0 0 0;
   }
 }
 

@@ -1,6 +1,6 @@
 <!--
-SPDX-FileCopyrightText: 2024 Jomco B.V.
-SPDX-FileCopyrightText: 2024 Topsector Logistiek
+SPDX-FileCopyrightText: 2024, 2025 Jomco B.V.
+SPDX-FileCopyrightText: 2024, 2025 Topsector Logistiek
 SPDX-FileContributor: Joost Diepenmaat <joost@jomco.nl>
 SPDX-FileContributor: Remco van 't Veer <remco@jomco.nl>
 
@@ -60,6 +60,7 @@ ERP:
 - `ERP_CHAIN_FILE`: the file to read the ERP certificate chain from
 - `ERP_AR_ID`: EORI of the ERP authorization register
 - `ERP_AR_ENDPOINT`: URL to the ERP authorization register
+- `ERP_PORTBASE_WEBHOOK_SECRET`: Portbase webhook secret part of URL (which is `BASE_URL + "/" + DEMO_NR + "/erp/event/" + ERP_PORTBASE_WEBHOOK_SECRET`)
 
 WMS:
 
@@ -84,6 +85,13 @@ TMS 2:
 - `TMS2_AR_ID`: EORI of the authorization register
 - `TMS2_AR_ENDPOINT`: URL to the authorization register
 - `TMS1_AR_TYPE`: type of authorization register (ishare or poort8)
+
+PMS:
+
+- `PORTBASE_API_BASE_URL`: base URL to portbase event API
+- `PORTBASE_API_KEY`: API key for portbase event API
+
+### Run web server
 
 Run the web server with the following:
 
@@ -133,8 +141,8 @@ Documentation on the architecture of this demo can be found at
 
 ## Copying
 
-Copyright (C) 2024 Jomco B.V.
+Copyright (C) 2024, 2025 Jomco B.V.
 
-Copyright (C) 2024 Topsector Logistiek
+Copyright (C) 2024, 2025 Topsector Logistiek
 
 [AGPL-3.0-or-later](LICENSES/AGPL-3.0-or-later.txt)

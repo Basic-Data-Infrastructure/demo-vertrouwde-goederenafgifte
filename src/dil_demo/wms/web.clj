@@ -14,11 +14,10 @@
             [dil-demo.store :as store]
             [dil-demo.web-form :as f]
             [dil-demo.web-utils :as w]
-            [dil-demo.wms.events :as wms.events]
+            [dil-demo.wms.api :as wms.api]
             [dil-demo.wms.verify :as wms.verify]
             [ring.util.response :refer [redirect]])
-  (:import (java.time Instant)
-           (java.util UUID)))
+  (:import (java.util UUID)))
 
 (defn list-transport-orders [transport-orders]
   [:main
@@ -184,15 +183,8 @@
   (get-in store [:transport-orders id]))
 
 
-(defn transport-order->subscription [{:keys [ref], {:keys [eori]} :owner}
-                                     user-number
-                                     site-id]
-  {:topic       ref
-   :owner-eori  eori
-   :user-number user-number
-   :site-id     site-id})
 
-(defn make-handler [{:keys [site-id site-name client-data]}]
+(defn make-handler [{:keys [site-id site-name client-data] :as config}]
   (let [slug   (name site-id)
         render (fn render [title main flash & {:keys [slug-postfix html-class]}]
                  (w/render (str slug slug-postfix)
@@ -247,31 +239,14 @@
                      flash
                      :html-class "verify")))))
 
-     (POST "/send-gate-out-:id" {:keys        [master-data store user-number]
+     (POST "/send-gate-out-:id" {:keys        [store]
                                  {:keys [id]} :params
                                  :as          req}
        (when-let [{:keys [ref] :as transport-order} (get-transport-order store id)]
-         (let [event-id  (str (UUID/randomUUID))
-               event-url (wms.events/url-for (assoc req :site-id site-id) event-id)
-               targets   (wms.events/transport-order-gate-out-targets transport-order)
-               tstamp    (Instant/now)
-               body      (wms.events/transport-order-gate-out-body transport-order
-                                                                   {:event-id   event-id
-                                                                    :time-stamp tstamp}
-                                                                   master-data)]
-           (-> (str "sent-gate-out-" id)
-               (redirect :see-other)
-               (assoc :flash {:success (t "wms/flash/send-gate-out-success" {:ref ref})}
-                      :store/commands [[:put! :transport-orders
-                                        (assoc transport-order :status otm/status-in-transit)]
-                                       [:put! :events
-                                        {:id           event-id
-                                         :targets      targets
-                                         :content-type "application/json; charset=utf-8"
-                                         :body         (json-str body)}]]
-                      :event/commands [[:send! (-> transport-order
-                                                   (transport-order->subscription user-number site-id)
-                                                   (assoc :message event-url))]])))))
+         (-> (str "sent-gate-out-" id)
+             (redirect :see-other)
+             (assoc :flash {:success (t "wms/flash/send-gate-out-success" {:ref ref})})
+             (wms.api/apply-epcis-departing-event config req transport-order))))
 
      (GET "/sent-gate-out-:id" {:keys        [flash store]
                                 {:keys [id]} :params}

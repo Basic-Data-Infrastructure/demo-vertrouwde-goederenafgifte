@@ -1,5 +1,5 @@
-# SPDX-FileCopyrightText: 2024 Jomco B.V.
-# SPDX-FileCopyrightText: 2024 Topsector Logistiek
+# SPDX-FileCopyrightText: 2024, 2025 Jomco B.V.
+# SPDX-FileCopyrightText: 2024, 2025 Topsector Logistiek
 # SPDX-FileContributor: Joost Diepenmaat <joost@jomco.nl>
 # SPDX-FileContributor: Remco van 't Veer <remco@jomco.nl>
 #
@@ -25,6 +25,8 @@ nl:
   nav/wms/contacts: "Contacten"
   nav/tms/contacts: "Chauffeurs"
   nav/pulses: "Notificaties"
+  nav/pms/list: "Aanvragen"
+  nav/pms/contacts: ".."
   dummy-link: "Niet geïmplementeerd"
 
   see-also: "Zie ook:"
@@ -38,6 +40,7 @@ nl:
   button/edit: "Aanpassen"
   button/list: "Terug naar overzicht"
   button/save: "Opslaan"
+  button/request: "Aanvragen"
 
   tooltip/edit: "Eigenschappen aanpassen"
 
@@ -55,13 +58,19 @@ nl:
   label/unload-location: "Afleveradres"
   label/unload-remarks: "Opmerkingen"
   label/goods: "Goederen"
+  label/container-nr: "Container nummer"
   label/carrier: "Vervoerder"
   label/carrier-eories: "Vervoerder EORI's"
   label/driver-id-digits: "Rijbewijs"
   label/license-plate: "Kenteken"
   label/carrier-data: "Vervoerder informatie"
+  label/equipment: "Container nummer"
+  label/location-short-name: "Terminal"
+  label/port-visit-reference: "Havenbezoek referentie"
+  label/vessel-imo-number: "Schip IMO-nummer"
 
   placeholder/remarks: "Heeft u opmerkingen?"
+  placeholder/container-nr: "Bijv. BICU123457"
 
   hint/goods: "Selecteer de goederen"
   hint/carrier: "Selecteer een vervoerder"
@@ -74,6 +83,9 @@ nl:
   status/cancelled: "Geannuleerd"
   status/assigned: "Toegewezen"
   status/outsourced: "Uitbesteed"
+  status/TODO-GTIN: "Gate In"
+  status/TODO-LOAD: "Geladen"
+  status/TODO-DEPA: "Vertrokken"
 
   erp/button/new: "Nieuwe order aanmaken"
   erp/button/publish: "Verzenden"
@@ -93,6 +105,7 @@ nl:
   erp/title/new: "Details"
   erp/title/publish: "Verzenden"
   erp/title/published: "Order %{ref} verstuurd"
+  erp/title/dcsa-events: "DCSA events"
   warning/already-published: "Let op!  Deze opdracht is al verzonden!"
 
   tms/button/assign: "Toewijzen"
@@ -145,6 +158,16 @@ nl:
   wms/explanation/verify-tms-outsource: "Verifieer uitbesteding bij vervoerder"
   wms/explanation/error: "Technische fout opgetreden: %{error}"
 
+  pms/title/list: "Events aanvragen in portbase"
+  pms/list/description: "Verzoek een van de volgende events na te bootsen."
+  pms/title/equipment-gate-in: "Gate-in"
+  pms/title/equipment-loaded: "Geladen"
+  pms/title/transport-departed: "Vertrokken"
+  pms/title/event-requested: "Event aangevraagd"
+  pms/flash/equipment-gate-in-success: "Gate-in event aangevraagd"
+  pms/flash/equipment-loaded-success: "Geladen event aangevraagd"
+  pms/flash/transport-departed-success: "Vertrokken event aangevraagd"
+
   policy-rejection-reason/no-permit: "Geen toepasbare regels gevonden: %{rules}"
   policy-rejection-reason/not-before: "Mag niet voor %{tstamp}"
   policy-rejection-reason/not-on-or-after: "Mag niet op of na %{tstamp}"
@@ -154,6 +177,15 @@ nl:
   events/title/event: "Notificatie"
   events/no-found: "Unknown event"
 
+  dcsa-event/type/EQUIPMENT/GTIN: "Gate-in"
+  dcsa-event/type/EQUIPMENT/LOAD: "Geladen"
+  dcsa-event/type/TRANSPORT/DEPA: "Vertrokken"
+  dcsa-event/date-time: "Tijdstip"
+  dcsa-event/equipment-reference: "Container nr."
+  dcsa-event/port-visit-reference: "Havenbezoek ref."
+  dcsa-event/vessel-imo-number: "Schip IMO-nummer"
+  dcsa-event/button/raw: "Event data"
+  
   explanation: "Uitleg"
   explanation/event: "Bekijk event"
   explanation/events/access-policy: "Toevoegen policy toegang event broker"
@@ -169,6 +201,7 @@ nl:
   explanation/ishare/party: "Partij %{eori} opvragen van satelliet %{satellite}"
   explanation/ishare/policy: "Policy aanmaken in iSHARE Authorisatie Register op %{party}"
   explanation/otm-object: "Bekijk OTM object"
+  explanation/http-interaction: "Bekijk HTTP interactie"
   explanation/poort8/create-policy: "Policy aanmaken in Poort8 Authorisatie Register op %{party}"
   explanation/poort8/delete-policy: "Policy verwijderen in Poort8 Authorisatie Register op %{party}"
   explanation/unknown: "Oeps.."
@@ -178,6 +211,10 @@ nl:
   explanation/tms/outsource: "Stuur OTM Trip naar TMS van andere vervoerder"
   explanation/remove-policy-for-trip: "Verwijder policy voor trip"
   explanation/add-policy-for-trip: "Toevoegen policy voor trip"
+
+  explanation/request-portbase-event: "Aanvraag portbase event"
+  explanation/portbase-subscribe: "Abonneer portbase events"
+  explanation/portbase-unsubscribe: "Afmelden portbase events"
 
   error/create-policy-failed: "Aanmaken AR policy mislukt"
   error/delete-policy-failed: "Verwijderen AR policy mislukt"
@@ -204,6 +241,8 @@ en:
   nav/wms/contacts: "Contacts"
   nav/tms/contacts: "Drivers"
   nav/pulses: "Notifications"
+  nav/pms/list: "Request"
+  nav/pms/contacts: ".."
   dummy-link: "Not implemented"
 
   see-also: "See also:"
@@ -217,6 +256,7 @@ en:
   button/edit: "Edit"
   button/list: "Back to overview"
   button/save: "Save"
+  button/request: "Request"
 
   tooltip/edit: "Adjust properties"
 
@@ -234,13 +274,19 @@ en:
   label/unload-location: "Delivery address"
   label/unload-remarks: "Remarks"
   label/goods: "Goods"
+  label/container-nr: "Container number"
   label/carrier: "Carrier"
   label/carrier-eories: "Carrier EORI's"
   label/driver-id-digits: "Driver ID digits"
   label/license-plate: "Vehicle License Plate"
   label/carrier-data: "Carrier information"
+  label/equipment: "Container number"
+  label/location-short-name: "Terminal"
+  label/port-visit-reference: "Port visit reference"
+  label/vessel-imo-number: "Vessel IMO-number"
 
   placeholder/remarks: "Do you have any remarks?"
+  placeholder/container-nr: "Ex. BICU123457"
 
   hint/goods: "Select goods"
   hint/carrier: "Select a carrier"
@@ -253,6 +299,9 @@ en:
   status/cancelled: "Cancelled"
   status/assigned: "Assigned"
   status/outsourced: "Outsourced"
+  status/TODO-GTIN: "Gate In"
+  status/TODO-LOAD: "Loaded"
+  status/TODO-DEPA: "Departed"
 
   erp/button/new: "Create new order"
   erp/button/publish: "Submit"
@@ -272,6 +321,7 @@ en:
   erp/title/new: "Details"
   erp/title/publish: "Submit"
   erp/title/published: "Order %{ref} submitted"
+  erp/title/dcsa-events: "DCSA events"
   warning/already-published: "Attention! This order has already been sent!"
 
   tms/button/assign: "Assign"
@@ -324,6 +374,16 @@ en:
   wms/explanation/verify-tms-outsource: "Verify outsourcing with carrier"
   wms/explanation/error: "Technical error occurred: %{error}"
 
+  pms/title/list: "Request events in portbase"
+  pms/list/description: "Request one of the following events to be simulated."
+  pms/title/equipment-gate-in: "Gate-in"
+  pms/title/equipment-loaded: "Loaded"
+  pms/title/transport-departed: "Departed"
+  pms/title/event-requested: "Event requested"
+  pms/flash/equipment-gate-in-success: "Gate-in event requested"
+  pms/flash/equipment-loaded-success: "Geladen event requested"
+  pms/flash/transport-departed-success: "Vertrokken event requested"
+
   policy-rejection-reason/no-permit: "No applicable rules found: %{rules}"
   policy-rejection-reason/not-before: "Not allowed before %{tstamp}"
   policy-rejection-reason/not-on-or-after: "Not allowed on or after %{tstamp}"
@@ -332,6 +392,15 @@ en:
   events/title/list: "Notifications"
   events/title/event: "Notification"
   events/no-found: "Unknown event"
+
+  dcsa-event/type/EQUIPMENT/GTIN: "Gate-in"
+  dcsa-event/type/EQUIPMENT/LOAD: "Loaded"
+  dcsa-event/type/TRANSPORT/DEPA: "Departed"
+  dcsa-event/date-time: "Time"
+  dcsa-event/equipment-reference: "Container nr."
+  dcsa-event/port-visit-reference: "Port visit ref."
+  dcsa-event/vessel-imo-number: "Vessel IMO-number"
+  dcsa-event/button/raw: "Event data"
 
   explanation: "Explanation"
   explanation/event: "View event"
@@ -348,6 +417,7 @@ en:
   explanation/ishare/party: "Retrieve party %{eori} from satellite %{satellite}"
   explanation/ishare/policy: "Create policy in iSHARE Authorization Register on %{party}"
   explanation/otm-object: "View OTM object"
+  explanation/http-interaction: "View HTTP interaction"
   explanation/poort8/create-policy: "Create policy in Poort8 Authorization Register on %{party}"
   explanation/poort8/delete-policy: "Delete policy in Poort8 Authorization Register on %{party}"
   explanation/unknown: "Oops.."
@@ -357,6 +427,10 @@ en:
   explanation/tms/outsource: "Send OTM Trip to other carrier's TMS"
   explanation/remove-policy-for-trip: "Remove policy for trip"
   explanation/add-policy-for-trip: "Add policy for trip"
+
+  explanation/request-portbase-event: "Request portbase event"
+  explanation/portbase-subscribe: "Subscribe portbase events"
+  explanation/portbase-unsubscribe: "Unsubscribe portbase events"
 
   error/create-policy-failed: "Failed to create AR policy"
   error/delete-policy-failed: "Failed to delete AR policy"

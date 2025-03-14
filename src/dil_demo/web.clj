@@ -1,5 +1,5 @@
-;;; SPDX-FileCopyrightText: 2024 Jomco B.V.
-;;; SPDX-FileCopyrightText: 2024 Topsector Logistiek
+;;; SPDX-FileCopyrightText: 2024, 2025 Jomco B.V.
+;;; SPDX-FileCopyrightText: 2024, 2025 Topsector Logistiek
 ;;; SPDX-FileContributor: Joost Diepenmaat <joost@jomco.nl>
 ;;; SPDX-FileContributor: Remco van 't Veer <remco@jomco.nl>
 ;;;
@@ -11,16 +11,16 @@
             [compojure.core :refer [context GET routes]]
             [compojure.route :refer [resources]]
             [dil-demo.config :refer [->site-config]]
+            [dil-demo.dcsa-events-connector :as dcsa-events-connector]
             [dil-demo.erp :as erp]
-            [dil-demo.events :as events]
             [dil-demo.i18n :as i18n :refer [t]]
             [dil-demo.master-data :as master-data]
+            [dil-demo.pms :as pms]
             [dil-demo.sites :refer [sites]]
             [dil-demo.store :as store]
             [dil-demo.tms :as tms]
             [dil-demo.web-utils :as w]
             [dil-demo.wms :as wms]
-            [dil-demo.wms.events :as wms.events]
             [nl.jomco.ring-session-ttl-memory :refer [ttl-memory-store]]
             [ring.middleware.basic-authentication :refer [wrap-basic-authentication]]
             [ring.middleware.defaults :refer [api-defaults site-defaults wrap-defaults]]
@@ -29,9 +29,12 @@
 
 (defn not-found-handler [_]
   (-> (w/render-body "dil"
-                     [:main
-                      [:p (t "not-found")]
-                      [:a.button {:href "/"} (t "button/start-screen")]]
+                     [:div.app-container
+                      [:nav.app]
+                      [:div.app
+                       [:main.container
+                        [:p (t "not-found")]
+                        [:a.button {:href "/"} (t "button/start-screen")]]]]
                      :title (t "not-found/title")
                      :site-name "DIL-Demo"
                      :template-fn w/base-template)
@@ -111,55 +114,67 @@
                  (assoc :user-number basic-authentication))
              req)))))
 
-(defn- h2m-context [{:keys [site-id] :as site-config} make-handler]
-  (context (str "/" (name site-id)) []
-    (-> site-config
-        (make-handler)
-        (events/wrap-web site-config)
-        (store/wrap site-config))))
-
-(defn- h2m-routes [config]
-  (-> (routes
-       (h2m-context (->site-config config :erp) erp/make-web-handler)
-       (h2m-context (->site-config config :tms-1) tms/make-web-handler)
-       (h2m-context (->site-config config :tms-2) tms/make-web-handler)
-       (h2m-context (->site-config config :wms) wms/make-web-handler)
-       (make-root-handler config))
-
-      (master-data/wrap config)
-
+(defn- wrap-h2m [handler config]
+  (-> handler
       (wrap-user-number)
       (wrap-basic-authentication (->authenticate (config :auth)))
-      (i18n/wrap)
 
+      (i18n/wrap)
       (wrap-defaults (-> site-defaults
                          (assoc-in [:session :store] (ttl-memory-store))
-
-                         ;; serve resource ourselves to allow applying cache-control
                          (assoc-in [:static :resources] false)))))
 
-(defn- m2m-context [site-id config make-handler]
-  (let [site-config (->site-config config site-id)
-        handler     (make-handler site-config)]
-    (context [(str "/:user-number/" (name site-id)) :user-number #"\d+"] [user-number]
-      (wrap-defaults (fn m2m-context-wrapper [req]
-                       (-> req
-                           (assoc :eori (:eori site-config)
-                                  :user-number (parse-long user-number))
-                           (store/assoc-store site-config)
-                           (handler)))
-                     api-defaults))))
-
-(defn wrap-base-url
-  "Set base-url that should be used for generating urls back to the service."
-  [f {:keys [base-url]}]
-  (fn [req]
-    (f (assoc req :base-url base-url))))
+(defn- wrap-m2m [handler user-number]
+  (wrap-defaults (fn m2m-context-wrapper [req]
+                   (-> req
+                       (assoc :user-number (parse-long user-number))
+                       (handler)))
+                 api-defaults))
 
 (defn make-app [config]
-  (-> (routes
-       (m2m-context :wms config wms.events/make-api-handler)
-       (h2m-routes config))
-      (wrap-base-url config)
-      (wrap-stacktrace)
-      (wrap-log)))
+  (let [
+        ;; NOTE: can not define these within `context` because that
+        ;; gets reevaluated every time, causing session related stuff
+        ;; to break
+        erp-h2m   (-> (erp/make-web-handler (->site-config config :erp))
+
+                      ;; hook up dcsa-events-connector container registration
+                      (dcsa-events-connector/wrap-container-register)
+                      (store/wrap (->site-config config :erp))
+
+                      (wrap-h2m config))
+        tms-1-h2m (wrap-h2m (tms/make-web-handler (->site-config config :tms-1)) config)
+        tms-2-h2m (wrap-h2m (tms/make-web-handler (->site-config config :tms-2)) config)
+        wms-h2m   (wrap-h2m (wms/make-web-handler (->site-config config :wms)) config)
+        pms-h2m   (wrap-h2m (pms/make-web-handler (->site-config config :pms)) config)]
+    (-> (routes
+         ;;
+         ;; human to machine routes
+         ;;
+         (context "/erp" [] erp-h2m)
+         (context "/tms-1" [] tms-1-h2m)
+         (context "/tms-2" [] tms-2-h2m)
+         (context "/wms" [] wms-h2m)
+         (context "/pms" [] pms-h2m)
+
+         ;;
+         ;; machine to machine routes
+         ;;
+         (context ["/:user-number" :user-number #"\d+"] [user-number]
+           (context "/wms" []
+             (wrap-m2m (wms/make-api-handler (->site-config config :wms))
+                       user-number))
+
+           (context "/erp" []
+             (wrap-m2m (erp/make-api-handler (->site-config config :erp))
+                       user-number)))
+
+         ;;
+         ;; fallback
+         ;;
+         (make-root-handler config))
+
+        (master-data/wrap config)
+
+        (wrap-stacktrace)
+        (wrap-log))))
