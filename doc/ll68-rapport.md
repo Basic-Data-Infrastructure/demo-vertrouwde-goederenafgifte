@@ -58,9 +58,13 @@ Het abonneren op events geschiedt door een webhook te registreren bij het Portba
 
 Ook voor de aanroep van de webhook is geen authenticatie geregeld. Aangezien deze aanroep via SSL verloopt en de URL een geheim bevat, vormt dit geen direct beveiligingsprobleem. Echter, ook hier geldt dat het communicatie tussen twee partijen betreft en dat het afsprakenstelsel gebruikt kan worden om de betrouwbaarheid van de gegevens te waarborgen.
 
+De BDI authenticatie / autorisatie aanpak is in overleg tussen de betrokken programmamanagementteam leden (programmamanagement, DIL-architect, en anchor developer) bewust buiten scope geplaatst.
+
 ## Autorisatie
 
 Er is geen beperking op welke container- of schip-events men zich kan abonneren, waardoor de binnenkomende informatie in feite openbaar is voor iedereen die over een API-key beschikt. Deze gegevens zouden misbruikt kunnen worden door kwaadwillenden. Door gebruik te maken van het afsprakenstelsel, zoals beschreven in de sectie over authenticatie, kan dit risico worden beperkt.
+
+Ook hier geldt dat de BDI authenticatie / autorisatie aanpak in overleg tussen de betrokken programmamanagementteam leden (programmamanagement, DIL-architect, en anchor developer) bewust buiten scope is geplaatst.
 
 ## Ontwikkelen met webhooks
 
