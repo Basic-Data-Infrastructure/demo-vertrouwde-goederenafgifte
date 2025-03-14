@@ -5,8 +5,7 @@
 ;;;
 ;;; SPDX-License-Identifier: AGPL-3.0-or-later
 
-{:deps {buddy/buddy-sign                                    {:mvn/version "3.6.1-359"}
-        ch.qos.logback/logback-classic                      {:mvn/version "1.5.17"}
+{:deps {ch.qos.logback/logback-classic                      {:mvn/version "1.5.17"}
         clj-commons/clj-yaml                                {:mvn/version "1.0.29"}
         compojure/compojure                                 {:mvn/version "1.7.1"}
         environ/environ                                     {:mvn/version "1.2.0"}
