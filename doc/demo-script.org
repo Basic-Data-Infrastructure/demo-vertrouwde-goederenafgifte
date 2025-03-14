@@ -15,7 +15,7 @@
 In deze voorbeeldapplicatie worden de volgende elementen
 gedemonstreerd:
 
-- authorisatie van een chauffeur bij het ophalen van goederen;
+- autorisatie van een chauffeur bij het ophalen van goederen;
 
 - uitbesteding van een transportopdracht naar een ander transportbedrijf;
 
@@ -68,7 +68,7 @@ de volgende omgevingen:
 
 \clearpage
 
-* Authorisatie van een chauffeur en gate-out event
+* Autorisatie van een chauffeur en gate-out event
 <<scenario-1>>
 
 De autorisatie van een chauffeur om goederen te mogen ophalen verloopt
