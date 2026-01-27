@@ -199,67 +199,67 @@
                 :store/commands              [[:other-command]]}
                (handler)
                :store/commands))
-        "add assoc! for container-nr-ref"))
+        "add assoc! for container-nr-ref")))
 
-  (deftest wrap-event-handler
-    (let [handler (sut/wrap-event-handler identity)]
-      (is (nil? (handler nil))
-          "nothing in, nothing out")
-      (testing "gate in"
-        (is (nil? (-> {::sut/event example-equipment-gate-in}
-                      (handler)
-                      :dcsa-events-connector/events))
-            "nothing for an unregistered container")
-        (is (= #{['order-ref
-                  example-equipment-gate-in]}
-               (-> {:store      {:dcsa-events-connector {:container-nr-order-refs {example-container-nr #{'order-ref}}}}
-                    ::sut/event example-equipment-gate-in}
-                   (handler)
-                   :dcsa-events-connector/events))
-            "pass a gate in event for registered container"))
+(deftest wrap-event-handler
+  (let [handler (sut/wrap-event-handler identity)]
+    (is (nil? (handler nil))
+        "nothing in, nothing out")
+    (testing "gate in"
+      (is (nil? (-> {::sut/event example-equipment-gate-in}
+                    (handler)
+                    :dcsa-events-connector/events))
+          "nothing for an unregistered container")
+      (is (= #{['order-ref
+                example-equipment-gate-in]}
+             (-> {:store      {:dcsa-events-connector {:container-nr-order-refs {example-container-nr #{'order-ref}}}}
+                  ::sut/event example-equipment-gate-in}
+                 (handler)
+                 :dcsa-events-connector/events))
+          "pass a gate in event for registered container"))
 
-      (testing "loaded"
-        (is (nil? (-> {::sut/event example-equipment-loaded}
-                      (handler)
-                      :dcsa-events-connector/events))
-            "nothing for an unregistered container")
-        (is (= #{['order-ref
-                  example-equipment-loaded]}
-               (-> {:store      {:dcsa-events-connector {:container-nr-order-refs {example-container-nr #{'order-ref}}}}
-                    ::sut/event example-equipment-loaded}
-                   (handler)
-                   :dcsa-events-connector/events))
-            "pass a loaded event for registered container")
-        (is (= [[:assoc! :dcsa-events-connector {:container-nr-order-refs            {example-container-nr #{'order-ref}}
-                                                 :port-visit-ref-container-nrs {example-port-visit-ref #{example-container-nr}}}]]
-               (-> {:store      {:dcsa-events-connector {:container-nr-order-refs {example-container-nr #{'order-ref}}}}
-                    ::sut/event example-equipment-loaded}
-                   (handler)
-                   :store/commands))
-            "record port-visit-ref"))
+    (testing "loaded"
+      (is (nil? (-> {::sut/event example-equipment-loaded}
+                    (handler)
+                    :dcsa-events-connector/events))
+          "nothing for an unregistered container")
+      (is (= #{['order-ref
+                example-equipment-loaded]}
+             (-> {:store      {:dcsa-events-connector {:container-nr-order-refs {example-container-nr #{'order-ref}}}}
+                  ::sut/event example-equipment-loaded}
+                 (handler)
+                 :dcsa-events-connector/events))
+          "pass a loaded event for registered container")
+      (is (= [[:assoc! :dcsa-events-connector {:container-nr-order-refs            {example-container-nr #{'order-ref}}
+                                               :port-visit-ref-container-nrs {example-port-visit-ref #{example-container-nr}}}]]
+             (-> {:store      {:dcsa-events-connector {:container-nr-order-refs {example-container-nr #{'order-ref}}}}
+                  ::sut/event example-equipment-loaded}
+                 (handler)
+                 :store/commands))
+          "record port-visit-ref"))
 
-      (testing "departed"
-        (is (nil? (-> {:store      {:dcsa-events-connector {:container-nr-order-refs {example-container-nr #{'order-ref}}}}
-                       ::sut/event example-transport-departed}
-                      (handler)
-                      :dcsa-events-connector/events))
-            "nothing for an unregistered port visit ref")
-        (is (= #{['order-ref
-                  example-transport-departed]}
-               (-> {:store      {:dcsa-events-connector {:container-nr-order-refs            {example-container-nr #{'order-ref}}
-                                                         :port-visit-ref-container-nrs {example-port-visit-ref #{example-container-nr}}}}
-                    ::sut/event example-transport-departed}
-                   (handler)
-                   :dcsa-events-connector/events))
-            "pass a departed event for registered container")
-        (is (= [[:assoc! :dcsa-events-connector {:container-nr-order-refs            {}
-                                                 :port-visit-ref-container-nrs {}}]]
-               (-> {:store      {:dcsa-events-connector {:container-nr-order-refs            {example-container-nr #{'order-ref}}
-                                                         :port-visit-ref-container-nrs {example-port-visit-ref #{example-container-nr}}}}
-                    ::sut/event example-transport-departed}
-                   (handler)
-                   :store/commands))
-            "drop container for record")))))
+    (testing "departed"
+      (is (nil? (-> {:store      {:dcsa-events-connector {:container-nr-order-refs {example-container-nr #{'order-ref}}}}
+                     ::sut/event example-transport-departed}
+                    (handler)
+                    :dcsa-events-connector/events))
+          "nothing for an unregistered port visit ref")
+      (is (= #{['order-ref
+                example-transport-departed]}
+             (-> {:store      {:dcsa-events-connector {:container-nr-order-refs            {example-container-nr #{'order-ref}}
+                                                       :port-visit-ref-container-nrs {example-port-visit-ref #{example-container-nr}}}}
+                  ::sut/event example-transport-departed}
+                 (handler)
+                 :dcsa-events-connector/events))
+          "pass a departed event for registered container")
+      (is (= [[:assoc! :dcsa-events-connector {:container-nr-order-refs            {}
+                                               :port-visit-ref-container-nrs {}}]]
+             (-> {:store      {:dcsa-events-connector {:container-nr-order-refs            {example-container-nr #{'order-ref}}
+                                                       :port-visit-ref-container-nrs {example-port-visit-ref #{example-container-nr}}}}
+                  ::sut/event example-transport-departed}
+                 (handler)
+                 :store/commands))
+          "drop container for record"))))
 
 (deftest wrap-webhook-subscription-handler
   (let [config  {:site-id                 :test
