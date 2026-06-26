@@ -9,7 +9,7 @@ name: Check dependency vulnerabilities
 on:
   push:
   schedule:
-    - cron: '0 1 * * 1,2,3,4,5' # every workday
+    - cron: '0 1 * * 1' # every monday
 
 jobs:
   "NVD-check":
@@ -17,30 +17,16 @@ jobs:
 
     steps:
 
-    # NVD data can change every day, so we use a cache key based on today's date
-    - name: Get current date
-      id: date
-      run: echo "date=$(date '+%Y-%m-%d')" >> $GITHUB_OUTPUT
-
     - uses: actions/checkout@v6
     - uses: actions/cache@v5
       with:
         path: "~/.m2"
-        key: "nvd-${{ steps.date.outputs.date }}"
-        restore-keys: "nvd-"
+        key: "nvd"
 
     - name: Install clj runtime
       run: |
         .github/workflows/install-binaries.sh
         echo "${PWD}/bin" >> $GITHUB_PATH
 
-    - name: Check that NVD Secret is set
-      env:
-        NVD_API_TOKEN: ${{ secrets.NVD_API_TOKEN }}
-      if: ${{ env.NVD_API_TOKEN == '' }}
-      run: echo "NVD_API_TOKEN secret is empty"; exit 1
-
     - name: Check clojure dependencies with NVD
-      env:
-        CLJ_WATSON_NVD_API_KEY: ${{ secrets.NVD_API_TOKEN }}
-      run: clojure -M:watson scan -p deps.edn -f -w .watson.properties
+      run: make watson
